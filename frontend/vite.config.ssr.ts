@@ -3,14 +3,18 @@ import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  server: {
-    proxy: {
-      '/api/': 'http://localhost:3000/',
-    },
+  ssr: {
+    noExternal: true,
   },
   build: {
-    outDir: '../backend/client/dist',
+    ssr: 'src/main-server.tsx',
+    outDir: '../backend/client/dist-ssr',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        format: 'cjs',
+      },
+    },
   },
   plugins: [
     tsconfigPaths(),
@@ -18,6 +22,6 @@ export default defineConfig({
       babel: {
         plugins: [['babel-plugin-styled-components', { ssr: true }]],
       },
-    }),
+    })
   ],
 });
