@@ -6,6 +6,9 @@ function Home() {
   return (
     <>
       <Logo src={cardNestLogo} alt='Card Nest logo' />
+      <Link to='/signup'>
+        <button>Sign up</button>
+      </Link>
       <p><Link to='/placeholder'>Go the placeholder page</Link></p>
     </>
   )
