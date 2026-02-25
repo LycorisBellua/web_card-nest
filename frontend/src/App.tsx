@@ -4,6 +4,8 @@ import Home from 'pages/Home';
 import Placeholder from 'pages/Placeholder';
 import NotFound from 'pages/NotFound';
 import SignUp from 'pages/SignUp';
+import LogIn from 'pages/LogIn';
+import ResetPassword from 'pages/ResetPassword';
 
 export function Layout() {
   return (
@@ -22,6 +24,8 @@ export const routes = [
       { index: true, element: <Home /> },
       { path: 'placeholder', element: <Placeholder /> },
       { path: 'signup', element: <SignUp /> },
+      { path: 'login', element: <LogIn /> },
+      { path: 'reset-pwd', element: <ResetPassword /> },
       { path: '*', element: <NotFound /> },
     ],
   },

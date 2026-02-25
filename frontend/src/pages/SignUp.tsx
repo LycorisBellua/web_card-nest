@@ -69,30 +69,30 @@ function SignUp() {
 		} catch (err) {
 			setError("Internal error")
 		}
-		
+
 	}
 	return (
 		<div>
 			<h1>Sign up</h1>
 			<form onSubmit={handlerSubmit}>
 				<div>
-					<label>User name
-						<input type="text" value={uname} onChange={(e)=>setUname(e.target.value)}/>
+					<label htmlFor="u-name">User name
+						<input id="u-name" type="text" value={uname} onChange={(e)=>setUname(e.target.value)}/>
 					</label>
 				</div>
 				<div>
-					<label>Email
-						<input type="email" value={uemail} onChange={(e)=>setUEmail(e.target.value)}/>
+					<label htmlFor="u-email">Email
+						<input id="u-email" type="email" value={uemail} onChange={(e)=>setUEmail(e.target.value)}/>
 					</label>
 				</div>
 				<div>
-					<label>Password
-						<input type="password" value={upassword} onChange={(e)=>setUPassword(e.target.value)}/>
+					<label htmlFor="u-pwd">Password
+						<input id="u-pwd" type="password" value={upassword} onChange={(e)=>setUPassword(e.target.value)}/>
 					</label>
 				</div>
 				<div>
-					<label>Confirm your password  
-						<input type="password" value={upwdConfirm} onChange={(e)=>setUPwdConfirm(e.target.value)}/>
+					<label htmlFor="u-pwd-cfm">Confirm your password  
+						<input id="u-pwd-cfm" type="password" value={upwdConfirm} onChange={(e)=>setUPwdConfirm(e.target.value)}/>
 					</label>
 				</div>
 				{error && <div style={{color : 'red'}}>{error}</div>}
