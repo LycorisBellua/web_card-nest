@@ -21,7 +21,7 @@ function Placeholder() {
       {message && <p>Message from the backend: "{message}" </p>}
       <p><Link to='/'>Go back to the home page</Link></p>
     </>
-  )
+  );
 }
 
 export default Placeholder;
