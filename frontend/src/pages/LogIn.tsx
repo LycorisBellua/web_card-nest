@@ -41,10 +41,10 @@ function LogIn() {
 						<input id="password" type="password" value={logPwd} onChange={(e)=>setLogPwd(e.target.value)}></input>
 					</label>
 				</div>
-				<button type="submit">Login</button>
+				<button type="submit">Log in</button>
 			</form>
-			{error && <div style={{color:'red'}}>{error}</div>}
-			{message && <div style={{color:'green'}}>{message}</div>}
+			{error && <div>{error}</div>}
+			{message && <div>{message}</div>}
 			<Link to='/reset-pwd'>
 				<button>Reset a password ?</button>
 			</Link>

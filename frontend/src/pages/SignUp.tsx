@@ -24,24 +24,23 @@ function SignUp() {
 		}
 		const reg = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/
 		if (!reg.test(upassword)) {
-			setError("You need have 8 caracters minimum, includes one uppercase, one lowercase, one digit and one special caracter")
+			setError("You need a minimum of 8 caracters , including one uppercase, one lowercase, one digit and one special character")
 			return
 		}
 		if (upwdConfirm != upassword) {
-			setError("Password not match")
+			setError("Password don't match")
 			return
 		}
 		const idx: number = uemail.search('@')
-		console.log(idx)
 		if (idx != -1) {
 			const mailExt:string = uemail.substring(idx + 1)
 			if (upassword.search(mailExt) != -1) {
-				setError("Password can not contain email address content")
+				setError("Password cannot contain the email address")
 				return 
 			}
 		}
 		if (upassword.search(uname) != -1) {
-			setError("Password can not contain user name")
+			setError("Password cannot contain the username")
 			return 
 		}
 		setError("")
@@ -59,12 +58,11 @@ function SignUp() {
 				body: JSON.stringify(newUser)
 			})
 			const data = await res.json()
-			console.log(data)
 			if (!res.ok) {
 				setError(data.message)
 				return	
 			}
-			setMessage("Register success! Redirectin to placeholder...")
+			setMessage("You've signed up successfully! Redirectin to placeholder...")
 			setTimeout(()=>navigate('/placeholder'), 3000)
 		} catch (err) {
 			setError("Internal error")
@@ -76,7 +74,7 @@ function SignUp() {
 			<h1>Sign up</h1>
 			<form onSubmit={handlerSubmit}>
 				<div>
-					<label htmlFor="u-name">User name
+					<label htmlFor="u-name">Username
 						<input id="u-name" type="text" value={uname} onChange={(e)=>setUname(e.target.value)}/>
 					</label>
 				</div>
@@ -95,10 +93,10 @@ function SignUp() {
 						<input id="u-pwd-cfm" type="password" value={upwdConfirm} onChange={(e)=>setUPwdConfirm(e.target.value)}/>
 					</label>
 				</div>
-				{error && <div style={{color : 'red'}}>{error}</div>}
+				{error && <div>{error}</div>}
 				<button type="submit">Sign Up</button>
 			</form>
-			{message && <div style={{color: "green"}}>{message}</div>}
+			{message && <div>{message}</div>}
 		</div>
 	)
 }

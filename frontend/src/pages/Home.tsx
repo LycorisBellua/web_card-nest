@@ -8,10 +8,10 @@ function Home() {
       <Logo src={cardNestLogo} alt='Card Nest logo' />
       <div>
         <Link to='/signup'>
-          <button>Sign up</button>
+          <button>Sign Up</button>
         </Link>
         <Link to='/login'>
-          <button>Login</button>
+          <button>Log In</button>
         </Link>
       </div>
       <p><Link to='/placeholder'>Go the placeholder page</Link></p>
