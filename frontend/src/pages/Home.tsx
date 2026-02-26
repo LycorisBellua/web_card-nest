@@ -16,7 +16,7 @@ function Home() {
       </div>
       <p><Link to='/placeholder'>Go the placeholder page</Link></p>
     </>
-  )
+  );
 }
 
 export default Home;

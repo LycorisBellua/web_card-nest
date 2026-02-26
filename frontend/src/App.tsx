@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router-dom';
 import GlobalStyle from 'components/style/GlobalStyle';
 import Home from 'pages/Home';
-import Placeholder from 'pages/Placeholder';
 import NotFound from 'pages/NotFound';
+import Placeholder from 'pages/Placeholder';
 import SignUp from 'pages/SignUp';
 import LogIn from 'pages/LogIn';
 import ResetPassword from 'pages/ResetPassword';
