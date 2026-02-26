@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import Logo from 'components/style/Logo';
-import cardNestLogo from '/joker.svg';
+import cardNestLogo from '/favicon.svg';
 
 function Home() {
   return (

@@ -34,14 +34,14 @@ function LogIn() {
       <form onSubmit={handlerLogin}>
         <div>
           <label htmlFor='email'>Email address
-            <input type='text' value={logMail} 
+            <input id='email' type='text' autoComplete='on' value={logMail} 
               onChange={(e)=>setLogMail(e.target.value)}></input>
           </label>
         </div>
         <div>
           <label htmlFor='password'>Password
-            <input id='password' type='password' value={logPwd} 
-              onChange={(e)=>setLogPwd(e.target.value)}></input>
+            <input id='password' type='password' autoComplete='on' 
+              value={logPwd} onChange={(e)=>setLogPwd(e.target.value)}></input>
           </label>
         </div>
         <button type='submit'>Log In</button>

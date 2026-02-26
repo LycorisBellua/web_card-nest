@@ -13,7 +13,7 @@ function ResetPassword() {
       <h1>Reset Password</h1>
       <div>
         <label htmlFor='email'>Email address
-          <input id='email' type='email' />
+          <input id='email' type='email' autoComplete='on' />
         </label>
         <button type='submit' onClick={handlerSendCodeMsg}>Send code</button>
       </div>
