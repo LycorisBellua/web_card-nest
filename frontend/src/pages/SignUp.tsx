@@ -24,23 +24,25 @@ function SignUp() {
     }
     const reg = new RegExp(
       '^(?=.*[A-Z])' +
-      '(?=.*[a-z])' +
-      '(?=.*\\d)' +
-      '(?=.*[!@#$%^&*()_+\\-=\\[\\]{};\':"\\\\|,.<>\\/?])' +
-      '.{8,}$'
+        '(?=.*[a-z])' +
+        '(?=.*\\d)' +
+        '(?=.*[!@#$%^&*()_+\\-=\\[\\]{};\':"\\\\|,.<>\\/?])' +
+        '.{8,}$',
     );
     if (!reg.test(upassword)) {
-      setError('You need a minimum of 8 characters, including one uppercase, '
-        + 'one lowercase, one digit and one special character');
+      setError(
+        'You need a minimum of 8 characters, including one uppercase, ' +
+          'one lowercase, one digit and one special character',
+      );
       return;
     }
     if (upwdConfirm != upassword) {
-      setError('Passwords don\'t match');
+      setError("Passwords don't match");
       return;
     }
     const idx: number = uemail.search('@');
     if (idx != -1) {
-      const mailExt:string = uemail.substring(idx + 1);
+      const mailExt: string = uemail.substring(idx + 1);
       if (upassword.search(mailExt) != -1) {
         setError('The password cannot contain the email address');
         return;
@@ -60,17 +62,18 @@ function SignUp() {
       const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newUser)
+        body: JSON.stringify(newUser),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.message);
         return;
       }
-      setMessage('You\'ve signed up successfully! Redirecting to ' +
-        'placeholder...');
+      setMessage(
+        "You've signed up successfully! Redirecting to " + 'placeholder...',
+      );
       setTimeout(() => navigate('/placeholder'), 3000);
     } catch (err) {
       setError('Internal error');
@@ -82,31 +85,51 @@ function SignUp() {
       <h1>Sign Up</h1>
       <form onSubmit={handlerSubmit}>
         <div>
-          <label htmlFor='u-name'>Username
-            <input id='u-name' type='text' value={uname} 
-              onChange={(e)=>setUname(e.target.value)}/>
+          <label htmlFor="u-name">
+            Username
+            <input
+              id="u-name"
+              type="text"
+              value={uname}
+              onChange={(e) => setUname(e.target.value)}
+            />
           </label>
         </div>
         <div>
-          <label htmlFor='u-email'>Email
-            <input id='u-email' type='email' value={uemail} 
-              onChange={(e)=>setUEmail(e.target.value)}/>
+          <label htmlFor="u-email">
+            Email
+            <input
+              id="u-email"
+              type="email"
+              value={uemail}
+              onChange={(e) => setUEmail(e.target.value)}
+            />
           </label>
         </div>
         <div>
-          <label htmlFor='u-pwd'>Password
-            <input id='u-pwd' type='password' value={upassword} 
-              onChange={(e)=>setUPassword(e.target.value)}/>
+          <label htmlFor="u-pwd">
+            Password
+            <input
+              id="u-pwd"
+              type="password"
+              value={upassword}
+              onChange={(e) => setUPassword(e.target.value)}
+            />
           </label>
         </div>
         <div>
-          <label htmlFor='u-pwd-cfm'>Confirm your password  
-            <input id='u-pwd-cfm' type='password' value={upwdConfirm} 
-              onChange={(e)=>setUPwdConfirm(e.target.value)}/>
+          <label htmlFor="u-pwd-cfm">
+            Confirm your password
+            <input
+              id="u-pwd-cfm"
+              type="password"
+              value={upwdConfirm}
+              onChange={(e) => setUPwdConfirm(e.target.value)}
+            />
           </label>
         </div>
         {error && <div>{error}</div>}
-        <button type='submit'>Sign Up</button>
+        <button type="submit">Sign Up</button>
       </form>
       {message && <div>{message}</div>}
     </div>

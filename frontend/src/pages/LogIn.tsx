@@ -11,7 +11,7 @@ function LogIn() {
   async function handlerLogin(e: any) {
     e.preventDefault();
     if (!logMail || !logPwd) {
-      setError("Fields should not be empty");
+      setError('Fields should not be empty');
       return;
     }
     try {
@@ -33,22 +33,34 @@ function LogIn() {
       <h1>Log In</h1>
       <form onSubmit={handlerLogin}>
         <div>
-          <label htmlFor='email'>Email address
-            <input id='email' type='text' autoComplete='on' value={logMail} 
-              onChange={(e)=>setLogMail(e.target.value)}></input>
+          <label htmlFor="email">
+            Email address
+            <input
+              id="email"
+              type="text"
+              autoComplete="on"
+              value={logMail}
+              onChange={(e) => setLogMail(e.target.value)}
+            ></input>
           </label>
         </div>
         <div>
-          <label htmlFor='password'>Password
-            <input id='password' type='password' autoComplete='on' 
-              value={logPwd} onChange={(e)=>setLogPwd(e.target.value)}></input>
+          <label htmlFor="password">
+            Password
+            <input
+              id="password"
+              type="password"
+              autoComplete="on"
+              value={logPwd}
+              onChange={(e) => setLogPwd(e.target.value)}
+            ></input>
           </label>
         </div>
-        <button type='submit'>Log In</button>
+        <button type="submit">Log In</button>
       </form>
       {error && <div>{error}</div>}
       {message && <div>{message}</div>}
-      <Link to='/reset-pwd'>
+      <Link to="/reset-pwd">
         <button>Forgot your password?</button>
       </Link>
     </div>

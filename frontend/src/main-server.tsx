@@ -1,6 +1,8 @@
 import { renderToString } from 'react-dom/server';
 import {
-  createStaticHandler, createStaticRouter, StaticRouterProvider
+  createStaticHandler,
+  createStaticRouter,
+  StaticRouterProvider,
 } from 'react-router-dom';
 import { ServerStyleSheet } from 'styled-components';
 import { routes } from 'App';
@@ -17,8 +19,7 @@ export async function render(url: string) {
   const request = new Request(`http://localhost${url}`);
   const context = await query(request);
 
-  if (context instanceof Response)
-    throw context;
+  if (context instanceof Response) throw context;
 
   const router = createStaticRouter(dataRoutes, context);
   const sheet = new ServerStyleSheet();
@@ -26,8 +27,8 @@ export async function render(url: string) {
   try {
     const html = renderToString(
       sheet.collectStyles(
-        <StaticRouterProvider router={router} context={context} />
-      )
+        <StaticRouterProvider router={router} context={context} />,
+      ),
     );
     const styleTags = sheet.getStyleTags();
     return { html, styleTags };
