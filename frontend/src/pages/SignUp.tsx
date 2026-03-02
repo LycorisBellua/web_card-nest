@@ -22,6 +22,11 @@ function SignUp() {
       setError('Please fill all fields');
       return;
     }
+    uname.trim().replace(/[\x00-\x1F\x7F]/g, "").replace(/\s+/g, " ")
+    if (uname.length > 20){
+      setError("Your need a maximum of 20 characters for your username.")
+      return
+    }
     const reg = new RegExp(
       '^(?=.*[A-Z])' +
         '(?=.*[a-z])' +
