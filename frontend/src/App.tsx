@@ -6,6 +6,7 @@ import Placeholder from 'pages/Placeholder';
 import SignUp from 'pages/SignUp';
 import LogIn from 'pages/LogIn';
 import ResetPassword from 'pages/ResetPassword';
+import ResetPasswordSecond from 'pages/ResetPassword2';
 
 export function Layout() {
   return (
@@ -26,6 +27,7 @@ export const routes = [
       { path: 'signup', element: <SignUp /> },
       { path: 'login', element: <LogIn /> },
       { path: 'reset-pwd', element: <ResetPassword /> },
+      { path: 'reset-pwd2', element: <ResetPasswordSecond /> },
       { path: '*', element: <NotFound /> },
     ],
   },
