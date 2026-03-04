@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {sanitizeEmail} from 'functions/UserSanitation';
-import {validateEmail} from 'functions/UserValidation';
 import {
   Container,
   FormGroup,
@@ -9,59 +7,64 @@ import {
   ButtonSubmitWrapper,
   SuccessMsg,
 } from 'components/style/SignForm';
+import { sanitizeEmail } from 'functions/UserSanitation';
+import { validateEmail } from 'functions/UserValidation';
 
 function ResetPassword() {
-  const [mail, setMail] = useState("")
+  const [email, setEmail] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
   const [message, setMessage] = useState('');
-  const [errors, setErrors] = useState<string[]>([])
 
-  async function handlerSendCodeMsg(e: any) {
-    e.preventDefault()
-    if (!mail) {
-      setErrors(["Please enter your email address."])
-      return
+  async function handlerLogin(e: any) {
+    e.preventDefault();
+    if (!email) {
+      setErrors(['Please fill all fields.']);
+      return;
     }
-    setErrors([])
-    const userEmail = sanitizeEmail(mail)
-    const allErrors = validateEmail(userEmail)
+    setErrors([]);
+    setMessage('');
+    const uEmail = sanitizeEmail(email);
+    const allErrors = [...validateEmail(email)];
     if (allErrors.length > 0) {
-      setErrors(allErrors)
-      return
+      setErrors(allErrors);
+      return;
     }
     try {
-      const res = await fetch('https://jsonplaceholder.typicode.com/posts/1', {
-          method: "POST",
-          headers: {
-            "Content-Type" : "application/json"
-          },
-          body: JSON.stringify({email: userEmail})
-      })
-      const data = await res.json()
+      const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uemail: uEmail,
+        }),
+      });
+      const data = await res.json();
       if (!res.ok) {
-        console.log(data.message)
-        setErrors([data.message])
+        setErrors([data.message]);
+        return;
       }
       setMessage(
-      "If an account exists for this email address, you'll receive a " +
-        'password reset link shortly...',
-      )
-    } catch {
-      setErrors(["Internal error"])
+        "If an account exists for this email address, you'll receive a password reset link shortly...",
+      );
+      setEmail('');
+      setErrors([]);
+    } catch (err) {
+      setErrors(['Internal error']);
     }
   }
 
   return (
     <Container>
       <h1>Reset Password</h1>
-      <form onSubmit={handlerSendCodeMsg}>
+      <form onSubmit={handlerLogin}>
         <FormGroup>
-          <label htmlFor="email">Email address</label>
-          <input id="email" type="email" autoComplete="on"
-            value={mail} 
-            onChange={(e)=>setMail(e.target.value)}/>
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" autoComplete="on" value={email}
+            onChange={(e) => setEmail(e.target.value)} />
         </FormGroup>
         <ErrorText>
-          {errors && errors.map((err, i)=><p key={i}>{err}</p>)}
+          {errors && errors.map((err, i) => <p key={i}>{err}</p>)}
         </ErrorText>
         <ButtonSubmitWrapper>
           <button type="submit">Send code</button>
