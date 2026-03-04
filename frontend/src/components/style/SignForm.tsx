@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
-  max-width: 400px;
+  width: 400px;
   margin: auto;
 `;
 
@@ -25,12 +25,13 @@ export const ErrorText = styled.div`
   margin-bottom: 14px;
   p {
     margin: 0;
-  }
+    }
 `;
-
+    
 export const ButtonSubmitWrapper = styled.div`
-  display: flex;
-  justify-content: center;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
 `;
 
 export const SuccessMsg = styled.p`

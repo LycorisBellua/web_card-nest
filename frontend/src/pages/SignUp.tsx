@@ -6,7 +6,7 @@ import {
   ErrorText,
   ButtonSubmitWrapper,
   SuccessMsg,
-} from 'components/style/SignUp';
+} from 'components/style/SignForm';
 import {
   sanitizeUsername,
   sanitizeEmail,
