@@ -1,55 +1,75 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import {sanitizePassword} from 'functions/UserSanitation';
+import {validatePassword} from 'functions/UserValidation';
 
 function	ResetPasswordSecond() {
 	const [searchParams] = useSearchParams()
 	const token = searchParams.get("token")
 	const [email, setEmail] = useState("")
+	const [username, setUsername] = useState("")
 	const [message, setMessage] = useState("")
 	const [uPwd, setUPwd] = useState("")
 	const [uPwdConfirm, setUPwdConfirm] = useState("")
 	const [errors, setErrors] = useState<string[]>([])
+	const navigate = useNavigate()
 
 	useEffect(()=>{
-		async function fetchEmail() {
+		async function fetchUserData() {
 			if (!token) {
 				setErrors(["Invalid reset lnk."])
 				return 
 			}
 			try {
-				const res = await fetch(`/api/token-from-email?token=${token}`)
+				const res = await fetch('/api/verify-reset-token', {
+					method: "POST",
+					headers: {"Content-Type" : "application/json"},
+					body: JSON.stringify({token})
+				})
 				if (!res.ok) {
 					setErrors(["Link is expired."])
 					return
 				}
 				const data = await res.json()
 				setEmail(data.email)
+				setUsername(data.username)
 			} catch {
 				setErrors(["Internal error."])
 			}
 		}
-		fetchEmail()
+		fetchUserData()
 	}, [token])
 
 	async function handleSubmit(e: any) {
 		e.preventDefault()
+		setMessage("")
+		setErrors([])
 		if (!uPwd || !uPwdConfirm) {
 			setErrors(["Please fill all fields"])
 			return
 		}
+		
 		if (!token) {
 			setErrors(["Invalid reset link."])
 			return
 		}
 		if (uPwd !== uPwdConfirm) {
-     		setErrors(["Passwords don't match"]);
-     		return;
+			setErrors(["Passwords don't match"]);
+			return;
+		}
+		const userPwd = sanitizePassword(uPwd)
+		const allErrors = validatePassword(userPwd, username, email)
+		if (allErrors.length > 0) {
+			setErrors(allErrors)
+			return
 		}
 		try {
 			const res = await fetch("/api/reset-password", {
 				method: "POST",
 				headers: {"Content-Type": "application/json"},
-				body: JSON.stringify({token, uPwd})
+				body: JSON.stringify({
+					token, 
+					newPassword: userPwd})
 			})
 			if (!res.ok)
 				throw new Error("Password reset failed.")
@@ -57,6 +77,7 @@ function	ResetPasswordSecond() {
 			setUPwd("")
 			setUPwdConfirm("")
 			setErrors([])
+			setTimeout(() => {navigate('/login')}, 3000);
 		} catch {
 			setErrors(["Error occured"])
 		}
