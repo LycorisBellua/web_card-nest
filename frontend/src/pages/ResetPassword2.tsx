@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {sanitizePassword} from 'functions/UserSanitation';
 import {validatePassword} from 'functions/UserValidation';
+import {
+  Container,
+  FormGroup,
+  ErrorText,
+  ButtonSubmitWrapper,
+  SuccessMsg,
+} from 'components/style/SignForm';
 
 function	ResetPasswordSecond() {
 	const [searchParams] = useSearchParams()
@@ -84,25 +91,29 @@ function	ResetPasswordSecond() {
 	}
 
 	return (
-		<div>
+		<Container>
 			<h1>Reset a new password</h1>
 			<p>Email: {email}</p>
 			<form onSubmit={handleSubmit}>
-				<div>
-					<label>New password</label>
+				<FormGroup>
+					<label>Please enter a new password</label>
 					<input type="password" value={uPwd} onChange={e=>setUPwd(e.target.value)}/>
 					<p>You need a minimum of 8 characters, including one uppercase, one lowercase, one digit and one special character</p>
-				</div>
-				<div>
+				</FormGroup>
+				<FormGroup>
 					<label>Confirm password</label>
 					<input type="password" value={uPwdConfirm} onChange={e=>setUPwdConfirm(e.target.value)}/>
-				</div>
-			{errors.length > 0 && errors.map((err, i)=><p key={i}>{err}</p>)}
-			<button>Confirm</button>
+				</FormGroup>
+				<ErrorText>
+					{errors.length > 0 && errors.map((err, i)=><p key={i}>{err}</p>)}
+				</ErrorText>
+				<ButtonSubmitWrapper>
+					<button>Confirm</button>
+				</ButtonSubmitWrapper>
 			</form>
-			{message && <p>{message}</p>}
+			{message && <SuccessMsg>{message}</SuccessMsg>}
 			<Link to="/login">Go back to login page 👈</Link>
-		</div>
+		</Container>
 	)
 }
 
