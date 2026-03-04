@@ -1,30 +1,46 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  sanitizeEmail,
+  sanitizePassword,
+} from 'functions/UserSanitation';
+import {
+  validateEmail,
+  validatePassword,
+} from 'functions/UserValidation';
 
 function LogIn() {
   const [logMail, setLogMail] = useState('');
   const [logPwd, setLogPwd] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   async function handlerLogin(e: any) {
     e.preventDefault();
     if (!logMail || !logPwd) {
-      setError('Fields should not be empty');
+      setErrors(['Fields should not be empty']);
       return;
     }
+    const loginEmail = sanitizeEmail(logMail)
+    const loginPwd = sanitizePassword(logPwd)
+    const allErrors = [
+      ...validateEmail(loginEmail),
+      ...validatePassword("", loginPwd, loginEmail)
+    ]
+    if (allErrors.length > 0)
+      setErrors(allErrors)
     try {
       const res = await fetch('https://jsonplaceholder.typicode.com/todos');
       const data = await res.json();
       if (!res.ok) {
-        setError(data.massage);
+        setErrors(data.massage);
         return;
       }
       setMessage('Login success! Redirecting to placeholder...');
       setTimeout(() => navigate('/placeholder'), 3000);
     } catch (err) {
-      setError('Internal error');
+      setErrors(['Internal error']);
     }
   }
 
@@ -58,7 +74,7 @@ function LogIn() {
         </div>
         <button type="submit">Log In</button>
       </form>
-      {error && <div>{error}</div>}
+      {errors && <div>{errors}</div>}
       {message && <div>{message}</div>}
       <Link to="/reset-pwd">
         <button>Forgot your password?</button>
