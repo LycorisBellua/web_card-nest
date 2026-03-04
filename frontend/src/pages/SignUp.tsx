@@ -18,12 +18,6 @@ import {
   validatePassword,
 } from 'functions/UserValidation';
 
-type userData = {
-  uname: string;
-  uemail: string;
-  upassword: string;
-};
-
 function SignUp() {
   const [uname, setUname] = useState('');
   const [uemail, setUEmail] = useState('');
@@ -49,23 +43,21 @@ function SignUp() {
       ...validatePassword(password, username, email),
       ...(password != passwordConfirm ? ["Passwords don't match."] : []),
     ];
+    setError(allErrors);
     if (allErrors.length > 0) {
-      setError(allErrors);
       return;
     }
-    setError([]);
-    const newUser: userData = {
-      uname: username,
-      uemail: email,
-      upassword: password,
-    };
     try {
       const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify({
+          uname: username,
+          uemail: email,
+          upassword: password,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -73,7 +65,7 @@ function SignUp() {
         return;
       }
       setMessage(
-        "You've signed up successfully! Redirecting to " + 'placeholder...',
+        "You've signed up successfully! Redirecting to placeholder...",
       );
       setTimeout(() => navigate('/placeholder'), 3000);
     } catch (err) {

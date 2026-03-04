@@ -56,7 +56,7 @@ export function validatePassword(
     errors.push('The password must have at least 1 digit.');
   if (!/[!@#$%^&*()_+\-=\[\]{};':"|,.<>/?]/.test(upassword))
     errors.push('The password must have at least 1 symbol.');
-  if (upassword.includes(uname))
+  if (uname.length && upassword.includes(uname))
     errors.push('The password cannot contain the username.');
   const idx: number = uemail.search('@');
   if (idx != -1) {

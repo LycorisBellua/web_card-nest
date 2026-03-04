@@ -25,13 +25,13 @@ export const ErrorText = styled.div`
   margin-bottom: 14px;
   p {
     margin: 0;
-    }
+  }
 `;
-    
+
 export const ButtonSubmitWrapper = styled.div`
-    display: flex;
-    justify-content: center;
-    margin-bottom: 14px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
 `;
 
 export const SuccessMsg = styled.p`

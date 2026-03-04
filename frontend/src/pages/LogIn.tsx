@@ -1,20 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  sanitizeEmail,
-  sanitizePassword,
-} from 'functions/UserSanitation';
-import {
-  validateEmail,
-  validatePassword,
-} from 'functions/UserValidation';
-import {
   Container,
   FormGroup,
   ErrorText,
   ButtonSubmitWrapper,
   SuccessMsg,
 } from 'components/style/SignForm';
+import { sanitizeEmail, sanitizePassword } from 'functions/UserSanitation';
+import { validateEmail } from 'functions/UserValidation';
 
 function LogIn() {
   const [logMail, setLogMail] = useState('');
@@ -26,34 +20,39 @@ function LogIn() {
   async function handlerLogin(e: any) {
     e.preventDefault();
     if (!logMail || !logPwd) {
-      setErrors(['Fields should not be empty']);
+      setErrors(['Please fill all fields.']);
       return;
     }
-    setErrors([])
-    setMessage("")
-    const loginEmail = sanitizeEmail(logMail)
-    const loginPwd = sanitizePassword(logPwd)
-    const allErrors = [
-      ...validateEmail(loginEmail),
-      ...validatePassword(loginPwd, loginEmail, loginEmail)
-    ]
+    setErrors([]);
+    setMessage('');
+    const loginEmail = sanitizeEmail(logMail);
+    const loginPwd = sanitizePassword(logPwd);
+    const allErrors = [...validateEmail(loginEmail)];
     if (allErrors.length > 0) {
-      console.log(allErrors)
-      setErrors(allErrors)
-      return
+      setErrors(allErrors);
+      return;
     }
     try {
-      const res = await fetch('https://jsonplaceholder.typicode.com/todos');
+      const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uemail: loginEmail,
+          upassword: loginPwd,
+        }),
+      });
       const data = await res.json();
       if (!res.ok) {
         setErrors([data.message]);
         return;
       }
       setMessage('Login success! Redirecting to placeholder...');
-      setLogMail("")
-      setLogPwd("")
-      setErrors([])
-      // setTimeout(() => navigate('/placeholder'), 3000);
+      setLogMail('');
+      setLogPwd('');
+      setErrors([]);
+      setTimeout(() => navigate('/placeholder'), 3000);
     } catch (err) {
       setErrors(['Internal error']);
     }
@@ -64,7 +63,7 @@ function LogIn() {
       <h1>Log In</h1>
       <form onSubmit={handlerLogin}>
         <FormGroup>
-          <label htmlFor="email">Email address</label>
+          <label htmlFor="email">Email</label>
           <input
             id="email"
             type="text"
@@ -76,15 +75,15 @@ function LogIn() {
         <FormGroup>
           <label htmlFor="password">Password</label>
           <input
-              id="password"
-              type="password"
-              autoComplete="on"
-              value={logPwd}
-              onChange={(e) => setLogPwd(e.target.value)}
+            id="password"
+            type="password"
+            autoComplete="on"
+            value={logPwd}
+            onChange={(e) => setLogPwd(e.target.value)}
           ></input>
         </FormGroup>
         <ErrorText>
-          {errors && errors.map((err,i)=><p key={i}>{err}</p>)}
+          {errors && errors.map((err, i) => <p key={i}>{err}</p>)}
         </ErrorText>
         <ButtonSubmitWrapper>
           <button type="submit">Log In</button>
@@ -92,9 +91,9 @@ function LogIn() {
       </form>
       {message && <SuccessMsg>{message}</SuccessMsg>}
       <Link to="/reset-pwd">
-      <ButtonSubmitWrapper>
-        <button>Forgot your password?</button>
-      </ButtonSubmitWrapper>
+        <ButtonSubmitWrapper>
+          <button>Forgot your password?</button>
+        </ButtonSubmitWrapper>
       </Link>
     </Container>
   );
