@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import {sanitizePassword} from 'functions/UserSanitation';
-import {validatePassword} from 'functions/UserValidation';
 import {
   Container,
   FormGroup,
@@ -9,6 +7,8 @@ import {
   ButtonSubmitWrapper,
   SuccessMsg,
 } from 'components/style/SignForm';
+import {sanitizePassword} from 'functions/UserSanitation';
+import {validatePassword} from 'functions/UserValidation';
 
 function	ResetPasswordSecond() {
 	const [searchParams] = useSearchParams()
