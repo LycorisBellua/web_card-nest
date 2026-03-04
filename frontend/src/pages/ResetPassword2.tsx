@@ -60,7 +60,6 @@ function	ResetPasswordSecond() {
 		} catch {
 			setErrors(["Error occured"])
 		}
-
 	}
 
 	return (
