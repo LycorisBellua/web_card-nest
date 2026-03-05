@@ -96,13 +96,13 @@ function	ResetPasswordSecond() {
 			<p>Email: {email}</p>
 			<form onSubmit={handleSubmit}>
 				<FormGroup>
-					<label>Please enter a new password</label>
-					<input type="password" value={uPwd} onChange={e=>setUPwd(e.target.value)}/>
+					<label htmlFor='new-password'>Please enter a new password</label>
+					<input id='new-password' name='new-password' type="password" autoComplete='new-password' value={uPwd} onChange={e=>setUPwd(e.target.value)}/>
 					<p>You need a minimum of 8 characters, including one uppercase, one lowercase, one digit and one special character</p>
 				</FormGroup>
 				<FormGroup>
-					<label>Confirm password</label>
-					<input type="password" value={uPwdConfirm} onChange={e=>setUPwdConfirm(e.target.value)}/>
+					<label htmlFor='confirm-password'>Confirm password</label>
+					<input id='confirm-password' name='confirm-password' type="password" value={uPwdConfirm} onChange={e=>setUPwdConfirm(e.target.value)}/>
 				</FormGroup>
 				<ErrorText>
 					{errors.length > 0 && errors.map((err, i)=><p key={i}>{err}</p>)}

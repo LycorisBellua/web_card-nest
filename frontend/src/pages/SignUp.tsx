@@ -81,6 +81,7 @@ function SignUp() {
           <label htmlFor="u-name">Username</label>
           <input
             id="u-name"
+            name="u-name"
             type="text"
             value={uname}
             onChange={(e) => setUname(e.target.value)}
@@ -90,6 +91,7 @@ function SignUp() {
           <label htmlFor="u-email">Email</label>
           <input
             id="u-email"
+            name="u-email"
             type="email"
             value={uemail}
             onChange={(e) => setUEmail(e.target.value)}
@@ -99,6 +101,7 @@ function SignUp() {
           <label htmlFor="u-pwd">Password</label>
           <input
             id="u-pwd"
+            name="u-pwd"
             type="password"
             value={upassword}
             onChange={(e) => setUPassword(e.target.value)}
