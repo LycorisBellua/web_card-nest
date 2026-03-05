@@ -2,8 +2,10 @@
 
 This project has been created as part of a school curriculum by 
 [Lycoris Bellua](https://github.com/LycorisBellua), 
-[Joshw34](https://github.com/joshw34), [Cngogang](https://github.com/cngogang) 
-and [Hong-CHP](https://github.com/Hong-CHP).  
+[Joshw34](https://github.com/joshw34), 
+[Cngogang](https://github.com/cngogang), 
+[Hong-CHP](https://github.com/Hong-CHP) and 
+[Romtry](https://github.com/Romtry).  
 
 ## Description
 

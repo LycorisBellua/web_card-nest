@@ -60,8 +60,13 @@ function ResetPassword() {
       <form onSubmit={handlerLogin}>
         <FormGroup>
           <label htmlFor="email">Email</label>
-          <input id="email" type="email" autoComplete="on" value={email}
-            onChange={(e) => setEmail(e.target.value)} />
+          <input
+            id="email"
+            type="email"
+            autoComplete="on"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </FormGroup>
         <ErrorText>
           {errors && errors.map((err, i) => <p key={i}>{err}</p>)}
