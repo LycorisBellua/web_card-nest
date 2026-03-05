@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
+import { Container } from 'components/style/SignForm';
 import Logo from 'components/style/Logo';
 import cardNestLogo from '/favicon.svg';
 
 function Home() {
   return (
-    <>
+    <Container>
       <Logo src={cardNestLogo} alt="Card Nest logo" />
       <div>
         <Link to="/signup">
@@ -17,7 +18,7 @@ function Home() {
       <p>
         <Link to="/placeholder">Go the placeholder page</Link>
       </p>
-    </>
+    </Container>
   );
 }
 
