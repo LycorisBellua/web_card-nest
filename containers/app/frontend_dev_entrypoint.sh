@@ -7,4 +7,4 @@ npm install
 npm start &
 cd /app/frontend
 npm install
-exec npm run dev
+exec npm run dev -- --host 0.0.0.0
