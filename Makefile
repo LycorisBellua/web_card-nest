@@ -60,10 +60,10 @@ clean: down
 	@echo "All Images removed"
 
 fclean: clean
-	@docker volume rm transcendence_db-data
+	@docker volume prune -af
 	@$(RM) $(ENV_FILE)
 	@$(RM) $(NGINX_CERTS_DIR)
-	@echo "Database Volume, Nginx SSL Certs and .env file removed"
+	@echo "Docker Volumes, Nginx SSL Certs and .env file removed"
 
 re: fclean all
 
