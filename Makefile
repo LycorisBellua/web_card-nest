@@ -15,6 +15,8 @@ BACKEND = -f $(BASE_COMPOSE_FILE) -f $(BACKEND_DEV_COMPOSE_FILE)
 PROD = -f $(BASE_COMPOSE_FILE) -f $(PROD_COMPOSE_FILE)
 UP = up --build -d
 DOWN = down
+ENTER = docker exec -it
+
 RM = rm -rf
 
 all: prod_up
@@ -65,9 +67,18 @@ fclean: clean
 
 re: fclean all
 
+app_shell:
+	$(ENTER) app sh
+
+nginx_shell:
+	$(ENTER) nginx sh
+
+db_shell:
+	$(ENTER) db sh
+
 logs:
 	@$(COMPOSE) $(FRONTEND) logs -f 2>/dev/null || \
 	$(COMPOSE) $(BACKEND) logs -f 2>/dev/null || \
 	$(COMPOSE) $(PROD) logs -f
 
-.PHONY: all env-file frontend_up backend_up prod_up down clean fclean re logs
+.PHONY: all env-file frontend_up backend_up prod_up down clean fclean re app_shell nginx_shell db_shell logs
