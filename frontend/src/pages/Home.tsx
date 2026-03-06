@@ -16,7 +16,7 @@ function Home() {
         </Link>
       </div>
       <p>
-        <Link to="/placeholder">Go the placeholder page</Link>
+        <Link to="/profile">Go the profile page</Link>
       </p>
     </Container>
   );

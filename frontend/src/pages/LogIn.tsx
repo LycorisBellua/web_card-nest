@@ -52,7 +52,7 @@ function LogIn() {
       setLogMail('');
       setLogPwd('');
       setErrors([]);
-      setTimeout(() => navigate('/placeholder'), 3000);
+      setTimeout(() => navigate('/profile'), 3000);
     } catch (err) {
       setErrors(['Internal error']);
     }

@@ -67,7 +67,7 @@ function SignUp() {
       setMessage(
         "You've signed up successfully! Redirecting to placeholder...",
       );
-      setTimeout(() => navigate('/placeholder'), 3000);
+      setTimeout(() => navigate('/profile'), 3000);
     } catch (err) {
       setError(['Internal error.']);
     }
