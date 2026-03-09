@@ -1,65 +1,22 @@
-import styled from 'styled-components'
 import userAvatar from 'assets/default_user.png'
-import { useEffect, useState } from 'react';
-
-const Page = styled.div`
-	width: 80%;
-	p {
-		margin: 4px
-	}
-`;
-
-const UserInfoStyles = styled.div`
-	background-color: #542C0E;
-	padding: 20px;
-	border-radius: 10px;
-	margin: auto;
-	h2 {
-		margin: 4px
-	}
-
-`;
-
-const UserAvatarStyle = styled.div`
-	position: relative;
-	display: flex;
-	justify-content: center;
-	img {
-		max-width: 100px;
-		max-height: 100px;
-		object-fit: cover;
-	}
-	button {
-		position: absolute;
-	}
-`;
-
-const InfoRow = styled.div`
-	display: flex;
-	justify-content: space-between;
-	padding: 4px;
-	gap: 10px;
-	input {
-		flex: 1;
-	}
-	button {
-		border: none;
-		border-radius: 8px;
-	}
-`;
-
-const DescriptionTextarea = styled.div`
-	p {
-		max-width: 100%;
-		word-wrap: break-word;
-		white-space: pre-wrap;
-	}
-	textarea {
-		width: 100%;
-		box-sizing: border-box;
-		border: none;
-	}
-`;
+import React, { useEffect, useRef, useState } from 'react';
+import {
+	Page,
+	ProfileErrorText,
+	UserInfoStyles,
+	UserAvatarStyle,
+	InfoRow,
+	DescriptionTextarea,
+} from 'components/style/ProfileStyle';
+import {ErrorText} from 'components/style/SignForm';
+import {
+  sanitizeUsername,
+  sanitizeEmail,
+} from 'functions/UserSanitation';
+import {
+  validateUsername,
+  validateEmail,
+} from 'functions/UserValidation';
 
 type User = {
 	id: string | number;
@@ -79,15 +36,14 @@ function Profile() {
 	useEffect(()=>{
 		async function fetchUser() {
 			try{
-				const res = await fetch("https://jsonplaceholder.typicode.com/users/1", {
+				const res = await fetch("http://localhost:3001/users/1", {
 					credentials: "include"
 				})
-				const data = await res.json()
 				if (!res.ok) {
 					setErrors([`Error ${res.status}: ${res.statusText}`])
 					return 
 				}
-				console.log(data)
+				const data = await res.json()
 				setUser(data)
 			} catch (err) {
 				setErrors(["Network error, please try again."])
@@ -98,7 +54,7 @@ function Profile() {
 
 	async function updateUserField(field: keyof User, value: any) {
 		if (!value) return
-		await fetch('https://jsonplaceholder.typicode.com/posts/1', {
+		await fetch('http://localhost:3001/users/1', {
 			method: 'PATCH',
 			headers: {"Content-type" : "application/json"},
 			body: JSON.stringify({[field]: value})
@@ -108,8 +64,8 @@ function Profile() {
 
 	return (
 		<Page>
-			{errors.length > 0 && <p>{errors}</p>}
 			<UserInfo user={user} OnUpdateUserField={updateUserField} />
+			{errors.length > 0 && <ErrorText>{errors}</ErrorText>}
 		</Page>
 	)
 }
@@ -122,12 +78,10 @@ type UserInfoProps = {
 function UserInfo({user, OnUpdateUserField} : UserInfoProps) {
 	if (!user) return
 	const {username, email, unverifiedEmail, rank, description, avatarURL, registred} = user
+	
 	return (
 		<UserInfoStyles>
-			<UserAvatarStyle>
-				<img src={avatarURL? avatarURL : userAvatar} alt='avatar' />
-				<button>Edit🖊️​</button>
-			</UserAvatarStyle>
+			<UpdateUserAvatar avatarURL={avatarURL} OnUpdateUserField={OnUpdateUserField}/>
 			<div>
 				<UpdateUsername username={username} OnUpdateUserField={OnUpdateUserField}/>
 				<InfoRow>
@@ -137,11 +91,47 @@ function UserInfo({user, OnUpdateUserField} : UserInfoProps) {
 					<p>Registre date: {registred}</p>
 				</InfoRow>
 				<UpdateUserEmail email={email} OnUpdateUserField={OnUpdateUserField} />
-				{!unverifiedEmail && <VerifyEmail unverifiedEmail={unverifiedEmail} />}
+				{unverifiedEmail && <VerifyEmail unverifiedEmail={unverifiedEmail} />}
 				<UpdateUserDescription description={description} OnUpdateUserField={OnUpdateUserField}/>
-
 			</div>
 		</UserInfoStyles>
+	)
+}
+
+type UpdateUserAvatarProps = { 
+	avatarURL: string;
+	OnUpdateUserField: (field: keyof User, value: any)=>Promise<void>;
+}
+
+function UpdateUserAvatar({avatarURL, OnUpdateUserField} : UpdateUserAvatarProps) {
+	const imgInputRef = useRef<HTMLInputElement | null>(null)
+	function handleAvatar() {
+		imgInputRef.current?.click()
+	}
+
+	async function handleUpdateAvatar(e:React.ChangeEvent<HTMLInputElement>) {
+		const file = e.target.files?.[0]
+		if (!file) return
+		const avatarForm = new FormData()
+		avatarForm.append("avatar", file)
+		const res = await fetch("/api/upload/avatar", {
+			method: "POST",
+			body: avatarForm,
+		})
+		if (!res.ok)
+			return
+		const data = await res.json()
+		await OnUpdateUserField("avatarURL", data.url)
+		// const imgUrl = URL.createObjectURL(file)
+		// await OnUpdateUserField("avatarURL", imgUrl)
+	}
+
+	return (
+		<UserAvatarStyle>
+			<img src={avatarURL? avatarURL : userAvatar} alt='avatar'/>
+			<button onClick={handleAvatar}>Edit🖊️​</button>
+			<input type="file" accept=".png" ref={imgInputRef} onChange={handleUpdateAvatar} />
+		</UserAvatarStyle>
 	)
 }
 
@@ -151,19 +141,40 @@ type UpdateUsernameProps = {
 }
 
 function UpdateUsername({username, OnUpdateUserField} : UpdateUsernameProps) {
+	const inputRef = useRef<HTMLInputElement>(null)
+	const [errors, setErrors] = useState<string[]>([])
 	const [edit, setEdit] = useState(false)
 	const [value, setValue] = useState("")
 
+	useEffect(()=>{
+		if (edit)
+			inputRef.current?.focus()
+	}, [edit])
 	async function handleSaving() {
-		await OnUpdateUserField("username", value)
+		const username = sanitizeUsername(value)
+		if (!username) {
+			setErrors([])
+			setEdit(false)
+			return
+		}
+		const allErrors = [...validateUsername(username)]
+		if (allErrors.length > 0) {
+			setErrors(allErrors)
+			setValue("")
+			return
+		}
+		await OnUpdateUserField("username", username)
 		setEdit(false)
+		setErrors([])
 	}
-
 	return (
-		<InfoRow>
-			<p>Username: {edit? <input type="text" value={value} onChange={e=>setValue(e.target.value)}/> : username}</p>
-			<button onClick={edit? handleSaving : ()=>setEdit(true)}>{edit? "save" : "🖊️"}</button>
-		</InfoRow>
+		<div>
+			<InfoRow>
+				<p>Username: {edit? <input type="text" ref={inputRef} value={value} onChange={e=>setValue(e.target.value)}/> : username}</p>
+				<button onClick={edit? handleSaving : ()=>setEdit(true)}>{edit? "save" : "🖊️"}</button>
+			</InfoRow>
+			{errors && errors.map((err, i)=><ProfileErrorText key={i}>{err}</ProfileErrorText>)}
+		</div>
 	)
 }
 
@@ -175,21 +186,43 @@ type UpdateUserEmailProps = {
 function UpdateUserEmail({email, OnUpdateUserField} : UpdateUserEmailProps) {
 	const [edit, setEdit] = useState(false)
 	const [value, setValue] = useState("")
+	const inputRef = useRef<HTMLInputElement>(null)
+	const [errors, setErrors] = useState<string[]>([])
 
+	useEffect(()=>{
+		if (edit)
+			inputRef.current?.focus()
+	}, [edit])
 	async function handleSaving() {
-		await OnUpdateUserField("email", value)
+		const userEmail = sanitizeEmail(value)
+		if (!userEmail) {
+			setErrors([])
+			setEdit(false)
+			return
+		}
+		const allErrors = [...validateEmail(userEmail)]
+		if (allErrors.length > 0) {
+			setErrors(allErrors)
+			setValue("")
+			return
+		}
+		await OnUpdateUserField("email", userEmail)
 		setEdit(false)
+		setErrors([])
 	}
 
 	return (
-		<InfoRow>
-			<p>Email: {edit? 
-				<input type='email'
-					value={value}
-					onChange={e=>setValue(e.target.value)}/>
-					: email}</p>
-			<button onClick={edit? handleSaving : ()=>setEdit(true)}>{edit? "save" : "🖊️"}</button>
-		</InfoRow>
+		<div>
+			<InfoRow>
+				<p>Email: {edit? 
+					<input type='email'
+						value={value} ref={inputRef}
+						onChange={e=>setValue(e.target.value)}/>
+						: email}</p>
+				<button onClick={edit? handleSaving : ()=>setEdit(true)}>{edit? "save" : "🖊️"}</button>
+			</InfoRow>
+		{errors && errors.map((err, i)=><ProfileErrorText key={i}>{err}</ProfileErrorText>)}
+		</div>
 	)
 }
 
@@ -206,7 +239,7 @@ function VerifyEmail({unverifiedEmail} : {unverifiedEmail : string}) {
 				setMessage(`Error ${res.status} : ${res.statusText}`)
 				return
 			}
-			setMessage("You will receive shortly a confirmation by email.")
+			setMessage("You'll receive a password reset link shortly....")
 		} catch (err) {
 			setMessage("Error occured")
 		}
@@ -231,7 +264,12 @@ type UpdateUserDescription = {
 function UpdateUserDescription({description, OnUpdateUserField} : UpdateUserDescription) {
 	const [edit, setEdit] = useState(false)
 	const [value, setValue] = useState("")
+	const inputRef = useRef<HTMLInputElement>(null)
 
+	useEffect(()=>{
+		if (edit)
+			inputRef.current?.focus()
+	}, [edit])
 	async function handleSaving() {
 		await OnUpdateUserField("description", value)
 		setEdit(false)
