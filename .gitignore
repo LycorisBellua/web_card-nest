@@ -3,6 +3,7 @@ dist/
 dist-ssr/
 build/
 node_modules/
+generated/
 
 # Logs
 logs/
