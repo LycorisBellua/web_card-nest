@@ -5,6 +5,7 @@ import NotFound from 'pages/NotFound';
 import Placeholder from 'pages/Placeholder';
 import SignUp from 'pages/SignUp';
 import LogIn from 'pages/LogIn';
+// import SendMail from 'pages/SendMail';
 import ResetPassword from 'pages/ResetPassword';
 
 export function Layout() {
@@ -25,6 +26,7 @@ export const routes = [
       { path: 'placeholder', element: <Placeholder /> },
       { path: 'signup', element: <SignUp /> },
       { path: 'login', element: <LogIn /> },
+      // { path: 'SendMail', element: <SendMail/>},
       { path: 'reset-pwd', element: <ResetPassword /> },
       { path: '*', element: <NotFound /> },
     ],
