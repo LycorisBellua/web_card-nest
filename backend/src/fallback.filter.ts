@@ -1,6 +1,11 @@
 import {
-  ExceptionFilter, Catch, ArgumentsHost,
-  HttpException, HttpStatus, NotFoundException, Injectable
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  NotFoundException,
+  Injectable,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { SsrService } from './ssr/ssr.service';
@@ -22,13 +27,15 @@ export class FallbackFilter implements ExceptionFilter {
       return response.status(200).send(html);
     }
 
-    const status = exception instanceof HttpException
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message = exception instanceof HttpException
-      ? exception.message
-      : 'Internal server error';
+    const message =
+      exception instanceof HttpException
+        ? exception.message
+        : 'Internal server error';
 
     response.status(status).json({ statusCode: status, message });
   }

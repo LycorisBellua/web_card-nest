@@ -9,7 +9,7 @@ export class SsrService {
   constructor() {
     this.template = readFileSync(
       join(__dirname, '..', '..', 'client', 'dist', 'index.html'),
-      'utf-8'
+      'utf-8',
     );
   }
 
