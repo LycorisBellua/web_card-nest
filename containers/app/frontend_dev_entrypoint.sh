@@ -4,6 +4,7 @@ set -e
 
 cd /app/backend
 npm install
+npx prisma migrate deploy
 npm start &
 cd /app/frontend
 npm install

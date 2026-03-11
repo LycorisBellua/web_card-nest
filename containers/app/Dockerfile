@@ -17,6 +17,8 @@ RUN cd backend && npm install && npm run build
 RUN mv backend/dist ./ && \
     mv backend/client ./ && \
     mv backend/node_modules ./ && \
+    mv backend/prisma.config.ts ./ && \
+    mv backend/prisma ./ && \
     rm -rf frontend backend
 ENV NODE_ENV=production
-CMD ["node", "./dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node ./dist/main.js"]
