@@ -4,6 +4,7 @@ services:
       target: backend_dev
     ports:
       - "3000:3000"
+      - "5555:5555"
     environment:
       NODE_ENV: development
     volumes:
