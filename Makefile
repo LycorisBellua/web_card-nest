@@ -36,7 +36,7 @@ certs:
 		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 			-keyout $(NGINX_CERTS_DIR)/key.pem \
 			-out $(NGINX_CERTS_DIR)/cert.pem \
-			-subj "/CN=localhost"; \
+			-subj "/CN=localhost" 2>/dev/null; \
 		echo "Generated SSL certs"; \
 	fi
 
