@@ -1,9 +1,9 @@
-FROM node:24-alpine AS frontend_dev
+FROM ghcr.io/joshw34/dev_containers/card_nest_dev:latest AS frontend_dev
 COPY containers/app/frontend_dev_entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-FROM node:24-alpine AS backend_dev
+FROM ghcr.io/joshw34/dev_containers/card_nest_dev:latest AS backend_dev
 COPY containers/app/backend_dev_entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
