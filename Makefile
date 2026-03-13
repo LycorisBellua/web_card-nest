@@ -59,7 +59,7 @@ clean: down
 	@docker system prune -af
 	@echo "All Images removed"
 
-fclean: fix-perms clean
+fclean: fix-owner clean
 	@docker volume prune -af
 	@$(RM) $(ENV_FILE)
 	@$(RM) $(NGINX_CERTS_DIR)
@@ -76,7 +76,7 @@ nginx_shell:
 db_shell:
 	$(ENTER) db sh
 
-fix-perms:
+fix-owner:
 	@docker run --rm -v .:/repo busybox:uclibc chown -R $(shell id -u):$(shell id -g) /repo
 
 logs:
