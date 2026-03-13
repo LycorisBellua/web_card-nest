@@ -21,6 +21,9 @@ function Placeholder() {
       <p>
         <Link to="/">Go back to the home page</Link>
       </p>
+      <p>
+        <Link to="/reset-pwd2">Go to the reset password second page</Link>
+      </p>
     </>
   );
 }
