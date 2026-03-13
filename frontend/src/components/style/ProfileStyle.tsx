@@ -69,3 +69,8 @@ export const DescriptionTextarea = styled.div`
 		border: none;
 	}
 `;
+
+export const VerifyEmailMsg = styled.p`
+	margin-left: 20px;
+	font-size: 12px;
+`;

@@ -48,7 +48,7 @@ function LogIn() {
         setErrors([data.message]);
         return;
       }
-      setMessage('Login success! Redirecting to placeholder...');
+      setMessage('Login success! Redirecting to your profile...');
       setLogMail('');
       setLogPwd('');
       setErrors([]);

@@ -7,6 +7,7 @@ import {
 	UserAvatarStyle,
 	InfoRow,
 	DescriptionTextarea,
+	VerifyEmailMsg,
 } from 'components/style/ProfileStyle';
 import {ErrorText} from 'components/style/SignForm';
 import {
@@ -26,7 +27,7 @@ type User = {
 	rank: string;
 	description: string;
 	avatarURL: string;
-	registred: string;
+	registered: string;
 }
 
 function Profile() {
@@ -36,7 +37,7 @@ function Profile() {
 	useEffect(()=>{
 		async function fetchUser() {
 			try{
-				const res = await fetch("http://localhost:3001/users/1", {
+				const res = await fetch("/api/users/1", {
 					credentials: "include"
 				})
 				if (!res.ok) {
@@ -54,7 +55,7 @@ function Profile() {
 
 	async function updateUserField(field: keyof User, value: any) {
 		if (!value) return
-		await fetch('http://localhost:3001/users/1', {
+		await fetch('/api/users/1', {
 			method: 'PATCH',
 			headers: {"Content-type" : "application/json"},
 			body: JSON.stringify({[field]: value})
@@ -77,7 +78,7 @@ type UserInfoProps = {
 
 function UserInfo({user, OnUpdateUserField} : UserInfoProps) {
 	if (!user) return
-	const {username, email, unverifiedEmail, rank, description, avatarURL, registred} = user
+	const {username, email, unverifiedEmail, rank, description, avatarURL, registered} = user
 	
 	return (
 		<UserInfoStyles>
@@ -88,7 +89,7 @@ function UserInfo({user, OnUpdateUserField} : UserInfoProps) {
 					<p>Rank: {rank}</p>
 				</InfoRow>
 				<InfoRow>
-					<p>Registre date: {registred}</p>
+					<p>Registration date: {registered}</p>
 				</InfoRow>
 				<UpdateUserEmail email={email} OnUpdateUserField={OnUpdateUserField} />
 				{unverifiedEmail && <VerifyEmail unverifiedEmail={unverifiedEmail} />}
@@ -251,7 +252,7 @@ function VerifyEmail({unverifiedEmail} : {unverifiedEmail : string}) {
 				<p>Unverified email : {unverifiedEmail}</p>
 				<button onClick={handleVerifyEmail}>verify🖊️</button>
 			</InfoRow>
-			{message && <p style={{marginLeft: "20px", fontSize: '12px'}}>{message}</p>}
+			{message && <VerifyEmailMsg>{message}</VerifyEmailMsg>}
 		</div>
 	)
 }

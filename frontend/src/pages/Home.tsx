@@ -15,9 +15,6 @@ function Home() {
           <button>Log In</button>
         </Link>
       </div>
-      <p>
-        <Link to="/profile">Go the profile page</Link>
-      </p>
     </Container>
   );
 }
