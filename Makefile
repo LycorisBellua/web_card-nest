@@ -60,8 +60,6 @@ clean: down
 	@echo "All Images removed"
 
 fclean: clean
-	@docker run --rm -v ./backend:/app/backend busybox:uclibc sh -c "rm -rf /app/backend/dist /app/backend/client /app/backend/src/generated"
-	@docker system prune -af
 	@docker volume prune -af
 	@$(RM) $(ENV_FILE)
 	@$(RM) $(NGINX_CERTS_DIR)
