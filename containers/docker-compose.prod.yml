@@ -2,6 +2,8 @@ services:
   app:
     build:
       target: prod
+    environment:
+      NODE_ENV: production
     networks:
       - app-net
 
@@ -10,8 +12,7 @@ services:
     container_name: nginx
     restart: unless-stopped
     ports:
-      - '443:443'
-      - '80:80'
+      - '8080:8080'
     depends_on:
       - app
     networks:

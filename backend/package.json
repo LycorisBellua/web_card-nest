@@ -7,9 +7,11 @@
   "license": "UNLICENSED",
   "scripts": {
     "postinstall": "prisma generate",
+    "prebuild": "rm -rf dist/* || true",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
+    "prestart:dev": "rm -rf dist/* || true",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",

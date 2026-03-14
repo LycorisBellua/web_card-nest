@@ -4,8 +4,22 @@ services:
       target: backend_dev
     ports:
       - "3000:3000"
+      - "5555:5555"
+      - "50006:50006"
     environment:
       NODE_ENV: development
     volumes:
       - ../backend:/app/backend
       - ../frontend:/app/frontend
+      - backend_node_modules:/app/backend/node_modules
+      - frontend_node_modules:/app/frontend/node_modules
+      - backend_dist:/app/backend/dist
+      - backend_client:/app/backend/client
+      - backend_generated:/app/backend/src/generated
+
+volumes:
+  frontend_node_modules:
+  backend_node_modules:
+  backend_dist:
+  backend_client:
+  backend_generated:
