@@ -18,6 +18,7 @@ PROD = -f $(BASE_COMPOSE_FILE) -f $(PROD_COMPOSE_FILE)
 UP = up --build -d
 DOWN = down
 ENTER = docker exec -it
+APP_CMD = docker exec -t app sh -c
 
 RM = rm -rf
 
@@ -88,5 +89,27 @@ logs:
 	$(COMPOSE) $(BACKEND) logs -f 2>/dev/null || \
 	$(COMPOSE) $(PROD) logs -f
 
-.PHONY: all env-file dirs frontend_up backend_up prod_up down clean fclean re \
-	app_shell nginx_shell db_shell logs
+prettier:
+	@$(APP_CMD) "npx --no --prefix frontend prettier --write --log-level \
+		silent frontend; npx --no --prefix backend prettier --write \
+		--log-level silent backend" 2>/dev/null || true
+
+prettier_ls:
+	@$(APP_CMD) "npx --no --prefix frontend prettier --write --list-different \
+		frontend; npx --no --prefix backend prettier --write --list-different \
+		backend" 2>/dev/null || true
+
+prettier_check_only:
+	@$(APP_CMD) "npx --no --prefix frontend prettier --list-different \
+		frontend; npx --no --prefix backend prettier --list-different \
+		backend" 2>/dev/null || true
+
+eslint_frontend:
+	@$(APP_CMD) "cd frontend && npx --no eslint" 2>/dev/null || true
+
+eslint_backend:
+	@$(APP_CMD) "cd backend && npx --no eslint" 2>/dev/null || true
+
+.PHONY: all env-file dirs frontend_up backend_up prod_up down clean fclean re
+.PHONY: app_shell nginx_shell db_shell logs
+.PHONY: prettier prettier-ls prettier-check-only eslint_frontend eslint_backend
