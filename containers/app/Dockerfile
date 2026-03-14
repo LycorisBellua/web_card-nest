@@ -1,9 +1,13 @@
-FROM ghcr.io/joshw34/dev_containers/card_nest_dev:latest AS frontend_dev
+FROM node:24-alpine AS dev_base
+RUN apk add --no-cache bash make git
+WORKDIR /app
+
+FROM dev_base AS frontend_dev
 COPY containers/app/frontend_dev_entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-FROM ghcr.io/joshw34/dev_containers/card_nest_dev:latest AS backend_dev
+FROM dev_base AS backend_dev
 COPY containers/app/backend_dev_entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
@@ -20,5 +24,4 @@ RUN mv backend/dist ./ && \
     mv backend/prisma.config.ts ./ && \
     mv backend/prisma ./ && \
     rm -rf frontend backend
-ENV NODE_ENV=production
 CMD ["sh", "-c", "npx prisma migrate deploy && node ./dist/main.js"]
