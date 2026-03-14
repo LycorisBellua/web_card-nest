@@ -10,7 +10,7 @@ function Placeholder() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data) => setMessage(data.message))
+      .then((data: { message: string }) => setMessage(data.message))
       .catch(() => setMessage('Backend unavailable'));
   }, []);
 

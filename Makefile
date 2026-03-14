@@ -104,12 +104,12 @@ prettier_check_only:
 		frontend; npx --no --prefix backend prettier --list-different \
 		backend" 2>/dev/null || true
 
-eslint_frontend:
+eslint_frontend: prettier
 	@$(APP_CMD) "cd frontend && npx --no eslint" 2>/dev/null || true
 
-eslint_backend:
+eslint_backend: prettier
 	@$(APP_CMD) "cd backend && npx --no eslint" 2>/dev/null || true
 
 .PHONY: all env-file dirs frontend_up backend_up prod_up down clean fclean re
 .PHONY: app_shell nginx_shell db_shell logs
-.PHONY: prettier prettier-ls prettier-check-only eslint_frontend eslint_backend
+.PHONY: prettier prettier_ls prettier_check_only eslint_frontend eslint_backend

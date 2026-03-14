@@ -24,7 +24,7 @@ function ResetPasswordSecond() {
   useEffect(() => {
     async function fetchUserData() {
       if (!token) {
-        setErrors(['Invalid reset lnk.']);
+        setErrors(['Invalid reset link.']);
         return;
       }
       try {
@@ -37,17 +37,17 @@ function ResetPasswordSecond() {
           setErrors(['Link is expired.']);
           return;
         }
-        const data = await res.json();
+        const data = (await res.json()) as { email: string; username: string };
         setEmail(data.email);
         setUsername(data.username);
       } catch {
         setErrors(['Internal error.']);
       }
     }
-    fetchUserData();
+    void fetchUserData();
   }, [token]);
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage('');
     setErrors([]);
@@ -85,7 +85,7 @@ function ResetPasswordSecond() {
       setUPwdConfirm('');
       setErrors([]);
       setTimeout(() => {
-        navigate('/login');
+        void navigate('/login');
       }, 3000);
     } catch {
       setErrors(['Error occured']);
@@ -96,7 +96,11 @@ function ResetPasswordSecond() {
     <Container>
       <h1>Reset a new password</h1>
       <p>Email: {email}</p>
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={(e) => {
+          void handleSubmit(e);
+        }}
+      >
         <FormGroup>
           <label htmlFor="new-password">Please enter a new password</label>
           <input
