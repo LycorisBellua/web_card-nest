@@ -11,6 +11,8 @@ services:
     volumes:
       - ../backend:/app/backend
       - ../frontend:/app/frontend
+      - ../.prettierrc:/app/.prettierrc:ro
+      - ../.prettierignore:/app/.prettierignore:ro
       - backend_node_modules:/app/backend/node_modules
       - frontend_node_modules:/app/frontend/node_modules
       - backend_dist:/app/backend/dist

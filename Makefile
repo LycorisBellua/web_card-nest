@@ -7,8 +7,8 @@ PROD_COMPOSE_FILE = ./containers/docker-compose.prod.yml
 # Environment / Certs / Volume Dirs
 ENV_FILE = ./containers/.env
 NGINX_CERTS_DIR = ./containers/nginx/certs
-VOLUME_DIRS = ./backend/node_modules ./backend/dist ./backend/client \
-	./backend/src/generated ./frontend/node_modules
+VOLUME_DIRS = ./frontend/node_modules ./backend/node_modules ./backend/dist \
+	./backend/client ./backend/src/generated
 
 # Docker Commands
 COMPOSE = docker compose
