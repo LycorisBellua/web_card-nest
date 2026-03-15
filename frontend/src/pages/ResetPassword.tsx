@@ -15,7 +15,7 @@ function ResetPassword() {
   const [errors, setErrors] = useState<string[]>([]);
   const [message, setMessage] = useState('');
 
-  async function handlerLogin(e: any) {
+  async function handlerLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!email) {
       setErrors(['Please fill all fields.']);
@@ -39,7 +39,7 @@ function ResetPassword() {
           uemail: uEmail,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { message: string };
       if (!res.ok) {
         setErrors([data.message]);
         return;
@@ -49,7 +49,7 @@ function ResetPassword() {
       );
       setEmail('');
       setErrors([]);
-    } catch (err) {
+    } catch {
       setErrors(['Internal error']);
     }
   }
@@ -57,7 +57,11 @@ function ResetPassword() {
   return (
     <Container>
       <h1>Reset Password</h1>
-      <form onSubmit={handlerLogin}>
+      <form
+        onSubmit={(e) => {
+          void handlerLogin(e);
+        }}
+      >
         <FormGroup>
           <label htmlFor="email">Email</label>
           <input

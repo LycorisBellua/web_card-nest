@@ -5,7 +5,7 @@ import {
   StaticRouterProvider,
 } from 'react-router-dom';
 import { ServerStyleSheet } from 'styled-components';
-import { routes } from 'App';
+import routes from 'routes';
 
 /*
   About the argument of `Request`:
@@ -15,13 +15,16 @@ import { routes } from 'App';
   - It just needed to look like a valid URL, instead of only providing the path.
 */
 export async function render(url: string) {
-  const { query, dataRoutes } = createStaticHandler(routes);
+  const handler = createStaticHandler(routes);
   const request = new Request(`http://localhost${url}`);
-  const context = await query(request);
+  const context = await handler.query(request);
 
-  if (context instanceof Response) throw context;
+  if (context instanceof Response)
+    throw new Error(
+      `SSR redirect: ${context.status} ${context.headers.get('location') ?? ''}`,
+    );
 
-  const router = createStaticRouter(dataRoutes, context);
+  const router = createStaticRouter(handler.dataRoutes, context);
   const sheet = new ServerStyleSheet();
 
   try {

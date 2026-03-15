@@ -17,7 +17,7 @@ function LogIn() {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  async function handlerLogin(e: any) {
+  async function handlerLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!logMail || !logPwd) {
       setErrors(['Please fill all fields.']);
@@ -43,7 +43,7 @@ function LogIn() {
           upassword: loginPwd,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { message: string };
       if (!res.ok) {
         setErrors([data.message]);
         return;
@@ -53,7 +53,7 @@ function LogIn() {
       setLogPwd('');
       setErrors([]);
       setTimeout(() => navigate('/profile'), 3000);
-    } catch (err) {
+    } catch {
       setErrors(['Internal error']);
     }
   }
@@ -61,7 +61,11 @@ function LogIn() {
   return (
     <Container>
       <h1>Log In</h1>
-      <form onSubmit={handlerLogin}>
+      <form
+        onSubmit={(e) => {
+          void handlerLogin(e);
+        }}
+      >
         <FormGroup>
           <label htmlFor="email">Email</label>
           <input

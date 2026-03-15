@@ -14,9 +14,11 @@ export class SsrService {
   }
 
   async render(url: string): Promise<string> {
-    const { render } = await import(
+    const { render } = (await import(
       join(__dirname, '..', '..', 'client', 'dist-ssr', 'main-server.cjs')
-    );
+    )) as {
+      render: (url: string) => Promise<{ html: string; styleTags: string }>;
+    };
     const { html, styleTags } = await render(url);
     return this.template
       .replace('<!--ssr-outlet-->', html)

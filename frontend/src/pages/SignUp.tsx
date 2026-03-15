@@ -27,7 +27,7 @@ function SignUp() {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  async function handlerSubmit(e: any) {
+  async function handlerSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!uname || !uemail || !upassword || !upwdConfirm) {
       setError(['Please fill all fields.']);
@@ -59,16 +59,18 @@ function SignUp() {
           upassword: password,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { message: string };
       if (!res.ok) {
-        setError(data.message);
+        setError([data.message]);
         return;
       }
       setMessage(
         "You've signed up successfully! Redirecting to your profile...",
       );
-      setTimeout(() => navigate('/profile'), 3000);
-    } catch (err) {
+      setTimeout(() => {
+        void navigate('/profile');
+      }, 3000);
+    } catch {
       setError(['Internal error.']);
     }
   }
@@ -76,7 +78,11 @@ function SignUp() {
   return (
     <Container>
       <h1>Sign Up</h1>
-      <form onSubmit={handlerSubmit}>
+      <form
+        onSubmit={(e) => {
+          void handlerSubmit(e);
+        }}
+      >
         <FormGroup>
           <label htmlFor="u-name">Username</label>
           <input
