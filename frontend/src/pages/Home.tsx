@@ -14,9 +14,6 @@ function Home() {
         <Link to="/login">
           <button>Log In</button>
         </Link>
-        {/* <Link to="/SendMail">
-          <button>Send Mail</button>
-        </Link> */}
       </div>
       <p>
         <Link to="/placeholder">Go the placeholder page</Link>

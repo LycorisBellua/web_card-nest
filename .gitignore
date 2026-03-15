@@ -66,3 +66,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Nginx Certs
 containers/nginx/certs
+
+# Secrets
+gmail_cred.txt
