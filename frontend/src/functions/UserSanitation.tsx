@@ -3,7 +3,7 @@ export function sanitizeUsername(uname: string): string {
   return uname
     .normalize('NFC')
     .trim()
-    .replace(/[\x00-\x1F\x7F]/g, '')
+    .replace(/\p{Cc}/gu, '')
     .replace(/\s+/g, ' ');
 }
 

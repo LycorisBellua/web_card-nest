@@ -1,0 +1,7 @@
+README.md
+containers/
+frontend/node_modules/
+backend/node_modules/
+backend/dist/
+backend/client/
+backend/src/generated/

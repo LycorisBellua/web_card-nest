@@ -1,5 +1,5 @@
 export function validateUsername(uname: string): string[] {
-  let errors: string[] = [];
+  const errors: string[] = [];
   if (!uname) {
     errors.push('The username cannot be empty.');
   }
@@ -10,12 +10,12 @@ export function validateUsername(uname: string): string[] {
 }
 
 export function validateEmail(uemail: string): string[] {
-  let errors: string[] = [];
+  const errors: string[] = [];
   if (!uemail) {
     errors.push('The email address cannot be empty.');
   }
   const noEmoji = !/\p{Extended_Pictographic}/u.test(uemail);
-  if (!uemail.includes('@') || /[\x00-\x1F\x7F]/.test(uemail) || !noEmoji) {
+  if (!uemail.includes('@') || /\p{Cc}/gu.test(uemail) || !noEmoji) {
     errors.push('The email address is not valid.');
     return errors;
   }
@@ -25,7 +25,7 @@ export function validateEmail(uemail: string): string[] {
     return errors;
   }
   const [local, domain] = parts;
-  const illegalChar = /[\s&='",<>\\{}\[\]!#$%*+/?^|~]/;
+  const illegalChar = /[\s&='",<>\\{}[\]!#$%*+/?^|~]/;
   if (
     local.startsWith('.') ||
     local.endsWith('.') ||
@@ -45,7 +45,7 @@ export function validatePassword(
   uname: string,
   uemail: string,
 ): string[] {
-  let errors: string[] = [];
+  const errors: string[] = [];
   if (!upassword || upassword.length < 8)
     errors.push('The password must have at least 8 characters.');
   if (!/[A-Z]/.test(upassword))
@@ -54,7 +54,7 @@ export function validatePassword(
     errors.push('The password must have at least 1 lowercase letter.');
   if (!/\d/.test(upassword))
     errors.push('The password must have at least 1 digit.');
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"|,.<>/?]/.test(upassword))
+  if (!/[!@#$%^&*()_+\-=[\]{};':"|,.<>/?]/.test(upassword))
     errors.push('The password must have at least 1 symbol.');
   if (uname.length && upassword.includes(uname))
     errors.push('The password cannot contain the username.');
@@ -65,7 +65,7 @@ export function validatePassword(
       errors.push('The password cannot contain the email address.');
     }
   }
-  if (/[\x00-\x1F\x7F]/.test(upassword)) {
+  if (/\p{Cc}/gu.test(upassword)) {
     errors.push('The password cannot have non-printable characters.');
   }
   if (upassword.length > 128) {
