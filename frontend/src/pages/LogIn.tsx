@@ -48,11 +48,11 @@ function LogIn() {
         setErrors([data.message]);
         return;
       }
-      setMessage('Login success! Redirecting to placeholder...');
+      setMessage('Login success! Redirecting to your profile...');
       setLogMail('');
       setLogPwd('');
       setErrors([]);
-      setTimeout(() => navigate('/placeholder'), 3000);
+      setTimeout(() => navigate('/profile'), 3000);
     } catch {
       setErrors(['Internal error']);
     }

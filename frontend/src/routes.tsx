@@ -1,6 +1,5 @@
 import Layout from 'App';
 import Home from 'pages/Home';
-import Placeholder from 'pages/Placeholder';
 import SignUp from 'pages/SignUp';
 import LogIn from 'pages/LogIn';
 import ResetPassword from 'pages/ResetPassword';
@@ -16,7 +15,6 @@ const routes = [
     element: <Layout />,
     children: [
       { index: true, element: <Home /> },
-      { path: 'placeholder', element: <Placeholder /> },
       { path: 'signup', element: <SignUp /> },
       { path: 'login', element: <LogIn /> },
       { path: 'reset-pwd', element: <ResetPassword /> },
