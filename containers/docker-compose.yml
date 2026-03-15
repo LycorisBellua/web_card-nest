@@ -12,6 +12,8 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      GMAIL_EMAIL: ${GMAIL_EMAIL}
+      GMAIL_PASSWORD: ${GMAIL_PASSWORD}
     networks:
       - db-net
     restart: unless-stopped

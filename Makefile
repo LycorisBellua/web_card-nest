@@ -27,10 +27,11 @@ all: prod_up
 env-file:
 	@if [ ! -f $(ENV_FILE) ]; then \
 		echo "NODE_ENV=" > $(ENV_FILE); \
-		echo "POSTGRES_USER=db_user" > $(ENV_FILE); \
+		echo "POSTGRES_USER=db_user" >> $(ENV_FILE); \
 		echo "POSTGRES_PASSWORD=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
 		echo "POSTGRES_DB=transcendence" >> $(ENV_FILE); \
 		echo "PGDATA=/var/lib/postgresql/data/pgdata" >> $(ENV_FILE); \
+		cat ../gmail_cred.txt >> $(ENV_FILE); \
 		echo "Generated .env file";\
 	fi
 
