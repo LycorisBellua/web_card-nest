@@ -10,6 +10,7 @@ export const Page = styled.div`
 
 export const ProfileErrorText = styled(ErrorText)`
 	margin-left: 20px;
+
 `;
 
 export const UserInfoStyles = styled.div`
@@ -20,22 +21,28 @@ export const UserInfoStyles = styled.div`
 	h2 {
 		margin: 4px
 	}
-
+	.main {
+		margin-top: 16px;
+	}
 `;
 
 export const UserAvatarStyle = styled.div`
-	position: relative;
 	display: flex;
-	justify-content: center;
+	flex-direction: column;
+	align-items: center;
+	position: relative;
+
 	img {
 		max-width: 100px;
 		max-height: 100px;
 		object-fit: cover;
 		border-radius: 50%;
 	}
-	button {
+	.btn {
 		position: absolute;
-		top: 80px;
+		top: 90px;
+		display: flex;
+		gap: 10px;
 	}
 	input {
 		display: none;
@@ -53,6 +60,17 @@ export const InfoRow = styled.div`
 	button {
 		border: none;
 		border-radius: 8px;
+	}
+
+`;
+
+export const PasswordReset = styled.div`
+	margin-left: 20px;
+	display: flex;
+	flex-direction: column;
+
+	div {
+		margin-bottom: 4px;
 	}
 `;
 

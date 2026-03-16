@@ -8,6 +8,7 @@ import PrivacyPolicy from 'pages/PrivacyPolicy';
 import TermsOfService from 'pages/TermsOfService';
 import Credits from 'pages/Credits';
 import NotFound from 'pages/NotFound';
+import Profile from 'pages/Profile';
 
 const routes = [
   {
@@ -19,6 +20,7 @@ const routes = [
       { path: 'login', element: <LogIn /> },
       { path: 'reset-pwd', element: <ResetPassword /> },
       { path: 'reset-pwd2', element: <ResetPasswordSecond /> },
+      { path: 'profile', element: <Profile /> },
       { path: 'privacy-policy', element: <PrivacyPolicy /> },
       { path: 'terms-of-service', element: <TermsOfService /> },
       { path: 'credits', element: <Credits /> },

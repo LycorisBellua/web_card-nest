@@ -6,16 +6,19 @@ import {
 	UserInfoStyles,
 	UserAvatarStyle,
 	InfoRow,
+	PasswordReset,
 	DescriptionTextarea,
 	VerifyEmailMsg,
 } from 'components/style/ProfileStyle';
 import {ErrorText} from 'components/style/SignForm';
 import {
   sanitizeUsername,
+  sanitizePassword,
   sanitizeEmail,
 } from 'functions/UserSanitation';
 import {
   validateUsername,
+  validatePassword,
   validateEmail,
 } from 'functions/UserValidation';
 
@@ -27,7 +30,7 @@ type User = {
 	rank: string;
 	description: string;
 	avatarURL: string;
-	registered: string;
+	registered: Date;
 }
 
 function Profile() {
@@ -45,6 +48,8 @@ function Profile() {
 					return 
 				}
 				const data = await res.json()
+				data.registered = new Date(data.registered)
+				console.log(data.registered)
 				setUser(data)
 			} catch (err) {
 				setErrors(["Network error, please try again."])
@@ -79,18 +84,19 @@ type UserInfoProps = {
 function UserInfo({user, OnUpdateUserField} : UserInfoProps) {
 	if (!user) return
 	const {username, email, unverifiedEmail, rank, description, avatarURL, registered} = user
-	
+
 	return (
 		<UserInfoStyles>
 			<UpdateUserAvatar avatarURL={avatarURL} OnUpdateUserField={OnUpdateUserField}/>
-			<div>
+			<div className='main'>
 				<UpdateUsername username={username} OnUpdateUserField={OnUpdateUserField}/>
 				<InfoRow>
 					<p>Rank: {rank}</p>
 				</InfoRow>
 				<InfoRow>
-					<p>Registration date: {registered}</p>
+					<p>Registration date: {user?.registered? registered.toISOString().slice(0, 10) : "N/A"}</p>
 				</InfoRow>
+				<UpdatePassword username={username} email={email} OnUpdateUserField={OnUpdateUserField}/>
 				<UpdateUserEmail email={email} OnUpdateUserField={OnUpdateUserField} />
 				{unverifiedEmail && <VerifyEmail unverifiedEmail={unverifiedEmail} />}
 				<UpdateUserDescription description={description} OnUpdateUserField={OnUpdateUserField}/>
@@ -108,6 +114,10 @@ function UpdateUserAvatar({avatarURL, OnUpdateUserField} : UpdateUserAvatarProps
 	const imgInputRef = useRef<HTMLInputElement | null>(null)
 	function handleAvatar() {
 		imgInputRef.current?.click()
+	}
+
+	async function removeAvatar() {
+		await OnUpdateUserField("avatarURL", userAvatar)
 	}
 
 	async function handleUpdateAvatar(e:React.ChangeEvent<HTMLInputElement>) {
@@ -130,7 +140,10 @@ function UpdateUserAvatar({avatarURL, OnUpdateUserField} : UpdateUserAvatarProps
 	return (
 		<UserAvatarStyle>
 			<img src={avatarURL? avatarURL : userAvatar} alt='avatar'/>
-			<button onClick={handleAvatar}>Edit🖊️​</button>
+			<div className='btn'>	 
+				<button onClick={handleAvatar}>Edit🖊️​</button>
+				<button onClick={removeAvatar}>Remove🗑️​</button>
+			</div>
 			<input type="file" accept=".png" ref={imgInputRef} onChange={handleUpdateAvatar} />
 		</UserAvatarStyle>
 	)
@@ -177,6 +190,66 @@ function UpdateUsername({username, OnUpdateUserField} : UpdateUsernameProps) {
 			{errors && errors.map((err, i)=><ProfileErrorText key={i}>{err}</ProfileErrorText>)}
 		</div>
 	)
+}
+
+type UpdatePasswordProps = {
+	username: string;
+	email: string;
+	OnUpdateUserField: (field: keyof User, value: any)=>Promise<void>;
+}
+
+function UpdatePassword({username, email, OnUpdateUserField} : UpdatePasswordProps) {
+	const inputRef = useRef<HTMLInputElement>(null)
+	const [edit, setEdit] = useState(false)
+	const [value, setValue] = useState("")
+	const [confirm, setConfirm] = useState("")
+	const [errors, setErrors] = useState<string[]>([])
+
+	useEffect(()=>{
+		if (edit) {
+			inputRef.current?.focus()
+		}
+	}, [edit])
+	async function handleSaving() {
+		setErrors([])
+		if (!value || !confirm)
+			setErrors(["'Please fill all fields."])
+		const password = sanitizePassword(value)
+		const allErrors = [...validatePassword(password, username, email),
+			...(confirm !== password? ["Passwords don't match."]: []),
+		]
+		if (allErrors.length > 0) {
+			setErrors(allErrors);
+			return;
+		}
+		await OnUpdateUserField("password", password)
+		setEdit(false)
+		setValue("")
+		setConfirm("")
+	}
+
+	return (
+		<div>
+			<InfoRow>
+				<p>Password: ********</p>
+				<button onClick={edit? handleSaving : ()=>setEdit(true)}>{edit? "save" : "🖊️"}</button>
+			</InfoRow>
+			{edit &&
+				<PasswordReset>
+					<div>
+						<label htmlFor="new-password">New password: </label>
+						<input name="new-password" id="new-password" type="password" ref={inputRef} value={value} onChange={e=>setValue(e.target.value)}/>
+					</div>
+					<div>
+						<label htmlFor="new-password-conf">Confirm: </label>
+						<input name="new-password-conf" id="new-password-conf" type="password" value={confirm} onChange={e=>setConfirm(e.target.value)}/>
+					</div>
+				</PasswordReset>
+			}
+			{errors && errors.map((err, i)=><ProfileErrorText key={i}>{err}</ProfileErrorText>)}
+		</div>	
+	)
+
 }
 
 type UpdateUserEmailProps = {
@@ -229,7 +302,15 @@ function UpdateUserEmail({email, OnUpdateUserField} : UpdateUserEmailProps) {
 
 function VerifyEmail({unverifiedEmail} : {unverifiedEmail : string}) {
 	const [message, setMessage] = useState("")
+	const [errors, setErrors] = useState<string[]>([])
+
 	async function handleVerifyEmail() {
+		const sanitizeUnverifiedEmail = sanitizeEmail(unverifiedEmail)
+		const allErrors = [...validateEmail(sanitizeUnverifiedEmail)]
+		if (allErrors.length > 0) {
+			setErrors(allErrors)
+			return
+		}
 		try {
 			const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
 				method: "POST",
@@ -237,12 +318,12 @@ function VerifyEmail({unverifiedEmail} : {unverifiedEmail : string}) {
 				body: JSON.stringify({unverifiedEmail: unverifiedEmail})
 			})
 			if (!res.ok) {
-				setMessage(`Error ${res.status} : ${res.statusText}`)
+				setErrors([`Error ${res.status} : ${res.statusText}`])
 				return
 			}
-			setMessage("You'll receive a password reset link shortly....")
+			setMessage("You'll receive a verification link shortly....")
 		} catch (err) {
-			setMessage("Error occured")
+			setErrors(["Error occured"])
 		}
 	}
 
@@ -252,6 +333,7 @@ function VerifyEmail({unverifiedEmail} : {unverifiedEmail : string}) {
 				<p>Unverified email : {unverifiedEmail}</p>
 				<button onClick={handleVerifyEmail}>verify🖊️</button>
 			</InfoRow>
+			{errors && errors.map((err, i)=><ProfileErrorText key={i}>{err}</ProfileErrorText>)}
 			{message && <VerifyEmailMsg>{message}</VerifyEmailMsg>}
 		</div>
 	)
@@ -265,14 +347,15 @@ type UpdateUserDescription = {
 function UpdateUserDescription({description, OnUpdateUserField} : UpdateUserDescription) {
 	const [edit, setEdit] = useState(false)
 	const [value, setValue] = useState("")
-	const inputRef = useRef<HTMLInputElement>(null)
+	const inputRef = useRef<HTMLTextAreaElement>(null)
 
 	useEffect(()=>{
 		if (edit)
 			inputRef.current?.focus()
 	}, [edit])
 	async function handleSaving() {
-		await OnUpdateUserField("description", value)
+		const normalized = value.normalize('NFC').slice(0, 200);
+		await OnUpdateUserField("description", normalized)
 		setEdit(false)
 		setValue("")
 	}
@@ -284,7 +367,9 @@ function UpdateUserDescription({description, OnUpdateUserField} : UpdateUserDesc
 				<button onClick={edit? handleSaving : ()=>setEdit(true)}>{edit? "save" : "🖊️"}</button>
 			</InfoRow>
 			<DescriptionTextarea>
-				{edit? <textarea 
+				{edit? 
+				<>
+					<textarea 
 						name="user-description"
 						id="user-description"
 						maxLength={200}
@@ -293,6 +378,8 @@ function UpdateUserDescription({description, OnUpdateUserField} : UpdateUserDesc
 						value={value}
 						onChange={e=>setValue(e.target.value)}
 						></textarea>
+						<p>{value.length} / 200</p>
+				</>
 				: <p>{description}</p>}
 			</DescriptionTextarea>
 		</div>
