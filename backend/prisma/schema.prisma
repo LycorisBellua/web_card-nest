@@ -9,7 +9,38 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid(7))
-  email     String?   @unique
-  password  String?
+  id               String    @id @default(uuid(7))
+  username         String    @unique
+  email            String?   @unique
+  email_unverified String?   @unique
+  password         String
+  desc             String?   @db.VarChar(200)
+  avatar           String?
+  rank             Role      @default(USER)
+  date             DateTime  @default(now())
+  sentRequests     Friends[] @relation("requester")
+  receivedRequests Friends[] @relation("addressee")
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+model Friends {
+  requester   User         @relation("requester", fields: [requesterId], references: [id])
+  requesterId String
+  addressee   User         @relation("addressee", fields: [addresseeId], references: [id])
+  addresseeId String
+  status      FriendStatus @default(PENDING)
+  created     DateTime     @default(now())
+
+  @@id([requesterId, addresseeId])
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
 }
