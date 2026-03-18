@@ -29,14 +29,15 @@ enum Role {
 }
 
 model Friends {
-  requester   User         @relation("requester", fields: [requesterId], references: [id])
+  requester   User         @relation("requester", fields: [requesterId], references: [id], onDelete: Cascade)
   requesterId String
-  addressee   User         @relation("addressee", fields: [addresseeId], references: [id])
+  addressee   User         @relation("addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
   addresseeId String
   status      FriendStatus @default(PENDING)
   created     DateTime     @default(now())
 
   @@id([requesterId, addresseeId])
+  @@index([addresseeId]) // Index for addresseId only, requesterId is covered by the id index
 }
 
 enum FriendStatus {
