@@ -7,9 +7,12 @@ import {
 } from 'class-validator';
 
 export class CreateUserDto {
-  @Matches(/^[a-zA-Z0-9_]+$/)
   @MinLength(3)
   @MaxLength(20)
+  @Matches(/^[a-zA-Z0-9_]+$/, {
+    message:
+      'Username must contain only alphanumeric characters and underscores',
+  })
   username: string;
 
   @IsEmail()

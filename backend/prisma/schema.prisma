@@ -16,13 +16,13 @@ model User {
   password         String
   desc             String?   @db.VarChar(200)
   avatar           String?
-  rank             Role      @default(USER)
+  rank             Ranks     @default(USER)
   date             DateTime  @default(now())
   sentRequests     Friends[] @relation("requester")
   receivedRequests Friends[] @relation("addressee")
 }
 
-enum Role {
+enum Ranks {
   USER
   MODERATOR
   ADMIN
