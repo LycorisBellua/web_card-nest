@@ -15,9 +15,6 @@ function Home() {
           <button>Log In</button>
         </Link>
       </div>
-      <p>
-        <Link to="/placeholder">Go the placeholder page</Link>
-      </p>
     </Container>
   );
 }

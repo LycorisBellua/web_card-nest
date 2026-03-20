@@ -65,10 +65,10 @@ function SignUp() {
         return;
       }
       setMessage(
-        "You've signed up successfully! Redirecting to placeholder...",
+        "You've signed up successfully! Redirecting to your profile...",
       );
       setTimeout(() => {
-        void navigate('/placeholder');
+        void navigate('/profile');
       }, 3000);
     } catch {
       setError(['Internal error.']);
