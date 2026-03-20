@@ -4,11 +4,11 @@ import SignUp from 'pages/SignUp';
 import LogIn from 'pages/LogIn';
 import ResetPassword from 'pages/ResetPassword';
 import ResetPasswordSecond from 'pages/ResetPassword2';
+import Profile from 'pages/Profile';
 import PrivacyPolicy from 'pages/PrivacyPolicy';
 import TermsOfService from 'pages/TermsOfService';
 import Credits from 'pages/Credits';
 import NotFound from 'pages/NotFound';
-import Profile from 'pages/Profile';
 
 const routes = [
   {
