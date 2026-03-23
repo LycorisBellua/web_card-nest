@@ -61,12 +61,14 @@ export function validatePassword(
     errors.push('The password cannot contain the username.');
   const atIndex: number = uemail.indexOf('@');
   if (atIndex !== -1) {
-	  const localPart: string = uemail.substring(0, atIndex);
-	  const domainPart: string = uemail.substring(atIndex + 1);
-	  if ((localPart && passwordLower.includes(localPart.toLowerCase())) ||
-		(domainPart && passwordLower.includes(domainPart.toLowerCase()))) {
-		  errors.push('The password cannot contain the email address.');
-	  }
+    const localPart: string = uemail.substring(0, atIndex);
+    const domainPart: string = uemail.substring(atIndex + 1);
+    if (
+      (localPart && passwordLower.includes(localPart.toLowerCase())) ||
+      (domainPart && passwordLower.includes(domainPart.toLowerCase()))
+    ) {
+      errors.push('The password cannot contain the email address.');
+    }
   }
   if (/\p{Cc}/gu.test(upassword)) {
     errors.push('The password cannot have non-printable characters.');
@@ -74,5 +76,44 @@ export function validatePassword(
   if (upassword.length > 128) {
     errors.push('The password cannot be longer than 128 characters.');
   }
+  return errors;
+}
+
+export function validateDescription(udesc: string): string[] {
+  const errors: string[] = [];
+  if (!udesc) return errors;
+  if (udesc.length > 200)
+    errors.push('The description cannot be longer than 200 characters.');
+  return errors;
+}
+
+function getImageDimensions(
+  file: File,
+): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => {
+      resolve(null);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+}
+
+export async function validateAvatar(uavatar: File): Promise<string[]> {
+  const errors: string[] = [];
+  if (!uavatar) return errors;
+  if (uavatar.type !== 'image/png')
+    errors.push('The avatar can only be in PNG format.');
+  if (uavatar.size > 1 * 1024 * 1024)
+    errors.push('The avatar must be under 1 MB.');
+  const dimensions = await getImageDimensions(uavatar);
+  if (!dimensions || dimensions.width > 400 || dimensions.height > 400)
+    errors.push('The avatar must be under 400x400 pixels.');
   return errors;
 }

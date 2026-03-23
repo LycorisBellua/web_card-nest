@@ -13,17 +13,20 @@ import {
 import { ErrorText } from 'components/style/SignForm';
 import {
   sanitizeUsername,
-  sanitizePassword,
   sanitizeEmail,
+  sanitizePassword,
+  sanitizeDescription,
 } from 'functions/UserSanitation';
 import {
   validateUsername,
-  validatePassword,
   validateEmail,
+  validatePassword,
+  validateDescription,
+  validateAvatar,
 } from 'functions/UserValidation';
 
 type User = {
-  id: string | number;
+  id: string;
   username: string;
   email: string;
   unverifiedEmail: string;
@@ -40,31 +43,34 @@ function Profile() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch('/api/users/1', {
-          credentials: 'include',
-        });
+        const res = await fetch('/api/users/1', { credentials: 'include' });
         if (!res.ok) {
           setErrors([`Error ${res.status}: ${res.statusText}`]);
           return;
         }
-        const data = await res.json();
+        const data = (await res.json()) as User & { registered: string };
         data.registered = new Date(data.registered);
         setUser(data);
-      } catch (err) {
+      } catch {
         setErrors(['Network error, please try again.']);
       }
     }
-    fetchUser();
+    void fetchUser();
   }, []);
 
-  async function updateUserField(field: keyof User | 'password', value: any) {
+  async function updateUserField(
+    field: keyof User | 'password',
+    value: string,
+  ) {
     if (!value) return;
     await fetch('/api/users/1', {
       method: 'PATCH',
       headers: { 'Content-type': 'application/json' },
       body: JSON.stringify({ [field]: value }),
     });
-    setUser((old) => ({ ...old!, [field]: value }));
+    if (field !== 'password') {
+      setUser((old) => (old ? { ...old, [field]: value } : null));
+    }
   }
 
   return (
@@ -79,7 +85,7 @@ type UserInfoProps = {
   user: User | null;
   OnUpdateUserField: (
     field: keyof User | 'password',
-    value: any,
+    value: unknown,
   ) => Promise<void>;
 };
 
@@ -133,7 +139,7 @@ function UserInfo({ user, OnUpdateUserField }: UserInfoProps) {
 
 type UpdateUserAvatarProps = {
   avatarURL: string;
-  OnUpdateUserField: (field: keyof User, value: any) => Promise<void>;
+  OnUpdateUserField: (field: keyof User, value: unknown) => Promise<void>;
 };
 
 function UpdateUserAvatar({
@@ -141,6 +147,8 @@ function UpdateUserAvatar({
   OnUpdateUserField,
 }: UpdateUserAvatarProps) {
   const imgInputRef = useRef<HTMLInputElement | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+
   function handleAvatar() {
     imgInputRef.current?.click();
   }
@@ -152,8 +160,9 @@ function UpdateUserAvatar({
   async function handleUpdateAvatar(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.type !== 'image/png') {
-      alert('Only PNG images are allowed.');
+    const allErrors = [...(await validateAvatar(file))];
+    if (allErrors.length > 0) {
+      setErrors(allErrors);
       return;
     }
     const avatarForm = new FormData();
@@ -163,18 +172,19 @@ function UpdateUserAvatar({
       body: avatarForm,
     });
     if (!res.ok) return;
-    const data = await res.json();
+    const data = (await res.json()) as { url: string };
     await OnUpdateUserField('avatarURL', data.url);
     //const imgUrl = URL.createObjectURL(file)
     //await OnUpdateUserField("avatarURL", imgUrl)
+    setErrors([]);
   }
 
   return (
     <UserAvatarStyle>
       <img src={avatarURL ? avatarURL : userAvatar} alt="avatar" />
       <div className="btn">
-        <button onClick={handleAvatar}>Edit🖊️​</button>
-        <button onClick={removeAvatar}>Remove🗑️​</button>
+        <button onClick={handleAvatar}>Edit🖊️</button>
+        <button onClick={() => void removeAvatar()}>Remove🗑️</button>
       </div>
       <input
         name="avatar"
@@ -182,15 +192,18 @@ function UpdateUserAvatar({
         type="file"
         accept=".png"
         ref={imgInputRef}
-        onChange={handleUpdateAvatar}
+        onChange={(e) => void handleUpdateAvatar(e)}
       />
+      {errors.map((err, i) => (
+        <ProfileErrorText key={i}>{err}</ProfileErrorText>
+      ))}
     </UserAvatarStyle>
   );
 }
 
 type UpdateUsernameProps = {
   username: string;
-  OnUpdateUserField: (field: keyof User, value: any) => Promise<void>;
+  OnUpdateUserField: (field: keyof User, value: unknown) => Promise<void>;
 };
 
 function UpdateUsername({ username, OnUpdateUserField }: UpdateUsernameProps) {
@@ -255,7 +268,7 @@ type UpdatePasswordProps = {
   email: string;
   OnUpdateUserField: (
     field: keyof User | 'password',
-    value: any,
+    value: unknown,
   ) => Promise<void>;
 };
 
@@ -338,7 +351,7 @@ function UpdatePassword({
 
 type UpdateUserEmailProps = {
   email: string;
-  OnUpdateUserField: (field: keyof User, value: any) => Promise<void>;
+  OnUpdateUserField: (field: keyof User, value: unknown) => Promise<void>;
 };
 
 function UpdateUserEmail({ email, OnUpdateUserField }: UpdateUserEmailProps) {
@@ -414,8 +427,8 @@ function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
         setErrors([`Error ${res.status} : ${res.statusText}`]);
         return;
       }
-      setMessage("You'll receive a verification link shortly....");
-    } catch (err) {
+      setMessage("You'll receive a verification link shortly...");
+    } catch {
       setErrors(['Error occured']);
     }
   }
@@ -424,7 +437,7 @@ function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
     <div>
       <InfoRow>
         <p>Unverified email: {unverifiedEmail}</p>
-        <button onClick={handleVerifyEmail}>verify🖊️</button>
+        <button onClick={() => void handleVerifyEmail()}>Verify🖊️</button>
       </InfoRow>
       {errors &&
         errors.map((err, i) => (
@@ -437,7 +450,7 @@ function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
 
 type UpdateUserDescription = {
   description: string;
-  OnUpdateUserField: (field: keyof User, value: any) => Promise<void>;
+  OnUpdateUserField: (field: keyof User, value: unknown) => Promise<void>;
 };
 
 function UpdateUserDescription({
@@ -446,16 +459,24 @@ function UpdateUserDescription({
 }: UpdateUserDescription) {
   const [edit, setEdit] = useState(false);
   const [value, setValue] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (edit) inputRef.current?.focus();
   }, [edit]);
+
   async function handleSaving() {
-    const normalized = value.normalize('NFC').slice(0, 200);
-    await OnUpdateUserField('description', normalized);
+    const userDesc = sanitizeDescription(value);
+    const allErrors = [...validateDescription(userDesc)];
+    if (allErrors.length > 0) {
+      setErrors(allErrors);
+      return;
+    }
+    await OnUpdateUserField('description', userDesc);
     setEdit(false);
     setValue('');
+    setErrors([]);
   }
 
   return (
@@ -472,7 +493,6 @@ function UpdateUserDescription({
             <textarea
               name="user-description"
               id="user-description"
-              maxLength={200}
               rows={4}
               wrap="soft"
               value={value}
@@ -484,6 +504,9 @@ function UpdateUserDescription({
           <p>{description}</p>
         )}
       </DescriptionTextarea>
+      {errors.map((err, i) => (
+        <ProfileErrorText key={i}>{err}</ProfileErrorText>
+      ))}
     </div>
   );
 }
