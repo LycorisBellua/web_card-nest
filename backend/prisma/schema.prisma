@@ -9,19 +9,19 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(uuid(7))
-  username         String    @unique
-  email            String?   @unique
-  email_unverified String?   @unique
+  id               String   @id @default(uuid(7))
+  username         String   @unique
+  email            String?  @unique
+  email_unverified String?  @unique
   password         String
-  desc             String?   @db.VarChar(200)
+  desc             String?  @db.VarChar(200)
   avatar           String?
-  rank             Ranks     @default(USER)
-  date             DateTime  @default(now())
-  sentRequests     Friend[]  @relation("requester")
-  receivedRequests Friend[]  @relation("addressee")
-  blocked          Blocked[] @relation("blocker")
-  blockedBy        Blocked[] @relation("blocked")
+  rank             Ranks    @default(USER)
+  date             DateTime @default(now())
+  sentRequests     Friend[] @relation("requester")
+  receivedRequests Friend[] @relation("addressee")
+  blocked          Block[]  @relation("blocker")
+  blockedBy        Block[]  @relation("blocked")
 }
 
 enum Ranks {
@@ -47,7 +47,7 @@ enum FriendStatus {
   ACCEPTED
 }
 
-model Blocked {
+model Block {
   blocker   User     @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
   blockerId String
   blocked   User     @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)

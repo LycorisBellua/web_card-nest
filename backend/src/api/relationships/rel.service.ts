@@ -3,7 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { ErrorMessages } from './error_messages/ErrorMessages';
 import { Friend } from 'src/generated/prisma/browser';
-import { Blocked } from 'src/generated/prisma/client';
+import { Block } from 'src/generated/prisma/client';
 
 @Injectable()
 export class RelService {
@@ -214,7 +214,7 @@ export class RelService {
 
   // BLOCK DB ACTIONS
   async findBlock(blockerId: string, blockedId: string) {
-    return await this.prisma.blocked.findUnique({
+    return await this.prisma.block.findUnique({
       where: {
         blockerId_blockedId: {
           blockerId: blockerId,
@@ -225,7 +225,7 @@ export class RelService {
   }
 
   async createBlock(originId: string, targetId: string) {
-    return await this.prisma.blocked.create({
+    return await this.prisma.block.create({
       data: {
         blockerId: originId,
         blockedId: targetId,
@@ -233,19 +233,19 @@ export class RelService {
     });
   }
 
-  async deleteBlock(blocked: Blocked) {
-    return await this.prisma.blocked.delete({
+  async deleteBlock(block: Block) {
+    return await this.prisma.block.delete({
       where: {
         blockerId_blockedId: {
-          blockerId: blocked.blockerId,
-          blockedId: blocked.blockedId,
+          blockerId: block.blockerId,
+          blockedId: block.blockedId,
         },
       },
     });
   }
 
   async findBlockedUsers(originId: string) {
-    return await this.prisma.blocked.findMany({
+    return await this.prisma.block.findMany({
       where: { blockerId: originId },
     });
   }
