@@ -1,10 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import { Injectable, Logger } from '@nestjs/common';
+import { createTransport, Transporter } from 'nodemailer';
+
+interface MailInfo {
+  messageId: string;
+}
 
 @Injectable()
 export class SendMailService {
-  async sendMail(email: string, object: string, message: string) {
-    const transporter = nodemailer.createTransport({
+  private readonly logger = new Logger(SendMailService.name);
+  private readonly transporter: Transporter;
+
+  constructor() {
+    this.transporter = createTransport({
       host: 'smtp.gmail.com',
       port: 465,
       secure: true,
@@ -13,30 +20,38 @@ export class SendMailService {
         pass: process.env.GMAIL_PASSWORD,
       },
     });
+  }
+
+  async sendMail(
+    email: string,
+    object: string,
+    message: string,
+  ): Promise<string> {
     const sender = {
       address: 'no-reply@cardnest.com',
       name: 'CardNest',
     };
+
     try {
-      const info = await transporter.sendMail({
+      const info = (await this.transporter.sendMail({
         from: sender,
         to: email,
         subject: object,
         text: message,
         html: `<b>${message}</b>`,
-		/*
+        /*
         attachments: [
           {
             filename: 'test.svg',
             path: '/app/frontend/public/favicon.svg',
           },
         ],
-		*/
-      });
+        */
+      })) as MailInfo;
 
       return info.messageId;
     } catch (err) {
-      console.error('Error sending mail:', err);
+      this.logger.error('Error sending mail:', err);
       throw err;
     }
   }

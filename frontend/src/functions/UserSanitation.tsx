@@ -16,3 +16,10 @@ export function sanitizePassword(upassword: string): string {
   if (!upassword) return '';
   return upassword.normalize('NFC');
 }
+
+export function sanitizeDescription(udesc: string): string {
+  if (!udesc) return '';
+  return udesc.normalize('NFC');
+}
+
+// No sanitation for the avatar
