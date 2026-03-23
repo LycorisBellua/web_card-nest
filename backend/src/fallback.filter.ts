@@ -32,11 +32,14 @@ export class FallbackFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
+    const body =
       exception instanceof HttpException
-        ? exception.message
-        : 'Internal server error';
+        ? exception.getResponse()
+        : {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            message: 'Internal server error',
+          };
 
-    response.status(status).json({ statusCode: status, message });
+    return response.status(status).json(body);
   }
 }

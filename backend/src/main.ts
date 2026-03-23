@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { FallbackFilter } from './fallback.filter';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -10,6 +11,7 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'client', 'dist'), {
     index: false,
   });
+  app.useGlobalPipes(new ValidationPipe());
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();
