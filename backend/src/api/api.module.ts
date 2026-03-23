@@ -3,9 +3,18 @@ import { HelloController } from './hello/hello.controller';
 import { HelloService } from './hello/hello.service';
 import { SendMailController } from './sendMail/sendMail.controller';
 import { SendMailService } from './sendMail/sendMail.service';
+import { UserController } from './user/user.controller';
+import { UserService } from './user/user.service';
+import { RelController } from './relationships/rel.controller';
+import { RelService } from './relationships/rel.service';
 
 @Module({
-  controllers: [HelloController, SendMailController],
-  providers: [HelloService, SendMailService],
+  controllers: [
+    HelloController,
+    SendMailController,
+    UserController,
+    RelController,
+  ],
+  providers: [HelloService, SendMailService, UserService, RelService],
 })
 export class ApiModule {}

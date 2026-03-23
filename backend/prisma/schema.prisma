@@ -9,7 +9,51 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id               String   @id @default(uuid(7))
+  username         String   @unique
+  email            String?  @unique
+  email_unverified String?  @unique
+  password         String
+  desc             String?  @db.VarChar(200)
+  avatar           String?
+  rank             Ranks    @default(USER)
+  date             DateTime @default(now())
+  sentRequests     Friend[] @relation("requester")
+  receivedRequests Friend[] @relation("addressee")
+  blocked          Block[]  @relation("blocker")
+  blockedBy        Block[]  @relation("blocked")
+}
+
+enum Ranks {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+model Friend {
+  requester   User         @relation("requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String
+  addressee   User         @relation("addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  addresseeId String
+  status      FriendStatus @default(PENDING)
+  created     DateTime     @default(now())
+
+  @@id([requesterId, addresseeId])
+  @@index([addresseeId])
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+}
+
+model Block {
+  blocker   User     @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockerId String
+  blocked   User     @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  blockedId String
+  created   DateTime @default(now())
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
 }
