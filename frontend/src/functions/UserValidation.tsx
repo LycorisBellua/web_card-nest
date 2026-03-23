@@ -56,14 +56,17 @@ export function validatePassword(
     errors.push('The password must have at least 1 digit.');
   if (!/[!@#$%^&*()_+\-=[\]{};':"|,.<>/?]/.test(upassword))
     errors.push('The password must have at least 1 symbol.');
-  if (uname.length && upassword.includes(uname))
+  const passwordLower: string = upassword.toLowerCase();
+  if (uname.length && passwordLower.includes(uname.toLowerCase()))
     errors.push('The password cannot contain the username.');
-  const idx: number = uemail.search('@');
-  if (idx != -1) {
-    const mailExt: string = uemail.substring(idx + 1);
-    if (upassword.search(mailExt) != -1) {
-      errors.push('The password cannot contain the email address.');
-    }
+  const atIndex: number = uemail.indexOf('@');
+  if (atIndex !== -1) {
+	  const localPart: string = uemail.substring(0, atIndex);
+	  const domainPart: string = uemail.substring(atIndex + 1);
+	  if ((localPart && passwordLower.includes(localPart.toLowerCase())) ||
+		(domainPart && passwordLower.includes(domainPart.toLowerCase()))) {
+		  errors.push('The password cannot contain the email address.');
+	  }
   }
   if (/\p{Cc}/gu.test(upassword)) {
     errors.push('The password cannot have non-printable characters.');
