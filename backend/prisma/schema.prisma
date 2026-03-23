@@ -18,8 +18,10 @@ model User {
   avatar           String?
   rank             Ranks     @default(USER)
   date             DateTime  @default(now())
-  sentRequests     Friends[] @relation("requester")
-  receivedRequests Friends[] @relation("addressee")
+  sentRequests     Friend[]  @relation("requester")
+  receivedRequests Friend[]  @relation("addressee")
+  blocked          Blocked[] @relation("blocker")
+  blockedBy        Blocked[] @relation("blocked")
 }
 
 enum Ranks {
@@ -28,7 +30,7 @@ enum Ranks {
   ADMIN
 }
 
-model Friends {
+model Friend {
   requester   User         @relation("requester", fields: [requesterId], references: [id], onDelete: Cascade)
   requesterId String
   addressee   User         @relation("addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
@@ -37,11 +39,21 @@ model Friends {
   created     DateTime     @default(now())
 
   @@id([requesterId, addresseeId])
-  @@index([addresseeId]) // Index for addresseId only, requesterId is covered by the id index
+  @@index([addresseeId])
 }
 
 enum FriendStatus {
   PENDING
   ACCEPTED
-  BLOCKED
+}
+
+model Blocked {
+  blocker   User     @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockerId String
+  blocked   User     @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  blockedId String
+  created   DateTime @default(now())
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
 }

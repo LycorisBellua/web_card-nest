@@ -21,72 +21,75 @@ export class UserController {
 
   // ADD / REMOVE
   @Post()
-  addUser(@Body() createUserDto: CreateUserDto) {
-    return this.userService.addUser(createUserDto);
+  async addUser(@Body() createUserDto: CreateUserDto) {
+    return await this.userService.addUser(createUserDto);
   }
 
   @Delete(':userId')
-  removeUser(@Param('userId', ParseUUIDPipe) userId: string) {
-    return this.userService.removeUser(userId);
+  async removeUser(@Param('userId', ParseUUIDPipe) userId: string) {
+    return await this.userService.removeUser(userId);
   }
 
   // UPDATE ENTRIES
   // For Patch Methods: id can be taken from auth token once implemented
   @Patch(':userId/username')
-  updateUsername(
+  async updateUsername(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() updateUsernameDto: UpdateUsernameDto,
   ) {
-    return this.userService.updateUsername(userId, updateUsernameDto);
+    return await this.userService.updateUsername(
+      userId,
+      updateUsernameDto.username,
+    );
   }
 
   @Patch(':userId/verify')
-  verifyEmail(@Param('userId', ParseUUIDPipe) userId: string) {
-    return this.userService.verifyEmail(userId);
+  async verifyEmail(@Param('userId', ParseUUIDPipe) userId: string) {
+    return await this.userService.verifyEmail(userId);
   }
 
   @Patch(':userId/desc')
-  updateDesc(
+  async updateDesc(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() updateDescDto: UpdateDescDto,
   ) {
-    return this.userService.updateDesc(userId, updateDescDto);
+    return await this.userService.updateDesc(userId, updateDescDto.desc);
   }
 
   @Patch(':userId/avatar')
-  updateAvatar(
+  async updateAvatar(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() updateAvatarDto: UpdateAvatarDto,
   ) {
-    return this.userService.updateAvatar(userId, updateAvatarDto);
+    return await this.userService.updateAvatar(userId, updateAvatarDto.avatar);
   }
 
   @Patch(':userId/rank')
-  updateRank(
+  async updateRank(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() updateRankDto: UpdateRankDto,
   ) {
-    return this.userService.updateRank(userId, updateRankDto);
+    return await this.userService.updateRank(userId, updateRankDto.rank);
   }
 
   // FETCH USERS
   @Get('id/:userId')
-  getUserbyId(@Param('userId', ParseUUIDPipe) userId: string) {
-    return this.userService.findByIdOrThrow(userId);
+  async getUserbyId(@Param('userId', ParseUUIDPipe) userId: string) {
+    return await this.userService.findByIdOrThrow(userId);
   }
 
   @Get('username/:username')
-  getUserByUsername(@Param('username') username: string) {
-    return this.userService.findByUsernameOrThrow(username);
+  async getUserByUsername(@Param('username') username: string) {
+    return await this.userService.findByUsernameOrThrow(username);
   }
 
   @Get('all/username')
-  getAllSortByUsername() {
-    return this.userService.returnAllSortByUsername();
+  async getAllSortByUsername() {
+    return await this.userService.returnAllSortByUsername();
   }
 
   @Get('all/date')
-  getAllSortByDate() {
-    return this.userService.returnAllSortByDate();
+  async getAllSortByDate() {
+    return await this.userService.returnAllSortByDate();
   }
 }

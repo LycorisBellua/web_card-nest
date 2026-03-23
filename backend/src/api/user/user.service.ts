@@ -6,10 +6,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUsernameDto } from './dto/update-username.dto';
-import { UpdateDescDto } from './dto/update-desc.dto';
-import { UpdateAvatarDto } from './dto/update-avatar.dto';
-import { UpdateRankDto } from './dto/update-rank.dto';
+import { ErrorMessages } from './error_messages/ErrorMessages';
+import { Ranks } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class UserService {
@@ -18,11 +16,11 @@ export class UserService {
   // ADD / REMOVE
   async addUser(createUserDto: CreateUserDto) {
     if (await this.findByUsername(createUserDto.username)) {
-      throw new ConflictException('Username already taken');
+      throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
     }
 
     if (await this.findByEmailAddress(createUserDto.email_unverified)) {
-      throw new ConflictException('Email address already in use');
+      throw new ConflictException(ErrorMessages.EMAIL_USED);
     }
 
     return await this.prisma.user.create({
@@ -44,14 +42,14 @@ export class UserService {
   }
 
   // UPDATE ENTRIES
-  async updateUsername(userId: string, updateUsernameDto: UpdateUsernameDto) {
+  async updateUsername(userId: string, newUsername: string) {
     await this.findByIdOrThrow(userId);
-    if (await this.findByUsername(updateUsernameDto.username)) {
-      throw new ConflictException('Username already taken');
+    if (await this.findByUsername(newUsername)) {
+      throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
     }
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { username: updateUsernameDto.username },
+      data: { username: newUsername },
       omit: { password: true },
     });
   }
@@ -59,7 +57,7 @@ export class UserService {
   async verifyEmail(userId: string) {
     const found = await this.findByIdOrThrow(userId);
     if (!found.email_unverified) {
-      throw new BadRequestException('No email to verify');
+      throw new BadRequestException(ErrorMessages.NO_EMAIL);
     }
     return await this.prisma.user.update({
       where: { id: userId },
@@ -68,29 +66,29 @@ export class UserService {
     });
   }
 
-  async updateDesc(userId: string, updateDescDto: UpdateDescDto) {
+  async updateDesc(userId: string, newDesc: string) {
     await this.findByIdOrThrow(userId);
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { desc: updateDescDto.desc },
+      data: { desc: newDesc },
       omit: { password: true },
     });
   }
 
-  async updateAvatar(userId: string, updateAvatarDto: UpdateAvatarDto) {
+  async updateAvatar(userId: string, newAvatar: string) {
     await this.findByIdOrThrow(userId);
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { avatar: updateAvatarDto.avatar },
+      data: { avatar: newAvatar },
       omit: { password: true },
     });
   }
 
-  async updateRank(userId: string, updateRankDto: UpdateRankDto) {
+  async updateRank(userId: string, newRank: Ranks) {
     await this.findByIdOrThrow(userId);
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { rank: updateRankDto.rank },
+      data: { rank: newRank },
       omit: { password: true },
     });
   }
@@ -99,7 +97,7 @@ export class UserService {
   async findByIdOrThrow(toFind: string) {
     const found = await this.findById(toFind);
     if (!found) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
     }
     return found;
   }
@@ -107,7 +105,7 @@ export class UserService {
   async findByUsernameOrThrow(toFind: string) {
     const found = await this.findByUsername(toFind);
     if (!found) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
     }
     return found;
   }
