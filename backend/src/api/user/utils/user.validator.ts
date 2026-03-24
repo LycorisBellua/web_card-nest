@@ -211,7 +211,8 @@ export function PasswordNotContainsUsername(
   return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'passwordNotContainsUsername',
-      target: (object as any).constructor,
+      target: (object as { constructor: new (...args: unknown[]) => unknown })
+        .constructor,
       propertyName,
       constraints: [usernameField],
       options: {
@@ -220,7 +221,10 @@ export function PasswordNotContainsUsername(
       },
       validator: {
         validate(value: string, args: ValidationArguments): boolean {
-          const username = (args.object as any)[args.constraints[0]] as string;
+          const obj = args.object as Record<string, unknown>;
+          const fieldName = args.constraints[0] as string;
+          const username =
+            typeof obj[fieldName] === 'string' ? obj[fieldName] : '';
           if (!username || !value) return true;
           return !value.toLowerCase().includes(username.toLowerCase());
         },
@@ -236,7 +240,8 @@ export function PasswordNotContainsEmail(
   return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'passwordNotContainsEmail',
-      target: (object as any).constructor,
+      target: (object as { constructor: new (...args: unknown[]) => unknown })
+        .constructor,
       propertyName,
       constraints: [emailField],
       options: {
@@ -245,7 +250,10 @@ export function PasswordNotContainsEmail(
       },
       validator: {
         validate(value: string, args: ValidationArguments): boolean {
-          const email = (args.object as any)[args.constraints[0]] as string;
+          const obj = args.object as Record<string, unknown>;
+          const fieldName = args.constraints[0] as string;
+          const email =
+            typeof obj[fieldName] === 'string' ? obj[fieldName] : '';
           if (!email || !value) return true;
 
           const atIndex = email.indexOf('@');

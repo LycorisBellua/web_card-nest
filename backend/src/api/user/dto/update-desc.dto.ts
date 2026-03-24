@@ -5,8 +5,8 @@ import { IsDescriptionNotTooLong } from '../utils/user.validator';
 
 export class UpdateDescDto {
   @IsOptional()
-  @Transform(({ value }) =>
-    value != null ? sanitizeDescription(value as string) : value,
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? sanitizeDescription(value) : undefined,
   )
   @IsDescriptionNotTooLong()
   desc?: string;
