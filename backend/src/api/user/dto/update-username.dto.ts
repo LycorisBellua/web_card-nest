@@ -5,7 +5,7 @@ export class UpdateUsernameDto {
   @MaxLength(20)
   @Matches(/^[a-zA-Z0-9_]+$/, {
     message:
-      'Username must contain only alphanumeric characters and underscores',
+      'Username must contain only alphanumeric characters and underscores.',
   })
   username: string;
 }
