@@ -1,9 +1,13 @@
-import { Matches, MaxLength } from 'class-validator';
+import {
+  IsAvatarDimensionsValid,
+  IsAvatarNotTooBig,
+  IsAvatarPng,
+} from '../utils/user.validator';
 
 export class UpdateAvatarDto {
-  @MaxLength(255)
-  @Matches(/^(?:.*[/\\])?[^/\\]+\.png$/i, {
-    message: 'Avatar must be a valid .png file path',
-  })
+  // The avatar is stored as a base64-encoded string (blob) in the DB.
+  @IsAvatarPng()
+  @IsAvatarNotTooBig()
+  @IsAvatarDimensionsValid()
   avatar: string;
 }
