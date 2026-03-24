@@ -326,3 +326,90 @@ export function IsDescriptionNotTooLong(validationOptions?: ValidationOptions) {
     validationOptions,
   );
 }
+
+/* AVATAR VALIDATORS -------------------------------------------------------- */
+
+const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+/*
+    - Decodes a base64 avatar string into a Buffer.
+    - Strips an optional data-URI prefix (e.g. "data:image/png;base64,") so 
+    both raw base64 and data-URI formats are accepted, matching whatever the 
+    frontend sends over the wire.
+    - Returns null if the string is absent or not valid base64.
+*/
+function decodeAvatarBase64(value: string): Buffer | null {
+  if (!value) return null;
+  try {
+    const raw = value.includes(',') ? value.split(',')[1] : value;
+    return Buffer.from(raw, 'base64');
+  } catch {
+    return null;
+  }
+}
+
+export function IsAvatarPng(validationOptions?: ValidationOptions) {
+  return ValidateBy(
+    {
+      name: 'isAvatarPng',
+      validator: {
+        validate(value: string): boolean {
+          if (!value) return true;
+          const buf = decodeAvatarBase64(value);
+          if (!buf || buf.length < PNG_SIGNATURE.length) return false;
+          return PNG_SIGNATURE.every((byte, i) => buf[i] === byte);
+        },
+        defaultMessage: buildMessage(
+          (eachPrefix) => eachPrefix + 'The avatar can only be in PNG format.',
+          validationOptions,
+        ),
+      },
+    },
+    validationOptions,
+  );
+}
+
+export function IsAvatarNotTooBig(validationOptions?: ValidationOptions) {
+  return ValidateBy(
+    {
+      name: 'isAvatarNotTooBig',
+      validator: {
+        validate(value: string): boolean {
+          if (!value) return true;
+          const buf = decodeAvatarBase64(value);
+          if (!buf) return true;
+          return buf.length <= 1 * 1024 * 1024;
+        },
+        defaultMessage: buildMessage(
+          (eachPrefix) => eachPrefix + 'The avatar must be under 1 MB.',
+          validationOptions,
+        ),
+      },
+    },
+    validationOptions,
+  );
+}
+
+export function IsAvatarDimensionsValid(validationOptions?: ValidationOptions) {
+  return ValidateBy(
+    {
+      name: 'isAvatarDimensionsValid',
+      validator: {
+        validate(value: string): boolean {
+          if (!value) return true;
+          const buf = decodeAvatarBase64(value);
+          if (!buf || buf.length < 24) return false;
+          const width = buf.readUInt32BE(16);
+          const height = buf.readUInt32BE(20);
+          return width <= 400 && height <= 400;
+        },
+        defaultMessage: buildMessage(
+          (eachPrefix) =>
+            eachPrefix + 'The avatar must be under 400x400 pixels.',
+          validationOptions,
+        ),
+      },
+    },
+    validationOptions,
+  );
+}

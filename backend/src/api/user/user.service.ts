@@ -66,7 +66,7 @@ export class UserService {
     });
   }
 
-  async updateDesc(userId: string, newDesc: string) {
+  async updateDesc(userId: string, newDesc: string | undefined) {
     await this.findByIdOrThrow(userId);
     return await this.prisma.user.update({
       where: { id: userId },
