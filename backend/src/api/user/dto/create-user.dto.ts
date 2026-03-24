@@ -1,23 +1,45 @@
+import { Transform } from 'class-transformer';
 import {
-  IsEmail,
-  IsStrongPassword,
-  Matches,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+  sanitizeEmail,
+  sanitizePassword,
+  sanitizeUsername,
+} from '../utils/user.sanitizer';
+import {
+  IsEmailFormatValid,
+  IsEmailNotEmpty,
+  IsPasswordLongEnough,
+  IsPasswordNotTooLong,
+  IsUsernameNotEmpty,
+  IsUsernameNotTooLong,
+  PasswordHasDigit,
+  PasswordHasLowercase,
+  PasswordHasNoControlChars,
+  PasswordHasSymbol,
+  PasswordHasUppercase,
+  PasswordNotContainsEmail,
+  PasswordNotContainsUsername,
+} from '../utils/user.validator';
 
 export class CreateUserDto {
-  @MinLength(3)
-  @MaxLength(20)
-  @Matches(/^[a-zA-Z0-9_]+$/, {
-    message:
-      'Username must contain only alphanumeric characters and underscores.',
-  })
+  @Transform(({ value }) => sanitizeUsername(value as string))
+  @IsUsernameNotEmpty()
+  @IsUsernameNotTooLong()
   username: string;
 
-  @IsEmail()
+  @Transform(({ value }) => sanitizeEmail(value as string))
+  @IsEmailNotEmpty()
+  @IsEmailFormatValid()
   email_unverified: string;
 
-  @IsStrongPassword()
+  @Transform(({ value }) => sanitizePassword(value as string))
+  @IsPasswordLongEnough()
+  @PasswordHasUppercase()
+  @PasswordHasLowercase()
+  @PasswordHasDigit()
+  @PasswordHasSymbol()
+  @PasswordNotContainsUsername('username')
+  @PasswordNotContainsEmail('email_unverified')
+  @PasswordHasNoControlChars()
+  @IsPasswordNotTooLong()
   password: string;
 }

@@ -1,9 +1,13 @@
-import { Matches, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsOptional } from 'class-validator';
+import { sanitizeDescription } from '../utils/user.sanitizer';
+import { IsDescriptionNotTooLong } from '../utils/user.validator';
 
 export class UpdateDescDto {
-  @MaxLength(200)
-  @Matches(/^\P{C}*$/u, {
-    message: 'Must be a string containing only non-control characters.',
-  })
-  desc: string;
+  @IsOptional()
+  @Transform(({ value }) =>
+    value != null ? sanitizeDescription(value as string) : value,
+  )
+  @IsDescriptionNotTooLong()
+  desc?: string;
 }
