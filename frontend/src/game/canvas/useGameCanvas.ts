@@ -124,15 +124,27 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
     			ctx.textAlign = "center"
 				const relativeIndex = getRelativeIndex(playerIdx, gameRef.current!.currentPlayerIdx, gameRef.current!.players.length)
 				const position = getPlayerPosition(relativeIndex, gameRef.current!.players.length)	
-    			if (position === "bottom") {
-    			    ctx.fillText(label, W / 2, H - CARD_H - 35)
+    			let labelX = 0
+    			let labelY = 0
+				if (position === "bottom") {
+					labelX = W / 2
+					labelY = H - CARD_H - 55 
     			} else if (position === "top") {
-    			    ctx.fillText(label, W / 2, CARD_H + 45)
+					labelX = W / 2
+					labelY = CARD_H + 55
     			} else if (position === "left") {
-    			    ctx.fillText(label, CARD_W + 60, H / 2)
+					labelX = CARD_W + 65
+					labelY = H / 2
     			} else if (position === "right") {
-    			    ctx.fillText(label, W - CARD_W - 60, H / 2)
+					labelX =  W - CARD_W - 65
+					labelY = H / 2
     			}
+				ctx.fillText(label, labelX, labelY)
+				if (gameRef.current!.players[playerIdx].isBusted) {
+				    ctx.font = "bold 16px Arial"
+    				ctx.fillStyle = "#c0110f"
+					ctx.fillText("BUST", labelX, labelY + 20)
+				}
     			ctx.restore()
 			})
 			ctx.restore()

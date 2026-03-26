@@ -70,13 +70,18 @@ function PlayGame() {
 					<TableWrapper>
 						{game?.gameStatus === "transition" && (
 							<Overlay>
-								<p>👉 Change to Player {(game.currentPlayerIdx + 1) % game.players.length + 1}</p>
+								{game.players[game.currentPlayerIdx].isBusted && <p>You're busted!</p>}
+								<p>Change to Player {(game.currentPlayerIdx + 1) % game.players.length + 1}</p>
 								<button onClick={handleNextPlayer}>Confirm</button>
 							</Overlay>
 						)}
 						{game?.gameStatus === "finished" && (
 							<Overlay>
-								<p>👉 Winner is Player {game.winnerId! + 1}</p>
+								<p>Turn {game.turn}: winner is Player {game.winnerId! + 1}</p>
+								<div className="btn">
+									<button onClick={handleLocalGame}>Another turn</button>
+									<button>Stop playing</button>
+								</div>
 							</Overlay>
 						)}
 						<PlayTableStyle>

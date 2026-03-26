@@ -8,7 +8,7 @@ export function hit(currentPlayerIdx: number, gameState: GameState) {
 	giveCard(player, next)
 	console.log("Current player:", next.currentPlayerIdx, "choose to hit", "Status:", next.gameStatus);
 	if (player.isBusted) {
-		nextPlayer(next)
+		next.gameStatus = "transition"
 	}
 	return next
 }
