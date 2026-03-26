@@ -13,7 +13,7 @@ export function initialGame(playerCount: number) : GameState {
 			hasStood: false,
 			isBusted: false,
 			hasBlackCrown: false,
-			reachedAt: -1
+			reachedAt: -2
 		})),
 		currentPlayerIdx: 0,
 		deck: shuffledDeck,

@@ -32,18 +32,24 @@ export function checkBlackCrown(cards: Card[]) : boolean {
 }
 
 export function checkWinner(game: GameState): number {
+	console.log("check winner is called")
 	const validPlayer = game.players.filter(player=>!player.isBusted)
 	if (validPlayer.length == 0)
 		return -1
+	console.log("valide players are: ", validPlayer.length)
 	const blackCrown = validPlayer.filter(player=>player.hasBlackCrown)
 	if (blackCrown.length > 0) {
-		if (blackCrown.length == 1)
+		if (blackCrown.length == 1) {
+			console.log(blackCrown[0].id)
 			return blackCrown[0].id
+		}
 		else {
 			blackCrown.sort((a, b)=>a.reachedAt - b.reachedAt)
+			console.log(blackCrown[0].id)
 			return blackCrown[0].id
 		}
 	}
+	console.log("No Blackjack")
 	validPlayer.sort((a, b)=> {
 		if (a.score != b.score)
 			return b.score - a.score
@@ -54,5 +60,7 @@ export function checkWinner(game: GameState): number {
 				return -1
 		}
 	})
+	console.log(validPlayer)
+	console.log("the winner is : ", validPlayer[0].id)
 	return validPlayer[0].id
 }

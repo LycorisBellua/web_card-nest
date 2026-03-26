@@ -27,6 +27,6 @@ export interface GameState {
 	deck: Card[];
 
 	turn: number;
-	gameStatus: "playing" | "finished";
+	gameStatus: "playing" | "transition" | "finished";
 	winnerId: number | null;
 }

@@ -1,5 +1,6 @@
 import { calculateScore, checkBlackCrown } from "./rules";
 import type { Suit, Rank, Player, Card, GameState } from '../logic/types';
+import { PlayerCountStyle } from "components/style/GameTableStyle";
 
 export function createDeck() : Card[] {
 	const suits: Suit[] = ["hearts", "diamonds", "clubs", "spades"]
@@ -33,7 +34,8 @@ export function giveCard(player: Player, gameState : GameState) {
 	const card = gameState.deck.pop()!
 	player.cards.push(card)
 	const newScore = calculateScore(player.cards)
-	player.reachedAt = gameState.turn
+	player.reachedAt++
+	console.log(`for ${player.id}, this is ${player.reachedAt} turns`)
 	player.score = newScore
 	if (player.score > 21) {
 		player.isBusted = true

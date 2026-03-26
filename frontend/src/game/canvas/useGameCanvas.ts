@@ -23,7 +23,7 @@ function	getPlayerPosition(relativeIndex: number, total: number) {
 		return ["bottom", "right", "top", "left"][relativeIndex]
 }
 
-export function useGameCanvas(game: GameState, started: boolean) {
+export function useGameCanvas(game: GameState | null, started: boolean) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null)
 	const rafRef = useRef<number>(0)
 	const allRef = useRef<CanvasCard[][]>([])
@@ -31,11 +31,12 @@ export function useGameCanvas(game: GameState, started: boolean) {
 	const revealedRef = useRef(false)
 
 	useEffect(()=>{
+		if (!game) return 
 		gameRef.current = game
 	}, [game])
 
 	useEffect(()=>{
-		if (!started) 
+		if (!started || !game) 
 			return
 		allRef.current = game.players.map((player, playerIdx)=> {
 			const existing = new Map(
@@ -51,10 +52,7 @@ export function useGameCanvas(game: GameState, started: boolean) {
 					card.flipped = true
 				return card
 			})
-			console.log(cards)
-			console.log(playerIdx)
-			console.log(game.currentPlayerIdx)
-
+			
 			const relativeIndex = getRelativeIndex(playerIdx, game.currentPlayerIdx, game.players.length)
 			const position = getPlayerPosition(relativeIndex, game.players.length)
 			const spacing = 90
@@ -87,7 +85,7 @@ export function useGameCanvas(game: GameState, started: boolean) {
 	}, [started, game])
 
 	useEffect(()=>{
-		if (!started) return
+		if (!started || !game) return
 		const canvas = canvasRef.current
 		if (!canvas) return
 		const ctx = canvas.getContext("2d")!
@@ -105,9 +103,9 @@ export function useGameCanvas(game: GameState, started: boolean) {
 			ctx.fillRect(0, 0, W, H)
 			
 			allRef.current.forEach((playerCards, playerIdx)=>{
-				const isCurrent = playerIdx === gameRef.current.currentPlayerIdx
+				const isCurrent = playerIdx === gameRef.current!.currentPlayerIdx
 				playerCards.forEach((card, i)=>{
-					if (gameRef.current.gameStatus !== "finished") {
+					if (gameRef.current!.gameStatus !== "finished") {
 						if (isCurrent)
 							card.flipped = false
 						else
@@ -119,6 +117,23 @@ export function useGameCanvas(game: GameState, started: boolean) {
 					card.update(dt)
 					card.draw(ctx, isCurrent)
 				})
+				const label = `Player ${playerIdx + 1}`
+    			ctx.save()
+    			ctx.font = "bold 16px Arial"
+    			ctx.fillStyle = isCurrent ? "#FFD700" : "rgba(255,255,255,0.8)"  // 当前玩家金色
+    			ctx.textAlign = "center"
+				const relativeIndex = getRelativeIndex(playerIdx, gameRef.current!.currentPlayerIdx, gameRef.current!.players.length)
+				const position = getPlayerPosition(relativeIndex, gameRef.current!.players.length)	
+    			if (position === "bottom") {
+    			    ctx.fillText(label, W / 2, H - CARD_H - 35)
+    			} else if (position === "top") {
+    			    ctx.fillText(label, W / 2, CARD_H + 45)
+    			} else if (position === "left") {
+    			    ctx.fillText(label, CARD_W + 60, H / 2)
+    			} else if (position === "right") {
+    			    ctx.fillText(label, W - CARD_W - 60, H / 2)
+    			}
+    			ctx.restore()
 			})
 			ctx.restore()
 			rafRef.current = requestAnimationFrame(loop)
@@ -128,14 +143,15 @@ export function useGameCanvas(game: GameState, started: boolean) {
 	}, [started])
 
 	useEffect(()=>{
+		if (!game) return
 		if (game.gameStatus === "finished" && !revealedRef.current) {
 			revealedRef.current = true
 			allRef.current.forEach(playerCards=>{
 				playerCards.forEach(card=>{
-					card.flipped == false
+					card.flipped = false
 				})
 			})
 		}
-	}, [game.gameStatus])
+	}, [game])
 	return { canvasRef }
 }

@@ -1,7 +1,8 @@
 import styled from 'styled-components';
 
 export const TableWrapper = styled.div`
-	div {
+	position: relative;
+	.btn {
 		margin-top: 10px;
 		display: flex;
 		gap: 10px;
@@ -9,6 +10,19 @@ export const TableWrapper = styled.div`
 		align-items: center;
 	}
 `;
+
+export const Overlay = styled.div`
+	position: absolute;
+	backdrop-filter: blur(6px);
+	inset: 0;
+	background: rgba(0,0,0,0.7);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	z-index: 999;
+`;
+
 
 export const PlayTableStyle = styled.div`
 	position: relative;
@@ -26,4 +40,10 @@ export const PlayTableStyle = styled.div`
 		height: 100%;
 		display: block;
 	}
+`;
+
+export const PlayerCountStyle = styled.div`
+	display:flex;
+	flex-direction: column;
+	gap: 20px;
 `;
