@@ -165,5 +165,10 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 			})
 		}
 	}, [game])
-	return { canvasRef }
+
+	const reset = ()=> {
+		allRef.current = []
+	}
+
+	return { canvasRef, reset }
 }

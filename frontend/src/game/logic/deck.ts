@@ -1,6 +1,5 @@
 import { calculateScore, checkBlackCrown } from "./rules";
 import type { Suit, Rank, Player, Card, GameState } from '../logic/types';
-import { PlayerCountStyle } from "components/style/GameTableStyle";
 
 export function createDeck() : Card[] {
 	const suits: Suit[] = ["hearts", "diamonds", "clubs", "spades"]

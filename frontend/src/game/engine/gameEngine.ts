@@ -10,7 +10,7 @@ export function nextPlayer(game: GameState) {
 		next.gameStatus = "finished"
 		next.winnerId = checkWinner(game)
 		next.turn++
-		console.log("return 1", next.gameStatus, next.winnerId)
+		console.log("return 1", next.turn, next.gameStatus, next.winnerId)
 		return next
 	}
 	if (activePlayer.length === 1) {
@@ -18,7 +18,7 @@ export function nextPlayer(game: GameState) {
 		next.gameStatus = "finished"
 		next.winnerId = checkWinner(game)
 		next.turn++
-		console.log("return 2", next.gameStatus, next.winnerId)
+		console.log("return 2",  next.turn, next.gameStatus, next.winnerId)
 		return next
 	}
 	for (let i = 1; i <= total; i++) {
@@ -32,6 +32,6 @@ export function nextPlayer(game: GameState) {
 	next.gameStatus = "finished"
 	next.winnerId = checkWinner(game)
 	next.turn++
-	console.log("return 3", next.gameStatus, next.winnerId)
+	console.log("return 3", next.turn, next.gameStatus, next.winnerId)
 	return next
 }

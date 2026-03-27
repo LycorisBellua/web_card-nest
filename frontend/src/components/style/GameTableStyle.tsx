@@ -15,7 +15,7 @@ export const Overlay = styled.div`
 	position: absolute;
 	backdrop-filter: blur(6px);
 	inset: 0;
-	background: rgba(0,0,0,0.7);
+	background: rgba(0,0,0,0.8);
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -46,4 +46,18 @@ export const PlayerCountStyle = styled.div`
 	display:flex;
 	flex-direction: column;
 	gap: 20px;
+`;
+
+export const RecordTableStyle = styled.table`
+	border-collapse: collapse;
+	th, td {
+		border: 1px solid;
+		padding: 10px;
+	}
+	margin-bottom: 20px;
+`;
+
+export const ShowFinishedStyle = styled(Overlay)`
+	background: rgba(0,0,0,0.3);
+	backdrop-filter: none;
 `;

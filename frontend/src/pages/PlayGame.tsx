@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { PlayTableStyle, TableWrapper, PlayerCountStyle, Overlay } from '../components/style/GameTableStyle';
+import { useEffect, useState } from "react"
+import { PlayTableStyle, TableWrapper, PlayerCountStyle, Overlay, RecordTableStyle, ShowFinishedStyle} from '../components/style/GameTableStyle';
 import { initialGame } from "game/state/initialState";
 import { dealInitialCards } from "game/logic/deck";
 import { hit, stand } from "game/logic/game";
@@ -7,13 +7,22 @@ import { useGameCanvas } from "game/canvas/useGameCanvas";
 import type { GameState } from "game/logic/types";
 import { nextPlayer } from "game/engine/gameEngine";
 
+type RoundRecord = {
+	round: number;
+	winnerId: number | null;
+	scores: number[];
+}
+
 function PlayGame() {
 	const [started, setStarted] = useState(false)
 	const [local, setLocal] = useState(false)
 	const [online, setOnline] = useState(false)
 	const [game, setGame] = useState<GameState | null>(null)
-	const {canvasRef} = useGameCanvas(game, started)
-	
+	const [history, setHistory] = useState<RoundRecord[]>([])
+	const [displayRecord, setDisplayRecord] = useState(false)
+	const [showFinished, setShowFinished] = useState(false)
+	const {canvasRef, reset} = useGameCanvas(game, started)
+
 	function handleLocalGame() {
 		setLocal(true)
 	}
@@ -63,6 +72,48 @@ function PlayGame() {
 		})
 	}
 
+	function handleNewRound() {
+		if (!game) return
+		setHistory((h)=>[...h, {
+			round: game.turn,
+			winnerId: game.winnerId,
+			scores: game.players.map(p=>p.score)
+		}])
+		const playerCount = game.players.length
+		const turn = game.turn
+		reset()
+		const newGame = initialGame(playerCount)
+		newGame.turn = turn
+		setGame(dealInitialCards(newGame))
+	}
+
+	function handleDisplayRecord() {
+		if (!game) return
+		setHistory((h)=>[...h, {
+			round: game.turn,
+			winnerId: game.winnerId,
+			scores: game.players.map(p=>p.score)
+		}])
+		setStarted(false)
+		if (local)
+			setLocal(false)
+		if (online)
+			setOnline(false)
+		setDisplayRecord(true)
+	}
+
+	useEffect(()=>{
+		if (!game) return
+		if (game.gameStatus == "finished") {
+			const timer = setTimeout(()=>{
+				setShowFinished(true)
+			}, 5000)
+			return (()=>clearTimeout(timer))
+		} else {
+			setShowFinished(false)
+		}
+	}, [game?.gameStatus])
+
  	return (
 		<div>
 			{started
@@ -75,14 +126,14 @@ function PlayGame() {
 								<button onClick={handleNextPlayer}>Confirm</button>
 							</Overlay>
 						)}
-						{game?.gameStatus === "finished" && (
-							<Overlay>
-								<p>Turn {game.turn}: winner is Player {game.winnerId! + 1}</p>
+						{showFinished && game?.gameStatus === "finished" && (
+							<ShowFinishedStyle>
+								<p>Round {game.turn}: winner is player {game.winnerId! + 1}</p>
 								<div className="btn">
-									<button onClick={handleLocalGame}>Another turn</button>
-									<button>Stop playing</button>
+									<button onClick={handleNewRound}>Another turn</button>
+									<button onClick={handleDisplayRecord}>Stop playing</button>
 								</div>
-							</Overlay>
+							</ShowFinishedStyle>
 						)}
 						<PlayTableStyle>
 							<canvas ref={canvasRef} width={900} height={600}></canvas>
@@ -94,14 +145,17 @@ function PlayGame() {
 					</TableWrapper>
 				</>
 			}
-			{!local && !online
+			{!local && !online && !displayRecord
 				&& <div>
 					<button onClick={handleLocalGame}>Local game</button>
 					<button onClick={handleOnlineGame}>Online game</button>
 				</div>
 			}
-			{(local || online) && !started
-				&& <PlayerCount local = {local} onStartLocalGame={handleStartLocalGame} onStartOnlineGame={handleStartOnlineGame}/>
+			{(local || online) && !started &&
+				<PlayerCount local = {local} onStartLocalGame={handleStartLocalGame} onStartOnlineGame={handleStartOnlineGame}/>
+			}
+			{!started && displayRecord && !local && !online &&
+				<DisplayRecord game={game} history={history}/>
 			}
 		</div>
 	)
@@ -120,6 +174,51 @@ function PlayerCount({local, onStartLocalGame, onStartOnlineGame}: PlayerCountPr
 			<button onClick={()=>{local ? onStartLocalGame(3) : onStartOnlineGame(3)}}>1 v 1 v 1</button>
 			<button onClick={()=>{local ? onStartLocalGame(4) : onStartOnlineGame(4)}}>1 v 1 v 1 v 1</button>
 		</PlayerCountStyle>
+	)
+}
+
+type DisplayRecordProps = {
+	game: GameState | null;
+	history: RoundRecord[];
+}
+
+function DisplayRecord({game, history}: DisplayRecordProps) {
+	if (!game) {
+        return (
+            <Overlay>
+                <div style={{ color: 'white', textAlign: 'center' }}>
+                    <h2>No records yet.</h2>
+                    <button onClick={() => window.location.reload()}>Back</button>
+                </div>
+            </Overlay>
+        );
+    }
+	return (
+		<Overlay>
+			<RecordTableStyle>
+				<thead>
+					<tr>
+						<th>Round</th>
+						{game.players.map((p, i)=>(
+							<th key={i}>Player {p.id + 1}</th>
+						))}
+						<th>Winner</th>
+					</tr>
+				</thead>
+				<tbody>
+				{history.map((h, idx)=>(
+					<tr key={idx}>
+						<td>{h.round}</td>
+						{h.scores.map((score, sIdx)=>(
+							<td key={sIdx}>{game.players[sIdx].hasBlackCrown? "Black Crown" : score}</td>
+						))}
+						<td>{h.winnerId! + 1}</td>
+					</tr>
+				))}
+				</tbody>
+			</RecordTableStyle>
+			<button onClick={() => window.location.reload()}>Back</button>
+		</Overlay>
 	)
 }
 
