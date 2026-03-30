@@ -8,6 +8,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ErrorMessages } from './error_messages/ErrorMessages';
 import { Ranks } from 'src/generated/prisma/enums';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -23,11 +24,13 @@ export class UserService {
       throw new ConflictException(ErrorMessages.EMAIL_USED);
     }
 
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
+
     return await this.prisma.user.create({
       data: {
         username: createUserDto.username,
         email_unverified: createUserDto.email_unverified,
-        password: createUserDto.password,
+        password: hashedPassword,
       },
       omit: { password: true },
     });
