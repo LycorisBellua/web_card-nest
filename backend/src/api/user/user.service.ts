@@ -141,12 +141,7 @@ export class UserService {
 
   async findByEmailAddress(toFind: string) {
     return await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: { equals: toFind, mode: 'insensitive' } },
-          { email_unverified: { equals: toFind, mode: 'insensitive' } },
-        ],
-      },
+      where: { email: { equals: toFind, mode: 'insensitive' } },
       omit: { password: true },
     });
   }
