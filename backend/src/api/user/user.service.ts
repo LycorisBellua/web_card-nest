@@ -59,11 +59,15 @@ export class UserService {
     if (!found.email_unverified) {
       throw new BadRequestException(ErrorMessages.NO_EMAIL);
     }
-    return await this.prisma.user.update({
+    const verified = await this.prisma.user.update({
       where: { id: userId },
       data: { email: found.email_unverified, email_unverified: null },
       omit: { password: true },
     });
+    await this.prisma.user.deleteMany({
+      where: { email_unverified: verified.email },
+    });
+    return verified;
   }
 
   async updateDesc(userId: string, newDesc: string | undefined) {
