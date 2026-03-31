@@ -1,6 +1,7 @@
 import { calculateScore, checkBlackCrown } from "./rules";
 import type { Suit, Rank, Player, Card, GameState } from '../logic/types';
 
+// create two decks
 export function createDeck() : Card[] {
 	const suits: Suit[] = ["hearts", "diamonds", "clubs", "spades"]
 	const ranks: Rank[] = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
@@ -12,10 +13,15 @@ export function createDeck() : Card[] {
 			deck.push({suit, rank})
 		}
 	}
+	for (const suit of suits) {
+		for (const rank of ranks) {
+			deck.push({suit, rank})
+		}
+	}
 	return deck
 }
 
-// fisher-yates algorithm
+// mix cards with fisher-yates algorithm
 export function shuffle(deck: Card[]): Card[] {
 	const newDeck : Card[] = [...deck]
 	for (let i = newDeck.length - 1; i > 0; i--) {
@@ -27,6 +33,22 @@ export function shuffle(deck: Card[]): Card[] {
 	return newDeck
 }
 
+// distribute first two cards
+export function dealInitialCards(gameState: GameState) {
+	const next = structuredClone(gameState)
+	for (let card = 0; card < 2; card++) {
+		for (let i = 0; i < next.players.length; i++) {
+			giveCard(next.players[i], next)
+		}
+	}
+	const blackCrownPlayer = next.players.find(p=>p.hasBlackCrown)
+	if (blackCrownPlayer) {
+		next.gameStatus = "finished"
+		next.winnerId = blackCrownPlayer.id
+	}
+	return next
+}
+
 export function giveCard(player: Player, gameState : GameState) {
 	if (player.hasStood)
 		return
@@ -34,7 +56,6 @@ export function giveCard(player: Player, gameState : GameState) {
 	player.cards.push(card)
 	const newScore = calculateScore(player.cards)
 	player.reachedAt++
-	console.log(`for ${player.id}, this is ${player.reachedAt} turns`)
 	player.score = newScore
 	if (player.score > 21) {
 		player.isBusted = true
@@ -43,12 +64,3 @@ export function giveCard(player: Player, gameState : GameState) {
 	player.hasBlackCrown = checkBlackCrown(player.cards)
 }
 
-export function dealInitialCards(gameState: GameState) {
-	const next = structuredClone(gameState)
-	for (let round = 0; round < 2; round++) {
-		for (let i = 0; i < next.players.length; i++) {
-			giveCard(next.players[i], next)
-		}
-	}
-	return next
-}

@@ -5,7 +5,7 @@ import { dealInitialCards } from "game/logic/deck";
 import { hit, stand } from "game/logic/game";
 import { useGameCanvas } from "game/canvas/useGameCanvas";
 import type { GameState } from "game/logic/types";
-import { nextPlayer } from "game/engine/gameEngine";
+import { newRoundGame, nextPlayer } from "game/engine/gameEngine";
 
 type RoundRecord = {
 	round: number;
@@ -80,10 +80,8 @@ function PlayGame() {
 			scores: game.players.map(p=>p.score)
 		}])
 		const playerCount = game.players.length
-		const turn = game.turn
 		reset()
-		const newGame = initialGame(playerCount)
-		newGame.turn = turn
+		const newGame = newRoundGame(playerCount, game)
 		setGame(dealInitialCards(newGame))
 	}
 

@@ -6,7 +6,11 @@ export function hit(currentPlayerIdx: number, gameState: GameState) {
 	const next = structuredClone(gameState)
 	const player = next.players[currentPlayerIdx]
 	giveCard(player, next)
-	console.log("Current player:", next.currentPlayerIdx, "choose to hit", "Status:", next.gameStatus);
+	if (player.hasBlackCrown) {
+        next.gameStatus = "finished"
+        next.winnerId = player.id
+        return next
+    }
 	if (player.isBusted) {
 		next.gameStatus = "transition"
 	}

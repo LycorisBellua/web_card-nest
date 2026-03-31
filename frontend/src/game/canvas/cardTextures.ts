@@ -114,7 +114,3 @@ export function makeBackImg() : HTMLCanvasElement {
 
 	return c
 }
-
-// export function makeHaloImg() : HTMLCanvasElement {
-
-// }

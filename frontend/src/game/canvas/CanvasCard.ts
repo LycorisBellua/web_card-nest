@@ -9,6 +9,7 @@ export class CanvasCard {
 	label: string;
 	flipped = false;
 	hover = false;
+	isWinner = false;
 
 	x: number;
 	y: number;
@@ -39,8 +40,15 @@ export class CanvasCard {
 		ctx.save()
 		if (isCurrent) {
 			ctx.shadowColor = "rgba(255, 220, 40, 0.8)"
+			ctx.strokeStyle = "rgba(255, 220, 40, 0.6)"
 			ctx.shadowBlur = 30
-			ctx.strokeStyle = "rgba(255, 220, 40, 0.6)";
+			ctx.lineWidth = 3
+			fillRoundRect(ctx, this.x, this.y, this.w + 1, this.h + 1, 6)
+			ctx.stroke()
+		} else if (this.isWinner) {
+			ctx.shadowColor = "rgb(194, 38, 255)"
+			ctx.strokeStyle = "rgb(192, 34, 255)"
+			ctx.shadowBlur = 30
 			ctx.lineWidth = 3
 			fillRoundRect(ctx, this.x, this.y, this.w + 1, this.h + 1, 6)
 			ctx.stroke()

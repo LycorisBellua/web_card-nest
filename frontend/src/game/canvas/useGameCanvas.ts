@@ -52,7 +52,6 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 					card.flipped = true
 				return card
 			})
-			
 			const relativeIndex = getRelativeIndex(playerIdx, game.currentPlayerIdx, game.players.length)
 			const position = getPlayerPosition(relativeIndex, game.players.length)
 			const spacing = 90
@@ -90,8 +89,6 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 		if (!canvas) return
 		const ctx = canvas.getContext("2d")!
 		if (!ctx) return
-		const W = canvas.width
-		const H = canvas.height
 		
 		let last = performance.now()
 		function loop(now: number) {
@@ -103,7 +100,7 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 			ctx.fillRect(0, 0, W, H)
 			
 			allRef.current.forEach((playerCards, playerIdx)=>{
-				const isCurrent = playerIdx === gameRef.current!.currentPlayerIdx
+				let isCurrent = playerIdx === gameRef.current!.currentPlayerIdx
 				playerCards.forEach((card, i)=>{
 					if (gameRef.current!.gameStatus !== "finished") {
 						if (isCurrent)
@@ -113,10 +110,12 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 								card.flipped = true
 					} else {
 						card.flipped = false
+						isCurrent = false
 					}
 					card.update(dt)
 					card.draw(ctx, isCurrent)
 				})
+
 				const label = `Player ${playerIdx + 1}`
     			ctx.save()
     			ctx.font = "bold 16px Arial"
@@ -145,9 +144,19 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
     				ctx.fillStyle = "#c0110f"
 					ctx.fillText("BUST", labelX, labelY + 20)
 				}
+				if (gameRef.current!.players[playerIdx].hasBlackCrown) {
+					ctx.font = "bold 16px Arial"
+    				ctx.fillStyle = "#b253ff"
+    				if (position === "left") {
+						labelX = CARD_W + 92
+    				} else if (position === "right") {
+						labelX =  W - CARD_W - 92
+						labelY = H / 2
+    				}
+					ctx.fillText("BLACKCROWN", labelX, labelY + 20)
+				}
     			ctx.restore()
 			})
-			ctx.restore()
 			rafRef.current = requestAnimationFrame(loop)
 		}
 		rafRef.current = requestAnimationFrame(loop)
@@ -158,9 +167,11 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 		if (!game) return
 		if (game.gameStatus === "finished" && !revealedRef.current) {
 			revealedRef.current = true
-			allRef.current.forEach(playerCards=>{
+			allRef.current.forEach((playerCards, playerIdx)=>{
+				const isWinner = playerIdx === game.winnerId
 				playerCards.forEach(card=>{
 					card.flipped = false
+					card.isWinner = isWinner
 				})
 			})
 		}
@@ -168,6 +179,7 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 
 	const reset = ()=> {
 		allRef.current = []
+		revealedRef.current = false
 	}
 
 	return { canvasRef, reset }

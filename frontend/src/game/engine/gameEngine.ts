@@ -1,24 +1,16 @@
+import { createDeck, shuffle } from "game/logic/deck";
 import { checkWinner } from "game/logic/rules";
-import type { GameState } from "game/logic/types";
+import type { Card, GameState } from "game/logic/types";
 
 export function nextPlayer(game: GameState) {
 	const next = structuredClone(game)
-	console.log("nextPlayer called, currentPlayerIdx=", game.currentPlayerIdx)
 	const total = next.players.length;
 	const activePlayer = next.players.filter(p=>!p.isBusted)
-	if (activePlayer.length === 0) {
-		next.gameStatus = "finished"
-		next.winnerId = checkWinner(game)
-		next.turn++
-		console.log("return 1", next.turn, next.gameStatus, next.winnerId)
-		return next
-	}
 	if (activePlayer.length === 1) {
 		activePlayer[0].hasStood = true
 		next.gameStatus = "finished"
 		next.winnerId = checkWinner(game)
 		next.turn++
-		console.log("return 2",  next.turn, next.gameStatus, next.winnerId)
 		return next
 	}
 	for (let i = 1; i <= total; i++) {
@@ -32,6 +24,30 @@ export function nextPlayer(game: GameState) {
 	next.gameStatus = "finished"
 	next.winnerId = checkWinner(game)
 	next.turn++
-	console.log("return 3", next.turn, next.gameStatus, next.winnerId)
+	return next
+}
+
+export function newRoundGame(playerCount: number, game: GameState) {
+	const next = structuredClone(game)
+	next.players = Array.from({length: playerCount}, (_, i)=>
+	({
+		id: i,
+		cards: [],
+		score: 0,
+		hasStood: false,
+		isBusted: false,
+		hasBlackCrown: false,
+		reachedAt: -2
+	}))
+	next.currentPlayerIdx = 0
+	next.gameStatus = "playing"
+	next.winnerId = null
+	if (game.deck.length > 52)
+		next.deck = game.deck
+	else {
+		const fullDeck: Card[] = createDeck()
+		const shuffledDeck: Card[] = shuffle(fullDeck)
+		next.deck = shuffledDeck
+	}
 	return next
 }
