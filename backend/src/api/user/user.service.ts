@@ -65,7 +65,11 @@ export class UserService {
       omit: { password: true },
     });
     await this.prisma.user.deleteMany({
+      where: { email: null, email_unverified: verified.email },
+    });
+    await this.prisma.user.updateMany({
       where: { email_unverified: verified.email },
+      data: { email_unverified: null },
     });
     return verified;
   }
