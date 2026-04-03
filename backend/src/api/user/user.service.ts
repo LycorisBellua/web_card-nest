@@ -10,10 +10,15 @@ import { Ranks } from 'src/generated/prisma/enums';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { decodeAvatarBase64 } from './utils/user.validator';
+import { SendMailService } from '../sendMail/sendMail.service';
+import { EmailContents } from '../sendMail/messages/EmailContents';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly sendMail: SendMailService,
+  ) {}
 
   // ADD / REMOVE
   // TODO: Hash password
@@ -28,8 +33,17 @@ export class UserService {
   }
 
   async removeUser(userId: string) {
-    await this.userExistsOrThrow(userId);
-    return this.deleteUser(userId);
+    const found = await this.userExistsOrThrow(userId);
+    const result = await this.deleteUser(userId);
+    const address = found.email ? found.email : found.email_unverified;
+    if (address) {
+      await this.sendMail.sendMail(
+        address,
+        EmailContents.DEL_OBJ,
+        EmailContents.DEL_MSG,
+      );
+    }
+    return result;
   }
 
   // UPDATE
