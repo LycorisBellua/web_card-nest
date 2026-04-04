@@ -31,6 +31,8 @@ env-file:
 		echo "POSTGRES_PASSWORD=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
 		echo "POSTGRES_DB=transcendence" >> $(ENV_FILE); \
 		echo "PGDATA=/var/lib/postgresql/data/pgdata" >> $(ENV_FILE); \
+		echo "DEV_URL=http://$(shell hostname):3000" >> $(ENV_FILE); \
+		echo "PROD_URL=https://$(shell hostname):8080" >> $(ENV_FILE); \
 		cat ../gmail_cred.txt >> $(ENV_FILE); \
 		echo "Generated .env file";\
 	fi
