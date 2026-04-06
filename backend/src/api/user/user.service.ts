@@ -12,6 +12,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { decodeAvatarBase64 } from './utils/user.validator';
 import { SendMailService } from '../sendMail/sendMail.service';
 import { EmailContents } from '../sendMail/messages/EmailContents';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class UserService {
@@ -20,18 +21,7 @@ export class UserService {
     private readonly sendMail: SendMailService,
   ) {}
 
-  // ADD / REMOVE
-  // TODO: Hash password
-  async addUser(createUserDto: CreateUserDto) {
-    if (await this.usernameIsTaken(createUserDto.username)) {
-      throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
-    }
-    if (await this.emailAddressIsTaken(createUserDto.email_unverified)) {
-      throw new ConflictException(ErrorMessages.EMAIL_USED);
-    }
-    return await this.createUser(createUserDto);
-  }
-
+  // CALLED FROM USER CONTROLLER
   async removeUser(userId: string) {
     const found = await this.userExistsOrThrow(userId);
     const result = await this.deleteUser(userId);
@@ -44,21 +34,6 @@ export class UserService {
       );
     }
     return result;
-  }
-
-  // UPDATE
-  async verifyEmail(userId: string) {
-    const found = await this.userExistsOrThrow(userId);
-    if (!found.email_unverified) {
-      throw new BadRequestException(ErrorMessages.NO_EMAIL);
-    }
-    const verified = await this.modifyVerifyEmail(
-      userId,
-      found.email_unverified,
-    );
-    await this.deleteUnverifiedWithTakenEmail(verified.email);
-    await this.modifyVerifiedWithTakenEmail(verified.email);
-    return verified;
   }
 
   async updateUser(userId: string, updateUserDto: UpdateUserDto) {
@@ -129,7 +104,6 @@ export class UserService {
     return await this.modifyRank(userId, newRank);
   }
 
-  // FETCH USERS
   async getUserById(toFind: string) {
     const found = await this.prisma.user.findUnique({
       where: { id: toFind },
@@ -184,13 +158,47 @@ export class UserService {
     }));
   }
 
+  // CALLED FROM AUTH SERVICE
+  // TODO: Hash password
+  async addUser(createUserDto: CreateUserDto) {
+    if (await this.usernameIsTaken(createUserDto.username)) {
+      throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
+    }
+    if (await this.emailAddressIsTaken(createUserDto.email_unverified)) {
+      throw new ConflictException(ErrorMessages.EMAIL_USED);
+    }
+    return await this.createUser(createUserDto);
+  }
+
+  async verifyEmail(userId: string, token: string) {
+    const found = await this.userExists(userId);
+    if (
+      !found ||
+      !found.verifyToken ||
+      found.verifyToken !== token ||
+      !found.email_unverified
+    ) {
+      return null;
+    }
+    const verified = await this.modifyVerifyEmail(
+      userId,
+      found.email_unverified,
+    );
+    await this.deleteUnverifiedWithTakenEmail(verified.email);
+    await this.modifyVerifiedWithTakenEmail(verified.email);
+    return verified;
+  }
+
   // DB ACTIONS (ONLY CALLED AFTER VALIDATION)
+  // TODO: Hash token
   private async createUser(createUserDto: CreateUserDto) {
+    const token = randomBytes(32).toString('hex');
     return await this.prisma.user.create({
       data: {
         username: createUserDto.username,
         email_unverified: createUserDto.email_unverified,
         password: createUserDto.password,
+        verifyToken: token,
       },
       select: { id: true, username: true, date: true },
     });
@@ -260,11 +268,26 @@ export class UserService {
         email_unverified: true,
         password: true,
         username: true,
+        verifyToken: true,
       },
     });
     if (!found) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
+    return found;
+  }
+
+  async userExists(toFind: string) {
+    const found = await this.prisma.user.findUnique({
+      where: { id: toFind },
+      select: {
+        email: true,
+        email_unverified: true,
+        password: true,
+        username: true,
+        verifyToken: true,
+      },
+    });
     return found;
   }
 
