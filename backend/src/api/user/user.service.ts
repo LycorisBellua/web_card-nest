@@ -59,11 +59,19 @@ export class UserService {
     if (!found.email_unverified) {
       throw new BadRequestException(ErrorMessages.NO_EMAIL);
     }
-    return await this.prisma.user.update({
+    const verified = await this.prisma.user.update({
       where: { id: userId },
       data: { email: found.email_unverified, email_unverified: null },
       omit: { password: true },
     });
+    await this.prisma.user.deleteMany({
+      where: { email: null, email_unverified: verified.email },
+    });
+    await this.prisma.user.updateMany({
+      where: { email_unverified: verified.email },
+      data: { email_unverified: null },
+    });
+    return verified;
   }
 
   async updateDesc(userId: string, newDesc: string | undefined) {
@@ -141,12 +149,7 @@ export class UserService {
 
   async findByEmailAddress(toFind: string) {
     return await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: { equals: toFind, mode: 'insensitive' } },
-          { email_unverified: { equals: toFind, mode: 'insensitive' } },
-        ],
-      },
+      where: { email: { equals: toFind, mode: 'insensitive' } },
       omit: { password: true },
     });
   }

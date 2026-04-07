@@ -12,7 +12,7 @@ model User {
   id               String   @id @default(uuid(7))
   username         String   @unique
   email            String?  @unique
-  email_unverified String?  @unique
+  email_unverified String?
   password         String
   desc             String?  @db.VarChar(200)
   avatar           String?
