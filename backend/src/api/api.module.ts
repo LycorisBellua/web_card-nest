@@ -45,6 +45,8 @@ import { PasswordResetService } from './auth/password-reset.service';
     AuthService,
     GdprService,
     PasswordResetService,
+    RelService,
+    AuthService,
   ],
 })
 export class ApiModule {}

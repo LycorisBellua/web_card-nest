@@ -388,10 +388,24 @@ export class UserService {
     newData: Record<string, unknown>,
   ) {
     return await this.prisma.user.update({
+  async verifyEmail(userId: string) {
+    const found = await this.findByIdOrThrow(userId);
+    if (!found.email_unverified) {
+      throw new BadRequestException(ErrorMessages.NO_EMAIL);
+    }
+    const verified = await this.prisma.user.update({
       where: { id: userId },
       data: newData,
       select: { desc: true, email_unverified: true, username: true },
     });
+    await this.prisma.user.deleteMany({
+      where: { email: null, email_unverified: verified.email },
+    });
+    await this.prisma.user.updateMany({
+      where: { email_unverified: verified.email },
+      data: { email_unverified: null },
+    });
+    return verified;
   }
 
   private async modifyPassword(userID: string, newPassword: string) {
@@ -516,6 +530,8 @@ export class UserService {
   private async expiredUsersToModify(time: Date) {
     return await this.prisma.user.findMany({
       where: { verifyTimeout: { lt: time }, email: { not: null } },
+      where: { email: { equals: toFind, mode: 'insensitive' } },
+      omit: { password: true },
     });
   }
 }
