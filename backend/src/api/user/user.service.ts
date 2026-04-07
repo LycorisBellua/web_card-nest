@@ -22,12 +22,15 @@ import {
   getRefreshTimeout,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
+import { SendMailService } from '../sendMail/sendMail.service';
+import { EmailContents } from '../sendMail/messages/EmailContents';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userEmailsService: UserEmailsService,
+    private readonly sendMail: SendMailService,
   ) {}
 
   // CALLED FROM USER CONTROLLER
@@ -244,8 +247,17 @@ export class UserService {
   }
 
   async removeUser(userId: string) {
-    await this.userExistsOrThrow(userId);
-    return this.deleteUser(userId);
+    const found = await this.userExistsOrThrow(userId);
+    const result = await this.deleteUser(userId);
+    const address = found.email ? found.email : found.email_unverified;
+    if (address) {
+      await this.sendMail.sendMail(
+        address,
+        EmailContents.DEL_OBJ,
+        EmailContents.DEL_MSG,
+      );
+    }
+    return result;
   }
 
   // UPDATE
@@ -540,15 +552,10 @@ export class UserService {
       where: { id: userId },
       data: newData,
       select: { desc: true, email_unverified: true, username: true },
+  private async deleteUnverifiedWithTakenEmail(address: string | null) {
+    return await this.prisma.user.deleteMany({
+      where: { email: null, email_unverified: address },
     });
-    await this.prisma.user.deleteMany({
-      where: { email: null, email_unverified: verified.email },
-    });
-    await this.prisma.user.updateMany({
-      where: { email_unverified: verified.email },
-      data: { email_unverified: null },
-    });
-    return verified;
   }
 
   private async modifyVerifiedWithTakenEmail(address: string | null) {
@@ -732,5 +739,11 @@ export class UserService {
       where: { email: { equals: toFind, mode: 'insensitive' } },
       omit: { password: true },
     });
+  private passwordContainsUsername(
+    password: string,
+    username: string,
+  ): boolean {
+    if (!username || !password) return false;
+    return password.toLowerCase().includes(username.toLowerCase());
   }
 }
