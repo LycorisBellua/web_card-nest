@@ -29,6 +29,11 @@ export class UserController {
 
   // UPDATE ENTRIES
   // For Patch Methods: id can be taken from auth token once implemented
+  @Patch(':userId/verify')
+  async verifyEmail(@Param('userId', ParseUUIDPipe) userId: string) {
+    return await this.userService.verifyEmail(userId);
+  }
+
   @Patch(':userId/rank')
   async updateRank(
     @Param('userId', ParseUUIDPipe) userId: string,
