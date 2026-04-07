@@ -346,7 +346,7 @@ const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
     frontend sends over the wire.
     - Returns null if the string is absent or not valid base64.
 */
-function decodeAvatarBase64(value: string): Buffer | null {
+export function decodeAvatarBase64(value: string): Buffer | null {
   if (!value) return null;
   try {
     const raw = value.includes(',') ? value.split(',')[1] : value;

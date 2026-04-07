@@ -15,7 +15,7 @@ model User {
   email_unverified String?
   password         String
   desc             String?  @db.VarChar(200)
-  avatar           String?
+  avatar           Bytes?
   rank             Ranks    @default(USER)
   date             DateTime @default(now())
   sentRequests     Friend[] @relation("requester")
