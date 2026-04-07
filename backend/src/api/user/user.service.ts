@@ -197,10 +197,24 @@ export class UserService {
     });
   }
 
-  private async deleteUnverifiedWithTakenEmail(address: string | null) {
-    return await this.prisma.user.deleteMany({
-      where: { email: null, email_unverified: address },
+  async verifyEmail(userId: string) {
+    const found = await this.findByIdOrThrow(userId);
+    if (!found.email_unverified) {
+      throw new BadRequestException(ErrorMessages.NO_EMAIL);
+    }
+    const verified = await this.prisma.user.update({
+      where: { id: userId },
+      data: { email: found.email_unverified, email_unverified: null },
+      omit: { password: true },
     });
+    await this.prisma.user.deleteMany({
+      where: { email: null, email_unverified: verified.email },
+    });
+    await this.prisma.user.updateMany({
+      where: { email_unverified: verified.email },
+      data: { email_unverified: null },
+    });
+    return verified;
   }
 
   private async modifyVerifiedWithTakenEmail(address: string | null) {
@@ -295,11 +309,10 @@ export class UserService {
     );
   }
 
-  private passwordContainsUsername(
-    password: string,
-    username: string,
-  ): boolean {
-    if (!username || !password) return false;
-    return password.toLowerCase().includes(username.toLowerCase());
+  async findByEmailAddress(toFind: string) {
+    return await this.prisma.user.findFirst({
+      where: { email: { equals: toFind, mode: 'insensitive' } },
+      omit: { password: true },
+    });
   }
 }
