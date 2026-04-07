@@ -9,7 +9,6 @@ import {
   Get,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUsernameDto } from './dto/update-username.dto';
 import { UpdateDescDto } from './dto/update-desc.dto';
 import { UpdateAvatarDto } from './dto/update-avatar.dto';
@@ -20,10 +19,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // ADD / REMOVE
-  @Post()
-  async addUser(@Body() createUserDto: CreateUserDto) {
-    return await this.userService.addUser(createUserDto);
-  }
+  // Add user moved to auth controller
 
   @Delete(':userId')
   async removeUser(@Param('userId', ParseUUIDPipe) userId: string) {
