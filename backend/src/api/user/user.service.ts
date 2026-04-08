@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  InternalServerErrorException,
   Injectable,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -12,13 +13,17 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { decodeAvatarBase64 } from './utils/user.validator';
 import { SendMailService } from '../sendMail/sendMail.service';
 import { EmailContents } from '../sendMail/messages/EmailContents';
-import { randomBytes } from 'crypto';
+import {
+  getCurrentTime,
+  getVerificationTimeout,
+  getVerificationToken,
+} from './utils/user.utils';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly sendMail: SendMailService,
+    private readonly sendMailService: SendMailService,
   ) {}
 
   // CALLED FROM USER CONTROLLER
@@ -27,7 +32,7 @@ export class UserService {
     const result = await this.deleteUser(userId);
     const address = found.email ? found.email : found.email_unverified;
     if (address) {
-      await this.sendMail.sendMail(
+      await this.sendMailService.sendMail(
         address,
         EmailContents.DEL_OBJ,
         EmailContents.DEL_MSG,
@@ -52,6 +57,8 @@ export class UserService {
         throw new ConflictException(ErrorMessages.EMAIL_USED);
       }
       data.email_unverified = updateUserDto.email_unverified;
+      data.verifyToken = getVerificationToken();
+      data.verifyTimeout = getVerificationTimeout();
     }
 
     if (updateUserDto.avatar !== undefined) {
@@ -78,7 +85,11 @@ export class UserService {
       throw new BadRequestException(ErrorMessages.NO_DATA);
     }
 
-    return await this.modifyUserInfo(userId, data);
+    const updated = await this.modifyUserInfo(userId, data);
+    if (updated.email_unverified) {
+      await this.sendVerificationEmail(userId);
+    }
+    return updated;
   }
 
   // TODO: Hash Password
@@ -158,6 +169,19 @@ export class UserService {
     }));
   }
 
+  // CALLED FROM USER-TASKS SERVICE
+  async unverifiedUserCleanup() {
+    const time = getCurrentTime();
+    const toDelete = await this.expiredUsersToDelete(time);
+    await this.deleteExpiredUnverified(time);
+    await this.modifyExpiredUnverified(time);
+    for (const user of toDelete) {
+      if (user.email_unverified) {
+        await this.sendExpiredDeletionEmail(user.email_unverified);
+      }
+    }
+  }
+
   // CALLED FROM AUTH SERVICE
   // TODO: Hash password
   async addUser(createUserDto: CreateUserDto) {
@@ -167,7 +191,9 @@ export class UserService {
     if (await this.emailAddressIsTaken(createUserDto.email_unverified)) {
       throw new ConflictException(ErrorMessages.EMAIL_USED);
     }
-    return await this.createUser(createUserDto);
+    const created = await this.createUser(createUserDto);
+    await this.sendVerificationEmail(created.id);
+    return created;
   }
 
   async verifyEmail(userId: string, token: string) {
@@ -186,22 +212,38 @@ export class UserService {
       userId,
       found.email_unverified,
     );
+    if (!verified || !verified.email) {
+      return null;
+    }
     await this.deleteUnverifiedWithTakenEmail(verified.email);
     await this.modifyVerifiedWithTakenEmail(verified.email);
+    await this.sendVerificationSuccess(verified.email);
     return verified;
+  }
+
+  async resendVerificationEmail(userId: string) {
+    const found = await this.userExistsOrThrow(userId);
+    if (!found.email_unverified) {
+      return { id: userId };
+    }
+    const data: Record<string, unknown> = {};
+    data.verifyToken = getVerificationToken();
+    data.verifyTimeout = getVerificationTimeout();
+    const result = await this.modifyVerificationData(userId, data);
+    await this.sendVerificationEmail(userId);
+    return result;
   }
 
   // DB ACTIONS (ONLY CALLED AFTER VALIDATION)
   // TODO: Hash token
-  private async createUser(createUserDto: CreateUserDto) {
-    const token = randomBytes(32).toString('hex');
+  private async createUser(createUse`rDto: CreateUserDto) {
     return await this.prisma.user.create({
       data: {
         username: createUserDto.username,
         email_unverified: createUserDto.email_unverified,
         password: createUserDto.password,
-        verifyToken: token,
-        verifyTimeout: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        verifyToken: getVerificationToken(),
+        verifyTimeout: getVerificationTimeout(),
       },
       select: { id: true, username: true, date: true },
     });
@@ -217,8 +259,24 @@ export class UserService {
   private async modifyVerifyEmail(userId: string, address: string) {
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { email: address, email_unverified: null },
+      data: {
+        email: address,
+        email_unverified: null,
+        verifyTimeout: null,
+        verifyToken: null,
+      },
       select: { email: true },
+    });
+  }
+
+  private async modifyVerificationData(
+    userId: string,
+    newData: Record<string, unknown>,
+  ) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: newData,
+      select: { id: true },
     });
   }
 
@@ -231,7 +289,20 @@ export class UserService {
   private async modifyVerifiedWithTakenEmail(address: string | null) {
     return await this.prisma.user.updateMany({
       where: { email_unverified: address },
-      data: { email_unverified: null },
+      data: { email_unverified: null, verifyTimeout: null, verifyToken: null },
+    });
+  }
+
+  private async deleteExpiredUnverified(time: Date) {
+    await this.prisma.user.deleteMany({
+      where: { verifyTimeout: { lt: time }, email: null },
+    });
+  }
+
+  private async modifyExpiredUnverified(time: Date) {
+    await this.prisma.user.updateMany({
+      where: { verifyTimeout: { lt: time }, email: { not: null } },
+      data: { email_unverified: null, verifyTimeout: null, verifyToken: null },
     });
   }
 
@@ -282,7 +353,7 @@ export class UserService {
   }
 
   async userExists(toFind: string) {
-    const found = await this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: { id: toFind },
       select: {
         email: true,
@@ -293,7 +364,6 @@ export class UserService {
         verifyTimeout: true,
       },
     });
-    return found;
   }
 
   async usernameIsTaken(toFind: string) {
@@ -310,6 +380,12 @@ export class UserService {
       select: { email: true },
     });
     return found !== null;
+  }
+
+  async expiredUsersToDelete(time: Date) {
+    return await this.prisma.user.findMany({
+      where: { verifyTimeout: { lt: time }, email: null },
+    });
   }
 
   // PASSWORD VALIDATION
@@ -343,5 +419,44 @@ export class UserService {
   ): boolean {
     if (!username || !password) return false;
     return password.toLowerCase().includes(username.toLowerCase());
+  }
+
+  // VERIFICATION EMAILS (INTERNAL USE)
+  async sendVerificationEmail(userId: string) {
+    const found = await this.userExistsOrThrow(userId);
+    const address = found.email_unverified;
+    if (!address) {
+      throw new BadRequestException('No email address to verify.');
+    }
+    let url = process.env.HOME_URL;
+    if (url === undefined) {
+      throw new InternalServerErrorException('Unable to verify Card Nest URL');
+    }
+    url += '/api/auth/verify/' + userId + '/' + found.verifyToken;
+    await this.sendMailService.sendMail(
+      address,
+      EmailContents.VER_OBJ,
+      EmailContents.VER_MSG.replace('URL', url),
+    );
+  }
+
+  async sendVerificationSuccess(address: string) {
+    const url = process.env.HOME_URL;
+    if (url === undefined) {
+      return;
+    }
+    await this.sendMailService.sendMail(
+      address,
+      EmailContents.VER_SUCCESS_OBJ,
+      EmailContents.VER_SUCCESS_MESSAGE.replace('URL', url),
+    );
+  }
+
+  async sendExpiredDeletionEmail(address: string) {
+    await this.sendMailService.sendMail(
+      address,
+      EmailContents.EXP_DEL_OBJ,
+      EmailContents.EXP_DEL_MSG,
+    );
   }
 }

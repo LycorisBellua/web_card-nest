@@ -1,20 +1,13 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
-import { SendMailService } from '../sendMail/sendMail.service';
-import { EmailContents } from '../sendMail/messages/EmailContents';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly userService: UserService,
-    private readonly sendMailService: SendMailService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   async signup(createUserDto: CreateUserDto) {
-    const created = await this.userService.addUser(createUserDto);
-    await this.sendVerificationEmail(created.id);
-    return created;
+    return await this.userService.addUser(createUserDto);
   }
 
   async verifyEmail(userId: string, token: string) {
@@ -22,40 +15,10 @@ export class AuthService {
     if (!verified) {
       return { url: `${process.env.HOME_URL}/verify-error` };
     }
-    if (verified.email) {
-      await this.sendVerificationSuccess(verified.email);
-    }
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
-  // Verification Email (internal use)
-  async sendVerificationEmail(userId: string) {
-    const found = await this.userService.userExistsOrThrow(userId);
-    const address = found.email_unverified;
-    if (!address) {
-      throw new BadRequestException('No email address to verify.');
-    }
-    let url = process.env.HOME_URL;
-    if (url === undefined) {
-      throw new BadRequestException('Unable to verify Card Nest URL');
-    }
-    url += '/api/auth/verify/' + userId + '/' + found.verifyToken;
-    await this.sendMailService.sendMail(
-      address,
-      EmailContents.VER_OBJ,
-      EmailContents.VER_MSG.replace('URL', url),
-    );
-  }
-
-  async sendVerificationSuccess(address: string) {
-    const url = process.env.HOME_URL;
-    if (url === undefined) {
-      return;
-    }
-    await this.sendMailService.sendMail(
-      address,
-      EmailContents.VER_SUCCESS_OBJ,
-      EmailContents.VER_SUCCESS_MESSAGE.replace('URL', url),
-    );
+  async resendVerificationEmail(userId: string) {
+    return await this.userService.resendVerificationEmail(userId);
   }
 }

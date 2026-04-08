@@ -27,4 +27,11 @@ export class AuthController {
   ) {
     return await this.authService.verifyEmail(userId, token);
   }
+
+  @Get('verify:userId/resend')
+  async resendVerificationEmail(
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ) {
+    return this.authService.resendVerificationEmail(userId);
+  }
 }
