@@ -176,7 +176,9 @@ export class UserService {
       !found ||
       !found.verifyToken ||
       found.verifyToken !== token ||
-      !found.email_unverified
+      !found.email_unverified ||
+      !found.verifyTimeout ||
+      found.verifyTimeout < new Date()
     ) {
       return null;
     }
@@ -199,6 +201,7 @@ export class UserService {
         email_unverified: createUserDto.email_unverified,
         password: createUserDto.password,
         verifyToken: token,
+        verifyTimeout: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
       select: { id: true, username: true, date: true },
     });
@@ -269,6 +272,7 @@ export class UserService {
         password: true,
         username: true,
         verifyToken: true,
+        verifyTimeout: true,
       },
     });
     if (!found) {
@@ -286,6 +290,7 @@ export class UserService {
         password: true,
         username: true,
         verifyToken: true,
+        verifyTimeout: true,
       },
     });
     return found;

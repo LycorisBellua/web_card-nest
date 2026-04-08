@@ -22,10 +22,13 @@ export class AuthService {
     if (!verified) {
       return { url: `${process.env.HOME_URL}/verify-error` };
     }
+    if (verified.email) {
+      await this.sendVerificationSuccess(verified.email);
+    }
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
-  // Send Verification email (internal use)
+  // Verification Email (internal use)
   async sendVerificationEmail(userId: string) {
     const found = await this.userService.userExistsOrThrow(userId);
     const address = found.email_unverified;
@@ -41,6 +44,18 @@ export class AuthService {
       address,
       EmailContents.VER_OBJ,
       EmailContents.VER_MSG.replace('URL', url),
+    );
+  }
+
+  async sendVerificationSuccess(address: string) {
+    const url = process.env.HOME_URL;
+    if (url === undefined) {
+      return;
+    }
+    await this.sendMailService.sendMail(
+      address,
+      EmailContents.VER_SUCCESS_OBJ,
+      EmailContents.VER_SUCCESS_MESSAGE.replace('URL', url),
     );
   }
 }

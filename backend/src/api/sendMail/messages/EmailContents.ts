@@ -3,4 +3,6 @@ export enum EmailContents {
   DEL_MSG = 'The account associated with this email address has been deleted',
   VER_OBJ = 'Email Verification',
   VER_MSG = `<p>Please click on the link below in order to verify your account:</p><p><a title="Card Nest Email Verification "href="URL">Click here</a></p>`,
+  VER_SUCCESS_OBJ = 'Email Address Successfully Verified',
+  VER_SUCCESS_MESSAGE = `<p>Your email address has been successfully verified and your account is now active.</p><p><a title="Card Nest Home" href="URL">Card Nest Home Page</a></p>`,
 }

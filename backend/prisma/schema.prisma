@@ -19,7 +19,7 @@ model User {
   rank             Ranks      @default(USER)
   date             DateTime   @default(now())
   verifyToken      String?    @unique
-  verifyTimeout    DateTime?  @default(now())
+  verifyTimeout    DateTime?
   sentRequests     Friend[]   @relation("requester")
   receivedRequests Friend[]   @relation("addressee")
   blocked          Block[]    @relation("blocker")
