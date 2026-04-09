@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { PlayTableStyle, TableWrapper, PlayerCountStyle, Overlay, RecordTableStyle, ShowFinishedStyle} from '../components/style/GameTableStyle';
+import { PlayTableStyle, TableWrapper, PlayerCountStyle, Overlay, OverlayStyle, RecordTableStyle, ShowFinishedStyle} from '../components/style/GameTableStyle';
 import { initialGame } from "game/state/initialState";
 import { dealInitialCards } from "game/logic/deck";
 import { hit, stand } from "game/logic/game";
@@ -184,10 +184,10 @@ function DisplayRecord({game, history}: DisplayRecordProps) {
 	if (!game) {
         return (
             <Overlay>
-                <div style={{ color: 'white', textAlign: 'center' }}>
+                <OverlayStyle>
                     <h2>No records yet.</h2>
                     <button onClick={() => window.location.reload()}>Back</button>
-                </div>
+                </OverlayStyle>
             </Overlay>
         );
     }

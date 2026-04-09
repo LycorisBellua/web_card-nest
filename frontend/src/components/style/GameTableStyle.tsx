@@ -23,6 +23,10 @@ export const Overlay = styled.div`
 	z-index: 999;
 `;
 
+export const OverlayStyle = styled.div`
+   color: white;
+   text-align: center;
+`;
 
 export const PlayTableStyle = styled.div`
 	position: relative;

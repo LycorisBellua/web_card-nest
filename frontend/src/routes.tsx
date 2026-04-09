@@ -25,7 +25,7 @@ const routes = [
       { path: 'privacy-policy', element: <PrivacyPolicy /> },
       { path: 'terms-of-service', element: <TermsOfService /> },
       { path: 'credits', element: <Credits /> },
-      { path: 'playGame', element: <PlayGame /> },
+      { path: 'play-game', element: <PlayGame /> },
       { path: '*', element: <NotFound /> },
     ],
   },
