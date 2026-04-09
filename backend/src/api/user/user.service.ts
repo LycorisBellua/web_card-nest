@@ -176,11 +176,19 @@ export class UserService {
   async unverifiedUserCleanup() {
     const time = getCurrentTime();
     const toDelete = await this.expiredUsersToDelete(time);
-    await this.deleteExpiredUnverified(time);
+    const toModify = await this.expiredUsersToModify(time);
     await this.modifyExpiredUnverified(time);
     for (const user of toDelete) {
       if (user.email_unverified) {
         await this.userEmailsService.sendExpiredDeletionEmail(
+          user.email_unverified,
+        );
+      }
+    }
+    for (const user of toModify) {
+      if (user.email && user.email_unverified) {
+        await this.userEmailsService.sendExpiredModificationEmail(
+          user.email,
           user.email_unverified,
         );
       }
@@ -404,6 +412,12 @@ export class UserService {
   private async expiredUsersToDelete(time: Date) {
     return await this.prisma.user.findMany({
       where: { verifyTimeout: { lt: time }, email: null },
+    });
+  }
+
+  private async expiredUsersToModify(time: Date) {
+    return await this.prisma.user.findMany({
+      where: { verifyTimeout: { lt: time }, email: { not: null } },
     });
   }
 }

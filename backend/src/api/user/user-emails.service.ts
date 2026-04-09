@@ -39,6 +39,14 @@ export class UserEmailsService {
     );
   }
 
+  async sendExpiredModificationEmail(address: string, expired: string) {
+    await this.sendMailService.sendMail(
+      address,
+      EmailContents.EXP_MOD_OBJ,
+      EmailContents.EXP_MOD_MSG.replace('EMAIL', expired),
+    );
+  }
+
   async sendDeletionEmail(address: string) {
     await this.sendMailService.sendMail(
       address,
