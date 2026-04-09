@@ -14,6 +14,8 @@ import {
   getCurrentTime,
   getVerificationTimeout,
   getVerificationToken,
+  newPasswordContainsUsername,
+  newPasswordContainsEmail,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
 
@@ -99,10 +101,10 @@ export class UserService {
     const newPassword = updatePasswordDto.newPassword;
     const currentPassword = updatePasswordDto.oldPassword;
     const email = user.email === null ? user.email_unverified : user.email;
-    if (this.passwordContainsUsername(newPassword, user.username)) {
+    if (newPasswordContainsUsername(newPassword, user.username)) {
       throw new BadRequestException(ErrorMessages.USERNAME_IN_PASSWORD);
     }
-    if (this.passwordContainsEmail(newPassword, email)) {
+    if (newPasswordContainsEmail(newPassword, email)) {
       throw new BadRequestException(ErrorMessages.EMAIL_IN_PASSWORD);
     }
     if (user.password !== currentPassword) {
@@ -369,7 +371,7 @@ export class UserService {
     return found;
   }
 
-  async userExists(toFind: string) {
+  private async userExists(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },
       select: {
@@ -383,7 +385,7 @@ export class UserService {
     });
   }
 
-  async usernameIsTaken(toFind: string) {
+  private async usernameIsTaken(toFind: string) {
     const found = await this.prisma.user.findUnique({
       where: { username: toFind },
       select: { username: true },
@@ -391,7 +393,7 @@ export class UserService {
     return found !== null;
   }
 
-  async emailAddressIsTaken(toFind: string) {
+  private async emailAddressIsTaken(toFind: string) {
     const found = await this.prisma.user.findUnique({
       where: { email: toFind },
       select: { email: true },
@@ -399,44 +401,9 @@ export class UserService {
     return found !== null;
   }
 
-  async expiredUsersToDelete(time: Date) {
+  private async expiredUsersToDelete(time: Date) {
     return await this.prisma.user.findMany({
       where: { verifyTimeout: { lt: time }, email: null },
     });
   }
-
-  // PASSWORD VALIDATION
-  // These are needed as the decorators used when creating a user compare
-  // against the username/email in the dto. When just updating a password,
-  // these decorators are invalid. Same logic as createUserDto decorators.
-  private passwordContainsEmail(
-    password: string,
-    email: string | null,
-  ): boolean {
-    if (!email || !password) return false;
-
-    const atIndex = email.indexOf('@');
-    if (atIndex === -1) return false;
-
-    const localPart = email.substring(0, atIndex);
-    const domainPart = email.substring(atIndex + 1);
-    const passwordLower = password.toLowerCase();
-
-    return (
-      (localPart.length > 0 &&
-        passwordLower.includes(localPart.toLowerCase())) ||
-      (domainPart.length > 0 &&
-        passwordLower.includes(domainPart.toLowerCase()))
-    );
-  }
-
-  private passwordContainsUsername(
-    password: string,
-    username: string,
-  ): boolean {
-    if (!username || !password) return false;
-    return password.toLowerCase().includes(username.toLowerCase());
-  }
-
-  // VERIFICATION EMAILS (INTERNAL USE)
 }
