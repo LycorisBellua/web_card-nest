@@ -19,7 +19,7 @@ export class AuthController {
     return await this.authService.signup(createUserDto);
   }
 
-  @Get('verify/:userId/:token')
+  @Get('/:userId/:token/verify')
   @Redirect(`${process.env.HOME_URL}/verify-success`)
   async verifyEmail(
     @Param('userId', ParseUUIDPipe) userId: string,
@@ -28,7 +28,7 @@ export class AuthController {
     return await this.authService.verifyEmail(userId, token);
   }
 
-  @Get('verify:userId/resend')
+  @Get('/:userId/resend')
   async resendVerificationEmail(
     @Param('userId', ParseUUIDPipe) userId: string,
   ) {

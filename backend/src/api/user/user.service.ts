@@ -12,7 +12,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { decodeAvatarBase64 } from './utils/user.validator';
 import { SendMailService } from '../sendMail/sendMail.service';
-import { EmailContents } from '../sendMail/messages/EmailContents';
+import { EmailContents } from './email_data/EmailContents';
 import {
   getCurrentTime,
   getVerificationTimeout,
@@ -32,11 +32,7 @@ export class UserService {
     const result = await this.deleteUser(userId);
     const address = found.email ? found.email : found.email_unverified;
     if (address) {
-      await this.sendMailService.sendMail(
-        address,
-        EmailContents.DEL_OBJ,
-        EmailContents.DEL_MSG,
-      );
+      await this.sendDeletionEmail(address);
     }
     return result;
   }
@@ -234,9 +230,9 @@ export class UserService {
     return result;
   }
 
-  // DB ACTIONS (ONLY CALLED AFTER VALIDATION)
+  // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
   // TODO: Hash token
-  private async createUser(createUse`rDto: CreateUserDto) {
+  private async createUser(createUserDto: CreateUserDto) {
     return await this.prisma.user.create({
       data: {
         username: createUserDto.username,
@@ -457,6 +453,14 @@ export class UserService {
       address,
       EmailContents.EXP_DEL_OBJ,
       EmailContents.EXP_DEL_MSG,
+    );
+  }
+
+  async sendDeletionEmail(address: string) {
+    await this.sendMailService.sendMail(
+      address,
+      EmailContents.DEL_OBJ,
+      EmailContents.DEL_MSG,
     );
   }
 }
