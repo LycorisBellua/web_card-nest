@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  InternalServerErrorException,
   Injectable,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -11,19 +10,18 @@ import { Ranks } from 'src/generated/prisma/enums';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { decodeAvatarBase64 } from './utils/user.validator';
-import { SendMailService } from '../sendMail/sendMail.service';
-import { EmailContents } from './email_data/EmailContents';
 import {
   getCurrentTime,
   getVerificationTimeout,
   getVerificationToken,
 } from './utils/user.utils';
+import { UserEmailsService } from './user-emails.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly sendMailService: SendMailService,
+    private readonly userEmailsService: UserEmailsService,
   ) {}
 
   // CALLED FROM USER CONTROLLER
@@ -32,7 +30,7 @@ export class UserService {
     const result = await this.deleteUser(userId);
     const address = found.email ? found.email : found.email_unverified;
     if (address) {
-      await this.sendDeletionEmail(address);
+      await this.userEmailsService.sendDeletionEmail(address);
     }
     return result;
   }
@@ -83,7 +81,14 @@ export class UserService {
 
     const updated = await this.modifyUserInfo(userId, data);
     if (updated.email_unverified) {
-      await this.sendVerificationEmail(userId);
+      const found = await this.userExistsOrThrow(userId);
+      if (found.email_unverified && found.verifyToken) {
+        await this.userEmailsService.sendVerificationEmail(
+          userId,
+          found.email_unverified,
+          found.verifyToken,
+        );
+      }
     }
     return updated;
   }
@@ -173,7 +178,9 @@ export class UserService {
     await this.modifyExpiredUnverified(time);
     for (const user of toDelete) {
       if (user.email_unverified) {
-        await this.sendExpiredDeletionEmail(user.email_unverified);
+        await this.userEmailsService.sendExpiredDeletionEmail(
+          user.email_unverified,
+        );
       }
     }
   }
@@ -188,7 +195,14 @@ export class UserService {
       throw new ConflictException(ErrorMessages.EMAIL_USED);
     }
     const created = await this.createUser(createUserDto);
-    await this.sendVerificationEmail(created.id);
+    const found = await this.userExistsOrThrow(created.id);
+    if (found.email_unverified && found.verifyToken) {
+      await this.userEmailsService.sendVerificationEmail(
+        created.id,
+        found.email_unverified,
+        found.verifyToken,
+      );
+    }
     return created;
   }
 
@@ -213,7 +227,7 @@ export class UserService {
     }
     await this.deleteUnverifiedWithTakenEmail(verified.email);
     await this.modifyVerifiedWithTakenEmail(verified.email);
-    await this.sendVerificationSuccess(verified.email);
+    await this.userEmailsService.sendVerificationSuccess(verified.email);
     return verified;
   }
 
@@ -226,7 +240,14 @@ export class UserService {
     data.verifyToken = getVerificationToken();
     data.verifyTimeout = getVerificationTimeout();
     const result = await this.modifyVerificationData(userId, data);
-    await this.sendVerificationEmail(userId);
+    const updated = await this.userExistsOrThrow(userId);
+    if (updated.email_unverified && updated.verifyToken) {
+      await this.userEmailsService.sendVerificationEmail(
+        userId,
+        updated.email_unverified,
+        updated.verifyToken,
+      );
+    }
     return result;
   }
 
@@ -418,49 +439,4 @@ export class UserService {
   }
 
   // VERIFICATION EMAILS (INTERNAL USE)
-  async sendVerificationEmail(userId: string) {
-    const found = await this.userExistsOrThrow(userId);
-    const address = found.email_unverified;
-    if (!address) {
-      throw new BadRequestException('No email address to verify.');
-    }
-    let url = process.env.HOME_URL;
-    if (url === undefined) {
-      throw new InternalServerErrorException('Unable to verify Card Nest URL');
-    }
-    url += '/api/auth/verify/' + userId + '/' + found.verifyToken;
-    await this.sendMailService.sendMail(
-      address,
-      EmailContents.VER_OBJ,
-      EmailContents.VER_MSG.replace('URL', url),
-    );
-  }
-
-  async sendVerificationSuccess(address: string) {
-    const url = process.env.HOME_URL;
-    if (url === undefined) {
-      return;
-    }
-    await this.sendMailService.sendMail(
-      address,
-      EmailContents.VER_SUCCESS_OBJ,
-      EmailContents.VER_SUCCESS_MESSAGE.replace('URL', url),
-    );
-  }
-
-  async sendExpiredDeletionEmail(address: string) {
-    await this.sendMailService.sendMail(
-      address,
-      EmailContents.EXP_DEL_OBJ,
-      EmailContents.EXP_DEL_MSG,
-    );
-  }
-
-  async sendDeletionEmail(address: string) {
-    await this.sendMailService.sendMail(
-      address,
-      EmailContents.DEL_OBJ,
-      EmailContents.DEL_MSG,
-    );
-  }
 }
