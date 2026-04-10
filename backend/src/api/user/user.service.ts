@@ -177,6 +177,7 @@ export class UserService {
     const time = getCurrentTime();
     const toDelete = await this.expiredUsersToDelete(time);
     const toModify = await this.expiredUsersToModify(time);
+    await this.deleteExpiredUnverified(time);
     await this.modifyExpiredUnverified(time);
     for (const user of toDelete) {
       if (user.email_unverified) {
