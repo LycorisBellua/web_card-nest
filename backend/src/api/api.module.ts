@@ -9,14 +9,17 @@ import { RelController } from './relationships/rel.controller';
 import { RelService } from './relationships/rel.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
+import { GdprController } from './gdpr/gdpr.controller';
+import { GdprService } from './gdpr/gdpr.service';
 
-@Module({
+@Module({ 
   controllers: [
     HelloController,
     SendMailController,
     UserController,
     RelController,
     AuthController,
+    GdprController,
   ],
   providers: [
     HelloService,
@@ -24,6 +27,7 @@ import { AuthService } from './auth/auth.service';
     UserService,
     RelService,
     AuthService,
+    GdprService,
   ],
 })
 export class ApiModule {}
