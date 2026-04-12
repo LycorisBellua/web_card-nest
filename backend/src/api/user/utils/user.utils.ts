@@ -2,6 +2,7 @@ import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 
 export function getToken(): string {
+
   return randomBytes(32).toString('hex');
 }
 
