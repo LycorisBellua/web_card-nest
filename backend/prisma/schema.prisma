@@ -9,19 +9,21 @@ datasource db {
 }
 
 model User {
-  id               String   @id @default(uuid(7))
-  username         String   @unique
-  email            String?  @unique
+  id               String     @id @default(uuid(7))
+  username         String     @unique
+  email            String?    @unique
   email_unverified String?
   password         String
-  desc             String?  @db.VarChar(200)
+  desc             String?    @db.VarChar(200)
   avatar           Bytes?
-  rank             Ranks    @default(USER)
-  date             DateTime @default(now())
-  sentRequests     Friend[] @relation("requester")
-  receivedRequests Friend[] @relation("addressee")
-  blocked          Block[]  @relation("blocker")
-  blockedBy        Block[]  @relation("blocked")
+  rank             Ranks      @default(USER)
+  date             DateTime   @default(now())
+  verifyToken      String?    @unique
+  verifyTimeout    DateTime?
+  sentRequests     Friend[]   @relation("requester")
+  receivedRequests Friend[]   @relation("addressee")
+  blocked          Block[]    @relation("blocker")
+  blockedBy        Block[]    @relation("blocked")
 }
 
 enum Ranks {
