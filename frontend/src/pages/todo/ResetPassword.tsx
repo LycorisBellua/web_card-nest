@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Button from 'components/Button';
 import {
-  Container,
   FormGroup,
   ErrorText,
-  ButtonSubmitWrapper,
   SuccessMsg,
-} from 'components/style/SignForm';
+} from 'components/todo/SignForm';
 import { sanitizeEmail } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 
@@ -55,7 +54,7 @@ function ResetPassword() {
   }
 
   return (
-    <Container>
+    <>
       <h1>Reset Password</h1>
       <form
         onSubmit={(e) => {
@@ -75,13 +74,11 @@ function ResetPassword() {
         <ErrorText>
           {errors && errors.map((err, i) => <p key={i}>{err}</p>)}
         </ErrorText>
-        <ButtonSubmitWrapper>
-          <button type="submit">Send code</button>
-        </ButtonSubmitWrapper>
+        <Button type="submit">Send code</Button>
       </form>
       {message && <SuccessMsg>{message}</SuccessMsg>}
       <Link to="/login">Go back to login page 👈</Link>
-    </Container>
+    </>
   );
 }
 

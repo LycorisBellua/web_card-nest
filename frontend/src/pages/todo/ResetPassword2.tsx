@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import Button from 'components/Button';
 import {
-  Container,
   FormGroup,
   ErrorText,
-  ButtonSubmitWrapper,
   SuccessMsg,
-} from 'components/style/SignForm';
+} from 'components/todo/SignForm';
 import { sanitizePassword } from 'functions/UserSanitation';
 import { validatePassword } from 'functions/UserValidation';
 
@@ -93,7 +92,7 @@ function ResetPasswordSecond() {
   }
 
   return (
-    <Container>
+    <>
       <h1>Reset a new password</h1>
       <p>Email: {email}</p>
       <form
@@ -129,13 +128,11 @@ function ResetPasswordSecond() {
         <ErrorText>
           {errors.length > 0 && errors.map((err, i) => <p key={i}>{err}</p>)}
         </ErrorText>
-        <ButtonSubmitWrapper>
-          <button>Confirm</button>
-        </ButtonSubmitWrapper>
+        <Button>Confirm</Button>
       </form>
       {message && <SuccessMsg>{message}</SuccessMsg>}
       <Link to="/login">Go back to login page 👈</Link>
-    </Container>
+    </>
   );
 }
 

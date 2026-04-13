@@ -1,0 +1,173 @@
+    <style>
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 14px;
+        height: 3rem;
+        flex-shrink: 0;
+        background: #100c09;
+        border-bottom: 1px solid #3a2a1e;
+        gap: 8px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-shrink: 0;
+        cursor: default;
+      }
+
+      .logo-mark {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 0.5rem;
+        background: linear-gradient(145deg, #d9a85a, #8b4820);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        box-shadow:
+          0 0 14px rgba(212, 160, 112, 0.3),
+          inset 0 1px 0 rgba(255, 220, 160, 0.15);
+        flex-shrink: 0;
+      }
+
+      .logo-text {
+        font-family: 'Quicksand', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #f0e2cc;
+        white-space: nowrap;
+      }
+
+      .logo-text span {
+        color: #f5c842;
+      }
+
+      .topnav {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+
+      .user-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 8px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+
+      .user-item:hover {
+        background: rgba(212, 160, 112, 0.09);
+      }
+
+      .u-av {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.72rem;
+        flex-shrink: 0;
+      }
+
+      .u-name {
+        font-family: 'Quicksand', sans-serif;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #e0c498;
+        white-space: nowrap;
+      }
+
+      .me-info {
+        text-align: left;
+      }
+
+      .subnav {
+        display: none;
+        height: 2.375rem;
+        flex-shrink: 0;
+        background: #100c09;
+        border-bottom: 1px solid #3a2a1e;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 0 8px;
+      }
+
+      .subnav .nav-btn {
+        flex: 1;
+        text-align: center;
+        padding: 5px 4px;
+        font-size: 0.7rem;
+      }
+
+      @media (max-width: 600px) {
+        .topnav {
+          display: none;
+        }
+        .subnav {
+          display: flex;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .me-info {
+          display: none;
+        }
+      }
+
+      @media (max-height: 620px) {
+        .topbar {
+          height: 2.5rem;
+        }
+      }
+    </style>
+
+  <body>
+    <div id="root">
+      <div id="border">
+        <div class="topbar">
+          <div class="logo">
+            <div class="logo-mark">🃏</div>
+            <div class="logo-text">Card<span>Nest</span></div>
+          </div>
+          <nav class="topnav">
+            <button class="nav-btn on" data-nav="lobby">💬 Lobby</button>
+            <button class="nav-btn" data-nav="play">🃏 Play</button>
+            <button class="nav-btn" data-nav="users">👤 Users</button>
+          </nav>
+          <div class="topbar-right">
+            <button class="user-item">
+              <img
+                class="u-av"
+                src="https://i.pinimg.com/236x/54/72/d1/5472d1b09d3d724228109d381d617326.jpg"
+              />
+              <div class="me-info">
+                <div class="u-name">Wolf-Hart</div>
+              </div>
+            </button>
+          </div>
+        </div>
+        <nav class="subnav">
+          <button class="nav-btn on" data-nav="lobby">💬 Lobby</button>
+          <button class="nav-btn" data-nav="play">🃏 Play</button>
+          <button class="nav-btn" data-nav="users">👤 Users</button>
+        </nav>
+        <div id="body"></div>
+      </div>
+    </div>
+  </body>

@@ -1,11 +1,5 @@
 import styled from 'styled-components';
 
-export const Container = styled.div`
-  width: 90%;
-  max-width: 400px;
-  margin: auto;
-`;
-
 export const FormGroup = styled.div`
   margin-bottom: 14px;
   display: flex;
@@ -27,12 +21,6 @@ export const ErrorText = styled.div`
   p {
     margin: 0;
   }
-`;
-
-export const ButtonSubmitWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-bottom: 14px;
 `;
 
 export const SuccessMsg = styled.p`

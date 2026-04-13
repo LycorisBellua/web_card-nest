@@ -1,5 +1,6 @@
 import userAvatar from 'assets/default_user.png';
 import React, { useEffect, useRef, useState } from 'react';
+import Button from 'components/Button';
 import {
   Page,
   ProfileErrorText,
@@ -9,8 +10,8 @@ import {
   PasswordReset,
   DescriptionTextarea,
   VerifyEmailMsg,
-} from 'components/style/ProfileStyle';
-import { ErrorText } from 'components/style/SignForm';
+} from 'components/todo/ProfileStyle';
+import { ErrorText } from 'components/todo/SignForm';
 import {
   sanitizeUsername,
   sanitizeEmail,
@@ -182,8 +183,8 @@ function UpdateUserAvatar({
     <UserAvatarStyle>
       <img src={avatarURL ? avatarURL : userAvatar} alt="avatar" />
       <div className="btn">
-        <button onClick={handleAvatar}>Edit🖊️</button>
-        <button onClick={() => void removeAvatar()}>Remove🗑️</button>
+        <Button onClick={handleAvatar}>Edit🖊️</Button>
+        <Button onClick={() => void removeAvatar()}>Remove🗑️</Button>
       </div>
       <input
         name="avatar"
@@ -250,9 +251,9 @@ function UpdateUsername({ username, OnUpdateUserField }: UpdateUsernameProps) {
             username
           )}
         </p>
-        <button onClick={edit ? handleSaving : () => setEdit(true)}>
+        <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
-        </button>
+        </Button>
       </InfoRow>
       {errors &&
         errors.map((err, i) => (
@@ -309,9 +310,9 @@ function UpdatePassword({
     <div>
       <InfoRow>
         <p>Password: ********</p>
-        <button onClick={edit ? handleSaving : () => setEdit(true)}>
+        <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
-        </button>
+        </Button>
       </InfoRow>
       {edit && (
         <PasswordReset>
@@ -399,9 +400,9 @@ function UpdateUserEmail({ email, OnUpdateUserField }: UpdateUserEmailProps) {
             email
           )}
         </p>
-        <button onClick={edit ? handleSaving : () => setEdit(true)}>
+        <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
-        </button>
+        </Button>
       </InfoRow>
       {errors &&
         errors.map((err, i) => (
@@ -436,7 +437,7 @@ function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
     <div>
       <InfoRow>
         <p>Unverified email: {unverifiedEmail}</p>
-        <button onClick={() => void handleVerifyEmail()}>Verify🖊️</button>
+        <Button onClick={() => void handleVerifyEmail()}>Verify🖊️</Button>
       </InfoRow>
       {errors &&
         errors.map((err, i) => (
@@ -479,12 +480,12 @@ function UpdateUserDescription({
   }
 
   return (
-    <div>
+    <>
       <InfoRow>
         <p>Description:</p>
-        <button onClick={edit ? handleSaving : () => setEdit(true)}>
+        <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
-        </button>
+        </Button>
       </InfoRow>
       <DescriptionTextarea>
         {edit ? (
@@ -506,7 +507,7 @@ function UpdateUserDescription({
       {errors.map((err, i) => (
         <ProfileErrorText key={i}>{err}</ProfileErrorText>
       ))}
-    </div>
+    </>
   );
 }
 

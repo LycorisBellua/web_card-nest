@@ -1,23 +1,27 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-const FooterStyle = styled.footer`
-  position: relative;
-  bottom: 0px;
-  margin: 20px;
+const FooterDiv = styled.footer`
+  margin-top: 1rem;
+  text-align: center;
 
   a {
-    margin: 15px;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+
+  @media (max-width: 680px) {
+    margin-bottom: 1rem;
   }
 `;
 
 function Footer() {
   return (
-    <FooterStyle>
+    <FooterDiv>
       <Link to="privacy-policy">Privacy Policy</Link>
       <Link to="terms-of-service">Terms of Service</Link>
       <Link to="credits">Credits</Link>
-    </FooterStyle>
+    </FooterDiv>
   );
 }
 

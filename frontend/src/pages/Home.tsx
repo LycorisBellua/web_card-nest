@@ -1,21 +1,16 @@
 import { Link } from 'react-router-dom';
-import { Container } from 'components/style/SignForm';
-import Logo from 'components/style/Logo';
-import cardNestLogo from '/favicon.svg';
+import Button from 'components/Button';
 
 function Home() {
   return (
-    <Container>
-      <Logo src={cardNestLogo} alt="Card Nest logo" />
-      <div>
-        <Link to="/signup">
-          <button>Sign Up</button>
-        </Link>
-        <Link to="/login">
-          <button>Log In</button>
-        </Link>
-      </div>
-    </Container>
+    <>
+      <Link to="/signup">
+        <Button>Sign Up</Button>
+      </Link>
+      <Link to="/login">
+        <Button>Log In</Button>
+      </Link>
+    </>
   );
 }
 

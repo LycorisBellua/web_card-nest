@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Button from 'components/Button';
 import {
-  Container,
   FormGroup,
   ErrorText,
-  ButtonSubmitWrapper,
   SuccessMsg,
-} from 'components/style/SignForm';
+} from 'components/todo/SignForm';
 import { sanitizeEmail, sanitizePassword } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 
@@ -59,7 +58,7 @@ function LogIn() {
   }
 
   return (
-    <Container>
+    <>
       <h1>Log In</h1>
       <form
         onSubmit={(e) => {
@@ -89,17 +88,13 @@ function LogIn() {
         <ErrorText>
           {errors && errors.map((err, i) => <p key={i}>{err}</p>)}
         </ErrorText>
-        <ButtonSubmitWrapper>
-          <button type="submit">Log In</button>
-        </ButtonSubmitWrapper>
+        <Button type="submit">Log In</Button>
       </form>
       {message && <SuccessMsg>{message}</SuccessMsg>}
       <Link to="/reset-pwd">
-        <ButtonSubmitWrapper>
-          <button>Forgot your password?</button>
-        </ButtonSubmitWrapper>
+        <Button>Forgot your password?</Button>
       </Link>
-    </Container>
+    </>
   );
 }
 
