@@ -20,7 +20,7 @@ function PlayGame() {
 	const [game, setGame] = useState<GameState | null>(null)
 	const [history, setHistory] = useState<RoundRecord[]>([])
 	const [displayRecord, setDisplayRecord] = useState(false)
-	const [showFinished, setShowFinished] = useState(false)
+	const [showTransition, setShowTransition] = useState(false)
 	const {canvasRef, reset} = useGameCanvas(game, started)
 
 	function handleLocalGame() {
@@ -62,6 +62,20 @@ function PlayGame() {
 		})
 	}
 
+	function getNextActivePlayer(): number {
+		if (!game)
+			return -1 
+		const total = game.players.length
+		for (let i = 1; i <= total; i++) {
+			const nextPlayer = (game.currentPlayerIdx + i) % total
+			const player = game.players[nextPlayer]
+			if (!player.hasStood && !player.isBusted) {
+				return nextPlayer
+			}
+		}
+		return -1
+	}
+
 	function handleNextPlayer() {
 		setGame(g=>{
 			if (!g) return g
@@ -74,6 +88,7 @@ function PlayGame() {
 
 	function handleNewRound() {
 		if (!game) return
+		// setShowFinished(false)
 		setHistory((h)=>[...h, {
 			round: game.turn,
 			winnerId: game.winnerId,
@@ -102,13 +117,13 @@ function PlayGame() {
 
 	useEffect(()=>{
 		if (!game) return
-		if (game.gameStatus == "finished") {
+		if (game.gameStatus == "transition") {
 			const timer = setTimeout(()=>{
-				setShowFinished(true)
-			}, 5000)
+				setShowTransition(true)
+			}, 1500)
 			return (()=>clearTimeout(timer))
 		} else {
-			setShowFinished(false)
+			setShowTransition(false)
 		}
 	}, [game?.gameStatus])
 
@@ -117,14 +132,18 @@ function PlayGame() {
 			{started
 				&& game && <>
 					<TableWrapper>
-						{game?.gameStatus === "transition" && (
+						{showTransition && game?.gameStatus === "transition" && (
 							<Overlay>
 								{game.players[game.currentPlayerIdx].isBusted && <p>You're busted!</p>}
-								<p>Change to Player {(game.currentPlayerIdx + 1) % game.players.length + 1}</p>
-								<button onClick={handleNextPlayer}>Confirm</button>
+								{game.players[game.currentPlayerIdx].hasStood && <p>You stood!</p>}
+								{getNextActivePlayer() !== -1 && 
+									<>
+										<p>Change to Player {getNextActivePlayer() + 1}</p>
+										<button onClick={handleNextPlayer}>Confirm</button>
+									</>}
 							</Overlay>
 						)}
-						{showFinished && game?.gameStatus === "finished" && (
+						{game?.gameStatus === "finished" && (
 							<ShowFinishedStyle>
 								<p>Round {game.turn}: winner is player {game.winnerId! + 1}</p>
 								<div className="btn">
@@ -137,8 +156,8 @@ function PlayGame() {
 							<canvas ref={canvasRef} width={900} height={600}></canvas>
 						</PlayTableStyle>
 						<div className="btn">
-							<button onClick={handleHit}>Hit</button>
-							<button onClick={handleStand}>Stand</button>
+							<button onClick={handleHit} disabled={game.gameStatus !== "playing"}>Hit</button>
+							<button onClick={handleStand} disabled={game.gameStatus !== "playing"}>Stand</button>
 						</div>
 					</TableWrapper>
 				</>

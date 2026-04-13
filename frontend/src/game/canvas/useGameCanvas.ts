@@ -65,19 +65,28 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 				else
 					startY = 20
 				cards.forEach((c, i)=>{
+					c.rotation = 0
 					c.tx = startX + i * spacing
 					c.ty = startY
 				})
 			} else {
-				startY = H / 2 - total / 2 - CARD_H / 2
-				if (position === "left")
-					startX = 20
-				else
-					startX = W - CARD_W - 20
-				cards.forEach((c, i)=>{
-					c.tx = startX
-					c.ty = startY + i * spacing	
-				})	
+				if (position === "left") {
+				    startX = 40
+				    startY = H / 2 - total / 2 - CARD_H / 2
+				    cards.forEach((c, i) => {
+				        c.rotation = Math.PI / 2
+				        c.tx = startX
+				        c.ty = startY + i * spacing
+				    })
+				} else {
+				    startX = W - CARD_H
+				    startY = H / 2 - total / 2 - CARD_H / 2
+				    cards.forEach((c, i) => {
+				        c.rotation = -Math.PI / 2
+				        c.tx = startX
+				        c.ty = startY + i * spacing
+				    })
+				}
 			}
 			return cards
 		})
@@ -132,10 +141,10 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 					labelX = W / 2
 					labelY = CARD_H + 55
     			} else if (position === "left") {
-					labelX = CARD_W + 65
+					labelX = CARD_W + 65 + 40
 					labelY = H / 2
     			} else if (position === "right") {
-					labelX =  W - CARD_W - 65
+					labelX =  W - CARD_W - 105
 					labelY = H / 2
     			}
 				ctx.fillText(label, labelX, labelY)
@@ -148,9 +157,9 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 					ctx.font = "bold 16px Arial"
     				ctx.fillStyle = "#b253ff"
     				if (position === "left") {
-						labelX = CARD_W + 92
+						labelX = CARD_W + 92 + 40
     				} else if (position === "right") {
-						labelX =  W - CARD_W - 92
+						labelX =  W - CARD_W - 92 - 40
 						labelY = H / 2
     				}
 					ctx.fillText("BLACKCROWN", labelX, labelY + 20)

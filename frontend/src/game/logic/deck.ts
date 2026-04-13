@@ -45,6 +45,7 @@ export function dealInitialCards(gameState: GameState) {
 	if (blackCrownPlayer) {
 		next.gameStatus = "finished"
 		next.winnerId = blackCrownPlayer.id
+		next.turn++
 	}
 	return next
 }

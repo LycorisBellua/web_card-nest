@@ -49,8 +49,9 @@ export function checkWinner(game: GameState): number {
 		if (a.score != b.score)
 			return b.score - a.score
 		else {
-			if (a.reachedAt != b.reachedAt)
+			if (a.reachedAt != b.reachedAt) {
 				return a.reachedAt - b.reachedAt
+			}
 			else
 				return -1
 		}

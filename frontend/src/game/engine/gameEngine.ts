@@ -9,7 +9,7 @@ export function nextPlayer(game: GameState) {
 	if (activePlayer.length === 1) {
 		activePlayer[0].hasStood = true
 		next.gameStatus = "finished"
-		next.winnerId = checkWinner(game)
+		next.winnerId = checkWinner(next)
 		next.turn++
 		return next
 	}
@@ -22,7 +22,7 @@ export function nextPlayer(game: GameState) {
 		}
 	}
 	next.gameStatus = "finished"
-	next.winnerId = checkWinner(game)
+	next.winnerId = checkWinner(next)
 	next.turn++
 	return next
 }

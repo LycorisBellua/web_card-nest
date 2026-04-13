@@ -10,6 +10,7 @@ export class CanvasCard {
 	flipped = false;
 	hover = false;
 	isWinner = false;
+	rotation = 0;
 
 	x: number;
 	y: number;
@@ -37,7 +38,14 @@ export class CanvasCard {
 	}
 
 	draw(ctx: CanvasRenderingContext2D, isCurrent: boolean) {
-		ctx.save()
+		const cx = this.x + this.w / 2
+    	const cy = this.y + this.h / 2
+
+    	ctx.save()
+    	ctx.translate(cx, cy)
+    	ctx.rotate(this.rotation)
+    	ctx.translate(-cx, -cy)
+
 		if (isCurrent) {
 			ctx.shadowColor = "rgba(255, 220, 40, 0.8)"
 			ctx.strokeStyle = "rgba(255, 220, 40, 0.6)"
