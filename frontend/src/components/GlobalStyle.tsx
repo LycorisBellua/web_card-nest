@@ -51,6 +51,7 @@ const GlobalStyle = createGlobalStyle`
   }
 
   a {
+    width: fit-content;
     color: #faf3f2;
   }
 `;

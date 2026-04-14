@@ -1,4 +1,3 @@
-- Work on the button component.
 - Implement the navbar.
 - Make sure that all frontend pages are connected to one another.
 - Rework all the old pages so that they have nice components instead of being 
