@@ -10,7 +10,9 @@ const Button = styled.button`
   font-size: 1rem;
   font-weight: 700;
   color: #aa8a68;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 
   &:hover {
     background: rgba(212, 160, 112, 0.16);

@@ -126,7 +126,7 @@ function ResetPasswordSecond() {
         <Button>Confirm</Button>
       </form>
       {message && <p>{message}</p>}
-      <Link to="/login">Go back to login page 👈</Link>
+      <Link to="/auth">Go back to login page 👈</Link>
     </>
   );
 }

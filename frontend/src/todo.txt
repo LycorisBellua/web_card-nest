@@ -1,23 +1,10 @@
-- Implement the navbar.
-- Make sure that all frontend pages are connected to one another.
+- User state shouldn't be in <Nav>, it should be at the top of the project.
+- Add the friends list, visible at all times unless responsiveness (only when 
+the user is logged in).
+- Add the lobby chat with placeholder content.
+- Do check responsiveness.
+
 - Rework all the old pages so that they have nice components instead of being 
 monoliths.
-- Add the chat at the end, with placeholder content.
-- Any page missing?
-- Are all styled components added?
-
----
-
-pages/
--- Home.tsx
--- PrivacyPolicy.tsx
--- TermsOfService.tsx
--- Credits.tsx
--- NotFound.tsx
-- SignUp.tsx
-- LogIn.tsx
-- Profile.tsx
-- ResetPassword.tsx
-- ResetPassword2.tsx
-- VerifySuccess.tsx
-- VerifyError.tsx
+- Add the other styled components.
+- Complete the placeholder pages so that they're placeholders no more.

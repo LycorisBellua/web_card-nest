@@ -80,9 +80,7 @@ function LogIn() {
             onChange={(e) => setLogPwd(e.target.value)}
           ></input>
         </div>
-        <div>
-          {errors && errors.map((err, i) => <p key={i}>{err}</p>)}
-        </div>
+        <div>{errors && errors.map((err, i) => <p key={i}>{err}</p>)}</div>
         <Button type="submit">Log In</Button>
       </form>
       {message && <p>{message}</p>}

@@ -66,13 +66,11 @@ function ResetPassword() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div>
-          {errors && errors.map((err, i) => <p key={i}>{err}</p>)}
-        </div>
+        <div>{errors && errors.map((err, i) => <p key={i}>{err}</p>)}</div>
         <Button type="submit">Send code</Button>
       </form>
       {message && <p>{message}</p>}
-      <Link to="/login">Go back to login page 👈</Link>
+      <Link to="/auth">Go back to login page 👈</Link>
     </>
   );
 }

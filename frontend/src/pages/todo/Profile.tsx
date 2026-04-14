@@ -1,4 +1,4 @@
-import userAvatar from 'assets/default_user.png';
+import defaultUserAvatar from 'assets/default_user.png';
 import React, { useEffect, useRef, useState } from 'react';
 import Button from 'components/Button';
 import {
@@ -143,7 +143,7 @@ function UpdateUserAvatar({
   }
 
   async function removeAvatar() {
-    await OnUpdateUserField('avatarURL', userAvatar);
+    await OnUpdateUserField('avatarURL', defaultUserAvatar);
   }
 
   async function handleUpdateAvatar(e: React.ChangeEvent<HTMLInputElement>) {
@@ -170,7 +170,7 @@ function UpdateUserAvatar({
 
   return (
     <div>
-      <img src={avatarURL ? avatarURL : userAvatar} alt="avatar" />
+      <img src={avatarURL ? avatarURL : defaultUserAvatar} alt="avatar" />
       <div className="btn">
         <Button onClick={handleAvatar}>Edit🖊️</Button>
         <Button onClick={() => void removeAvatar()}>Remove🗑️</Button>
@@ -244,10 +244,7 @@ function UpdateUsername({ username, OnUpdateUserField }: UpdateUsernameProps) {
           {edit ? 'save' : '🖊️'}
         </Button>
       </div>
-      {errors &&
-        errors.map((err, i) => (
-          <div key={i}>{err}</div>
-        ))}
+      {errors && errors.map((err, i) => <div key={i}>{err}</div>)}
     </div>
   );
 }
@@ -330,10 +327,7 @@ function UpdatePassword({
           </div>
         </div>
       )}
-      {errors &&
-        errors.map((err, i) => (
-          <div key={i}>{err}</div>
-        ))}
+      {errors && errors.map((err, i) => <div key={i}>{err}</div>)}
     </div>
   );
 }
@@ -393,10 +387,7 @@ function UpdateUserEmail({ email, OnUpdateUserField }: UpdateUserEmailProps) {
           {edit ? 'save' : '🖊️'}
         </Button>
       </div>
-      {errors &&
-        errors.map((err, i) => (
-          <div key={i}>{err}</div>
-        ))}
+      {errors && errors.map((err, i) => <div key={i}>{err}</div>)}
     </div>
   );
 }
@@ -428,10 +419,7 @@ function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
         <p>Unverified email: {unverifiedEmail}</p>
         <Button onClick={() => void handleVerifyEmail()}>Verify🖊️</Button>
       </div>
-      {errors &&
-        errors.map((err, i) => (
-          <div key={i}>{err}</div>
-        ))}
+      {errors && errors.map((err, i) => <div key={i}>{err}</div>)}
       {message && <p>{message}</p>}
     </div>
   );
