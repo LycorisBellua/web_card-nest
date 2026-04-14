@@ -41,7 +41,9 @@ const Button = styled.button`
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   white-space: nowrap;
 
   background: rgba(212, 160, 112, 0.16);

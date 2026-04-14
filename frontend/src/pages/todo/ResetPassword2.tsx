@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Button from 'components/Button';
-import {
-  FormGroup,
-  ErrorText,
-  SuccessMsg,
-} from 'components/todo/SignForm';
 import { sanitizePassword } from 'functions/UserSanitation';
 import { validatePassword } from 'functions/UserValidation';
 
@@ -100,7 +95,7 @@ function ResetPasswordSecond() {
           void handleSubmit(e);
         }}
       >
-        <FormGroup>
+        <div>
           <label htmlFor="new-password">Please enter a new password</label>
           <input
             id="new-password"
@@ -114,8 +109,8 @@ function ResetPasswordSecond() {
             You need a minimum of 8 characters, including one uppercase, one
             lowercase, one digit and one special character
           </p>
-        </FormGroup>
-        <FormGroup>
+        </div>
+        <div>
           <label htmlFor="confirm-password">Confirm password</label>
           <input
             id="confirm-password"
@@ -124,13 +119,13 @@ function ResetPasswordSecond() {
             value={uPwdConfirm}
             onChange={(e) => setUPwdConfirm(e.target.value)}
           />
-        </FormGroup>
-        <ErrorText>
+        </div>
+        <div>
           {errors.length > 0 && errors.map((err, i) => <p key={i}>{err}</p>)}
-        </ErrorText>
+        </div>
         <Button>Confirm</Button>
       </form>
-      {message && <SuccessMsg>{message}</SuccessMsg>}
+      {message && <p>{message}</p>}
       <Link to="/login">Go back to login page 👈</Link>
     </>
   );

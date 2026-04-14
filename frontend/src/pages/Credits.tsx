@@ -29,7 +29,8 @@ function Credits() {
           - <Link to="https://emojipedia.org/google/16.0/joker">Favicon</Link>
         </li>
         <li>
-          - <Link to="https://freesvg.org/user-icon-picture">
+          -{' '}
+          <Link to="https://freesvg.org/user-icon-picture">
             User default avatar
           </Link>
         </li>

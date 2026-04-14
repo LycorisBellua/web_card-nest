@@ -1,11 +1,11 @@
 - Work on the button component.
 - Implement the navbar.
 - Make sure that all frontend pages are connected to one another.
-- Remove components/todo/ (replace styled elements with raw tags).
 - Rework all the old pages so that they have nice components instead of being 
 monoliths.
-- Add the chat at the end.
+- Add the chat at the end, with placeholder content.
 - Any page missing?
+- Are all styled components added?
 
 ---
 

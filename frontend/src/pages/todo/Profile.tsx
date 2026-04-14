@@ -2,17 +2,6 @@ import userAvatar from 'assets/default_user.png';
 import React, { useEffect, useRef, useState } from 'react';
 import Button from 'components/Button';
 import {
-  Page,
-  ProfileErrorText,
-  UserInfoStyles,
-  UserAvatarStyle,
-  InfoRow,
-  PasswordReset,
-  DescriptionTextarea,
-  VerifyEmailMsg,
-} from 'components/todo/ProfileStyle';
-import { ErrorText } from 'components/todo/SignForm';
-import {
   sanitizeUsername,
   sanitizeEmail,
   sanitizePassword,
@@ -74,10 +63,10 @@ function Profile() {
   }
 
   return (
-    <Page>
+    <div>
       <UserInfo user={user} OnUpdateUserField={updateUserField} />
-      {errors.length > 0 && <ErrorText>{errors}</ErrorText>}
-    </Page>
+      {errors.length > 0 && <div>{errors}</div>}
+    </div>
   );
 }
 
@@ -102,7 +91,7 @@ function UserInfo({ user, OnUpdateUserField }: UserInfoProps) {
   } = user;
 
   return (
-    <UserInfoStyles>
+    <div>
       <UpdateUserAvatar
         avatarURL={avatarURL}
         OnUpdateUserField={OnUpdateUserField}
@@ -112,15 +101,15 @@ function UserInfo({ user, OnUpdateUserField }: UserInfoProps) {
           username={username}
           OnUpdateUserField={OnUpdateUserField}
         />
-        <InfoRow>
+        <div>
           <p>Rank: {rank}</p>
-        </InfoRow>
-        <InfoRow>
+        </div>
+        <div>
           <p>
             Registration date:{' '}
             {user?.registered ? registered.toISOString().slice(0, 10) : 'N/A'}
           </p>
-        </InfoRow>
+        </div>
         <UpdatePassword
           username={username}
           email={email}
@@ -133,7 +122,7 @@ function UserInfo({ user, OnUpdateUserField }: UserInfoProps) {
           OnUpdateUserField={OnUpdateUserField}
         />
       </div>
-    </UserInfoStyles>
+    </div>
   );
 }
 
@@ -180,7 +169,7 @@ function UpdateUserAvatar({
   }
 
   return (
-    <UserAvatarStyle>
+    <div>
       <img src={avatarURL ? avatarURL : userAvatar} alt="avatar" />
       <div className="btn">
         <Button onClick={handleAvatar}>Edit🖊️</Button>
@@ -195,9 +184,9 @@ function UpdateUserAvatar({
         onChange={(e) => void handleUpdateAvatar(e)}
       />
       {errors.map((err, i) => (
-        <ProfileErrorText key={i}>{err}</ProfileErrorText>
+        <div key={i}>{err}</div>
       ))}
-    </UserAvatarStyle>
+    </div>
   );
 }
 
@@ -234,7 +223,7 @@ function UpdateUsername({ username, OnUpdateUserField }: UpdateUsernameProps) {
   }
   return (
     <div>
-      <InfoRow>
+      <div>
         <p>
           Username:{' '}
           {edit ? (
@@ -254,10 +243,10 @@ function UpdateUsername({ username, OnUpdateUserField }: UpdateUsernameProps) {
         <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
         </Button>
-      </InfoRow>
+      </div>
       {errors &&
         errors.map((err, i) => (
-          <ProfileErrorText key={i}>{err}</ProfileErrorText>
+          <div key={i}>{err}</div>
         ))}
     </div>
   );
@@ -308,14 +297,14 @@ function UpdatePassword({
 
   return (
     <div>
-      <InfoRow>
+      <div>
         <p>Password: ********</p>
         <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
         </Button>
-      </InfoRow>
+      </div>
       {edit && (
-        <PasswordReset>
+        <div>
           <div>
             <label htmlFor="new-password">New password: </label>
             <input
@@ -339,11 +328,11 @@ function UpdatePassword({
               autoComplete="off"
             />
           </div>
-        </PasswordReset>
+        </div>
       )}
       {errors &&
         errors.map((err, i) => (
-          <ProfileErrorText key={i}>{err}</ProfileErrorText>
+          <div key={i}>{err}</div>
         ))}
     </div>
   );
@@ -383,7 +372,7 @@ function UpdateUserEmail({ email, OnUpdateUserField }: UpdateUserEmailProps) {
 
   return (
     <div>
-      <InfoRow>
+      <div>
         <p>
           Email:{' '}
           {edit ? (
@@ -403,10 +392,10 @@ function UpdateUserEmail({ email, OnUpdateUserField }: UpdateUserEmailProps) {
         <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
         </Button>
-      </InfoRow>
+      </div>
       {errors &&
         errors.map((err, i) => (
-          <ProfileErrorText key={i}>{err}</ProfileErrorText>
+          <div key={i}>{err}</div>
         ))}
     </div>
   );
@@ -435,15 +424,15 @@ function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
 
   return (
     <div>
-      <InfoRow>
+      <div>
         <p>Unverified email: {unverifiedEmail}</p>
         <Button onClick={() => void handleVerifyEmail()}>Verify🖊️</Button>
-      </InfoRow>
+      </div>
       {errors &&
         errors.map((err, i) => (
-          <ProfileErrorText key={i}>{err}</ProfileErrorText>
+          <div key={i}>{err}</div>
         ))}
-      {message && <VerifyEmailMsg>{message}</VerifyEmailMsg>}
+      {message && <p>{message}</p>}
     </div>
   );
 }
@@ -481,13 +470,13 @@ function UpdateUserDescription({
 
   return (
     <>
-      <InfoRow>
+      <div>
         <p>Description:</p>
         <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
         </Button>
-      </InfoRow>
-      <DescriptionTextarea>
+      </div>
+      <div>
         {edit ? (
           <>
             <textarea
@@ -503,9 +492,9 @@ function UpdateUserDescription({
         ) : (
           <p>{description}</p>
         )}
-      </DescriptionTextarea>
+      </div>
       {errors.map((err, i) => (
-        <ProfileErrorText key={i}>{err}</ProfileErrorText>
+        <div key={i}>{err}</div>
       ))}
     </>
   );

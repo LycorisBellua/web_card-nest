@@ -2,11 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from 'components/Button';
 import {
-  FormGroup,
-  ErrorText,
-  SuccessMsg,
-} from 'components/todo/SignForm';
-import {
   sanitizeUsername,
   sanitizeEmail,
   sanitizePassword,
@@ -82,7 +77,7 @@ function SignUp() {
           void handlerSubmit(e);
         }}
       >
-        <FormGroup>
+        <div>
           <label htmlFor="u-name">Username</label>
           <input
             id="u-name"
@@ -91,8 +86,8 @@ function SignUp() {
             value={uname}
             onChange={(e) => setUname(e.target.value)}
           />
-        </FormGroup>
-        <FormGroup>
+        </div>
+        <div>
           <label htmlFor="u-email">Email</label>
           <input
             id="u-email"
@@ -101,8 +96,8 @@ function SignUp() {
             value={uemail}
             onChange={(e) => setUEmail(e.target.value)}
           />
-        </FormGroup>
-        <FormGroup>
+        </div>
+        <div>
           <label htmlFor="u-pwd">Password</label>
           <input
             id="u-pwd"
@@ -115,8 +110,8 @@ function SignUp() {
             The password needs a minimum of 8 characters, including one
             uppercase, one lowercase, one digit and one special character.
           </p>
-        </FormGroup>
-        <FormGroup>
+        </div>
+        <div>
           <label htmlFor="u-pwd-cfm">Confirm your password</label>
           <input
             id="u-pwd-cfm"
@@ -124,12 +119,12 @@ function SignUp() {
             value={upwdConfirm}
             onChange={(e) => setUPwdConfirm(e.target.value)}
           />
-        </FormGroup>
-        <ErrorText>
+        </div>
+        <div>
           {errors.length > 0 && errors.map((err, i) => <p key={i}>{err}</p>)}
-        </ErrorText>
+        </div>
         <Button type="submit">Sign Up</Button>
-        {message && <SuccessMsg>{message}</SuccessMsg>}
+        {message && <p>{message}</p>}
       </form>
     </>
   );

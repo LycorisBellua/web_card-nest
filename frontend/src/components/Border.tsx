@@ -24,7 +24,7 @@ const Border = styled.div`
         0 40px 100px rgba(0, 0, 0, 0.8),
         0 0 0 1px rgba(240, 192, 106, 0.7),
         0 0 22px rgba(240, 192, 106, 0.35);
-      }
+    }
   }
 
   @media (max-width: 680px) {

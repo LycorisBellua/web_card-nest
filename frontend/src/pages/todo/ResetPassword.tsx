@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from 'components/Button';
-import {
-  FormGroup,
-  ErrorText,
-  SuccessMsg,
-} from 'components/todo/SignForm';
 import { sanitizeEmail } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 
@@ -61,7 +56,7 @@ function ResetPassword() {
           void handlerLogin(e);
         }}
       >
-        <FormGroup>
+        <div>
           <label htmlFor="email">Email</label>
           <input
             id="email"
@@ -70,13 +65,13 @@ function ResetPassword() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-        </FormGroup>
-        <ErrorText>
+        </div>
+        <div>
           {errors && errors.map((err, i) => <p key={i}>{err}</p>)}
-        </ErrorText>
+        </div>
         <Button type="submit">Send code</Button>
       </form>
-      {message && <SuccessMsg>{message}</SuccessMsg>}
+      {message && <p>{message}</p>}
       <Link to="/login">Go back to login page 👈</Link>
     </>
   );

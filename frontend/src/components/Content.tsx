@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-const Body = styled.div`
+const Content = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -11,4 +11,4 @@ const Body = styled.div`
   margin: 1rem;
 `;
 
-export default Body;
+export default Content;

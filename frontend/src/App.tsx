@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import GlobalStyle from 'components/GlobalStyle';
 import Border from 'components/Border';
-import Body from 'components/Body';
+import Content from 'components/Content';
 import Footer from 'components/Footer';
 
 /*
@@ -11,9 +11,9 @@ import Footer from 'components/Footer';
       <GlobalStyle />
       <Border>
         <NavBar />
-        <Body>
+        <Content>
           <Outlet />
-        </Body>
+        </Content>
       </Border>
       <Footer />
 */
@@ -23,9 +23,9 @@ function Layout() {
     <>
       <GlobalStyle />
       <Border>
-        <Body>
+        <Content>
           <Outlet />
-        </Body>
+        </Content>
       </Border>
       <Footer />
     </>

@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from 'components/Button';
-import {
-  FormGroup,
-  ErrorText,
-  SuccessMsg,
-} from 'components/todo/SignForm';
 import { sanitizeEmail, sanitizePassword } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 
@@ -65,7 +60,7 @@ function LogIn() {
           void handlerLogin(e);
         }}
       >
-        <FormGroup>
+        <div>
           <label htmlFor="email">Email</label>
           <input
             id="email"
@@ -74,8 +69,8 @@ function LogIn() {
             value={logMail}
             onChange={(e) => setLogMail(e.target.value)}
           ></input>
-        </FormGroup>
-        <FormGroup>
+        </div>
+        <div>
           <label htmlFor="password">Password</label>
           <input
             id="password"
@@ -84,13 +79,13 @@ function LogIn() {
             value={logPwd}
             onChange={(e) => setLogPwd(e.target.value)}
           ></input>
-        </FormGroup>
-        <ErrorText>
+        </div>
+        <div>
           {errors && errors.map((err, i) => <p key={i}>{err}</p>)}
-        </ErrorText>
+        </div>
         <Button type="submit">Log In</Button>
       </form>
-      {message && <SuccessMsg>{message}</SuccessMsg>}
+      {message && <p>{message}</p>}
       <Link to="/reset-pwd">
         <Button>Forgot your password?</Button>
       </Link>
