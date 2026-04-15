@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+import * as bcrypt from 'bcrypt';
 
 export function getVerificationToken(): string {
   return randomBytes(32).toString('hex');
@@ -10,6 +11,14 @@ export function getVerificationTimeout(): Date {
 
 export function getCurrentTime(): Date {
   return new Date();
+}
+
+export async function createHash(plain: string) {
+  return await bcrypt.hash(plain, 12);
+}
+
+export async function compareHash(plain: string, hashed: string) {
+  return await bcrypt.compare(plain, hashed);
 }
 
 // PASSWORD VALIDATION
