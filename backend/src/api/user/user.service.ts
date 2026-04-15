@@ -11,6 +11,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { decodeAvatarBase64 } from './utils/user.validator';
 import {
+  compareHash,
+  createHash,
   getCurrentTime,
   getVerificationTimeout,
   getVerificationToken,
@@ -40,6 +42,7 @@ export class UserService {
   async updateUser(userId: string, updateUserDto: UpdateUserDto) {
     await this.userExistsOrThrow(userId);
     const data: Record<string, unknown> = {};
+    const token = getVerificationToken();
 
     if (updateUserDto.username !== undefined) {
       if (await this.usernameIsTaken(updateUserDto.username)) {
@@ -53,7 +56,7 @@ export class UserService {
         throw new ConflictException(ErrorMessages.EMAIL_USED);
       }
       data.email_unverified = updateUserDto.email_unverified;
-      data.verifyToken = getVerificationToken();
+      data.verifyToken = await createHash(token);
       data.verifyTimeout = getVerificationTimeout();
     }
 
@@ -88,14 +91,13 @@ export class UserService {
         await this.userEmailsService.sendVerificationEmail(
           userId,
           found.email_unverified,
-          found.verifyToken,
+          token,
         );
       }
     }
     return updated;
   }
 
-  // TODO: Hash Password
   async updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto) {
     const user = await this.userExistsOrThrow(userId);
     const newPassword = updatePasswordDto.newPassword;
@@ -107,10 +109,10 @@ export class UserService {
     if (newPasswordContainsEmail(newPassword, email)) {
       throw new BadRequestException(ErrorMessages.EMAIL_IN_PASSWORD);
     }
-    if (user.password !== currentPassword) {
+    if (!(await compareHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
-    return await this.modifyPassword(userId, newPassword);
+    return await this.modifyPassword(userId, await createHash(newPassword));
   }
 
   async updateRank(userId: string, newRank: Ranks) {
@@ -197,7 +199,6 @@ export class UserService {
   }
 
   // CALLED FROM AUTH SERVICE
-  // TODO: Hash password
   async addUser(createUserDto: CreateUserDto) {
     if (await this.usernameIsTaken(createUserDto.username)) {
       throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
@@ -205,13 +206,20 @@ export class UserService {
     if (await this.emailAddressIsTaken(createUserDto.email_unverified)) {
       throw new ConflictException(ErrorMessages.EMAIL_USED);
     }
-    const created = await this.createUser(createUserDto);
+    createUserDto.password = await createHash(createUserDto.password);
+    const token = getVerificationToken();
+    const timeout = getVerificationTimeout();
+    const created = await this.createUser(
+      createUserDto,
+      await createHash(token),
+      timeout,
+    );
     const found = await this.userExistsOrThrow(created.id);
     if (found.email_unverified && found.verifyToken) {
       await this.userEmailsService.sendVerificationEmail(
         created.id,
         found.email_unverified,
-        found.verifyToken,
+        token,
       );
     }
     return created;
@@ -222,7 +230,7 @@ export class UserService {
     if (
       !found ||
       !found.verifyToken ||
-      found.verifyToken !== token ||
+      !(await compareHash(token, found.verifyToken)) ||
       !found.email_unverified ||
       !found.verifyTimeout ||
       found.verifyTimeout < new Date()
@@ -248,7 +256,8 @@ export class UserService {
       return { id: userId };
     }
     const data: Record<string, unknown> = {};
-    data.verifyToken = getVerificationToken();
+    const token = getVerificationToken();
+    data.verifyToken = await createHash(token);
     data.verifyTimeout = getVerificationTimeout();
     const result = await this.modifyVerificationData(userId, data);
     const updated = await this.userExistsOrThrow(userId);
@@ -256,22 +265,25 @@ export class UserService {
       await this.userEmailsService.sendVerificationEmail(
         userId,
         updated.email_unverified,
-        updated.verifyToken,
+        token,
       );
     }
     return result;
   }
 
   // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
-  // TODO: Hash token
-  private async createUser(createUserDto: CreateUserDto) {
+  private async createUser(
+    createUserDto: CreateUserDto,
+    token: string,
+    timeout: Date,
+  ) {
     return await this.prisma.user.create({
       data: {
         username: createUserDto.username,
         email_unverified: createUserDto.email_unverified,
         password: createUserDto.password,
-        verifyToken: getVerificationToken(),
-        verifyTimeout: getVerificationTimeout(),
+        verifyToken: token,
+        verifyTimeout: timeout,
       },
       select: { id: true, username: true, date: true },
     });
