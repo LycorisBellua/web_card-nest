@@ -1,6 +1,5 @@
 import {
   Controller,
-  Post,
   Body,
   Patch,
   Param,
@@ -9,21 +8,16 @@ import {
   Get,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUsernameDto } from './dto/update-username.dto';
-import { UpdateDescDto } from './dto/update-desc.dto';
-import { UpdateAvatarDto } from './dto/update-avatar.dto';
 import { UpdateRankDto } from './dto/update-rank.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Controller('api/user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // ADD / REMOVE
-  @Post()
-  async addUser(@Body() createUserDto: CreateUserDto) {
-    return await this.userService.addUser(createUserDto);
-  }
+  // Add user moved to auth controller
 
   @Delete(':userId')
   async removeUser(@Param('userId', ParseUUIDPipe) userId: string) {
@@ -32,38 +26,6 @@ export class UserController {
 
   // UPDATE ENTRIES
   // For Patch Methods: id can be taken from auth token once implemented
-  @Patch(':userId/username')
-  async updateUsername(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Body() updateUsernameDto: UpdateUsernameDto,
-  ) {
-    return await this.userService.updateUsername(
-      userId,
-      updateUsernameDto.username,
-    );
-  }
-
-  @Patch(':userId/verify')
-  async verifyEmail(@Param('userId', ParseUUIDPipe) userId: string) {
-    return await this.userService.verifyEmail(userId);
-  }
-
-  @Patch(':userId/desc')
-  async updateDesc(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Body() updateDescDto: UpdateDescDto,
-  ) {
-    return await this.userService.updateDesc(userId, updateDescDto.desc);
-  }
-
-  @Patch(':userId/avatar')
-  async updateAvatar(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Body() updateAvatarDto: UpdateAvatarDto,
-  ) {
-    return await this.userService.updateAvatar(userId, updateAvatarDto.avatar);
-  }
-
   @Patch(':userId/rank')
   async updateRank(
     @Param('userId', ParseUUIDPipe) userId: string,
@@ -72,24 +34,40 @@ export class UserController {
     return await this.userService.updateRank(userId, updateRankDto.rank);
   }
 
+  @Patch(':userId/update')
+  async updateUser(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return await this.userService.updateUser(userId, updateUserDto);
+  }
+
+  @Patch(':userId/password')
+  async updatePassword(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    return this.userService.updatePassword(userId, updatePasswordDto);
+  }
+
   // FETCH USERS
   @Get('id/:userId')
-  async getUserbyId(@Param('userId', ParseUUIDPipe) userId: string) {
-    return await this.userService.findByIdOrThrow(userId);
+  async getUserById(@Param('userId', ParseUUIDPipe) userId: string) {
+    return await this.userService.getUserById(userId);
   }
 
   @Get('username/:username')
   async getUserByUsername(@Param('username') username: string) {
-    return await this.userService.findByUsernameOrThrow(username);
+    return await this.userService.getUserByUsername(username);
   }
 
   @Get('all/username')
   async getAllSortByUsername() {
-    return await this.userService.returnAllSortByUsername();
+    return await this.userService.getAllSortByUsername();
   }
 
   @Get('all/date')
   async getAllSortByDate() {
-    return await this.userService.returnAllSortByDate();
+    return await this.userService.getAllSortByDate();
   }
 }

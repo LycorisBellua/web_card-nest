@@ -11,7 +11,6 @@ export class RelService {
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
   ) {}
-
   // FRIEND MANAGEMENT
   async addFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
@@ -71,17 +70,17 @@ export class RelService {
   }
 
   async fetchFriends(originId: string) {
-    await this.userService.findByIdOrThrow(originId);
+    await this.userService.userExistsOrThrow(originId);
     return await this.findAccepted(originId);
   }
 
   async fetchSentRequests(originId: string) {
-    await this.userService.findByIdOrThrow(originId);
+    await this.userService.userExistsOrThrow(originId);
     return await this.findSentPending(originId);
   }
 
   async fetchReceivedRequests(originId: string) {
-    await this.userService.findByIdOrThrow(originId);
+    await this.userService.userExistsOrThrow(originId);
     return await this.findReceivedPending(originId);
   }
 
@@ -208,7 +207,7 @@ export class RelService {
   }
 
   async fetchBlocked(originId: string) {
-    await this.userService.findByIdOrThrow(originId);
+    await this.userService.userExistsOrThrow(originId);
     return await this.findBlockedUsers(originId);
   }
 
@@ -252,8 +251,8 @@ export class RelService {
 
   // USER LOOKUP
   async userChecks(originId: string, targetId: string) {
-    await this.userService.findByIdOrThrow(originId);
-    await this.userService.findByIdOrThrow(targetId);
+    await this.userService.userExistsOrThrow(originId);
+    await this.userService.userExistsOrThrow(targetId);
     if (originId === targetId) {
       throw new BadRequestException(ErrorMessages.SELF);
     }
