@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 
-export function getVerificationToken(): string {
+export function getToken(): string {
   return randomBytes(32).toString('hex');
 }
 
@@ -13,11 +13,14 @@ export function getCurrentTime(): Date {
   return new Date();
 }
 
-export async function createHash(plain: string) {
+export async function createHash(plain: string): Promise<string> {
   return await bcrypt.hash(plain, 12);
 }
 
-export async function compareHash(plain: string, hashed: string) {
+export async function compareHash(
+  plain: string,
+  hashed: string,
+): Promise<boolean> {
   return await bcrypt.compare(plain, hashed);
 }
 

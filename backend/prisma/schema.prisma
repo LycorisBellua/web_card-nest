@@ -20,6 +20,7 @@ model User {
   date             DateTime   @default(now())
   verifyToken      String?    @unique
   verifyTimeout    DateTime?
+  refreshToken     String?    @unique
   sentRequests     Friend[]   @relation("requester")
   receivedRequests Friend[]   @relation("addressee")
   blocked          Block[]    @relation("blocker")
