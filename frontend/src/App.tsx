@@ -1,20 +1,25 @@
 import { Outlet } from 'react-router-dom';
-import { UserProvider } from 'context/UserContext';
+import { UserProvider } from 'hooks/UserContext';
 import GlobalStyle from 'components/global/GlobalStyle';
 import Border from 'components/global/Border';
 import Nav from 'components/global/Nav';
 import Content from 'components/global/Content';
+import Sidebar from 'components/global/Sidebar';
+import Page from 'components/global/Page';
 import Footer from 'components/global/Footer';
 
 function Layout() {
   return (
     <>
-      <GlobalStyle />
       <UserProvider>
+      <GlobalStyle />
         <Border>
           <Nav />
           <Content>
-            <Outlet />
+            <Sidebar />
+            <Page>
+              <Outlet />
+            </Page>
           </Content>
         </Border>
         <Footer />

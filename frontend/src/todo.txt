@@ -1,5 +1,28 @@
-- Add the friends list, visible at all times unless responsiveness (only when 
-the user is logged in).
+FRIENDS LIST
+
+- Add the online status circle:
+
+  ::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0.44rem;
+    height: 0.44rem;
+    border-radius: 50%;
+    border: 2px solid #0e0a08;
+    background: #6aaa5a;
+  }
+
+- The friends list is only visible when the user is logged in.
+- Have 8 friends in ascending order, with 3 of them offline (they must not be 
+the last 3 of the list).
+- Make the friends list visible at all times unless responsiveness. I happen to 
+have removed the sidebar toggle from the maquette, so don't forget to add it 
+back.
+
+---
+
 - Add the lobby chat with placeholder content.
 - Add DM threads (with no posts, it's okay).
 - Do check responsiveness.

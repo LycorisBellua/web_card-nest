@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
-import { useUser } from "context/UserContext";
+import { useUser } from 'hooks/UserContext';
 import styled from 'styled-components';
 import Button from 'components/Button';
+import Avatar from 'components/Avatar';
+import Username from 'components/Username';
 
 const TopBar = styled.div`
   display: flex;
@@ -93,26 +95,6 @@ const UserBtn = styled.button`
   }
 `;
 
-const Avatar = styled.img`
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.72rem;
-  flex-shrink: 0;
-`;
-
-const Username = styled.div`
-  text-align: left;
-  font-family: 'Quicksand', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #e0c498;
-  white-space: nowrap;
-`;
-
 const SubNav = styled.nav`
   display: none;
   height: 2.375rem;
@@ -137,7 +119,7 @@ const SubNav = styled.nav`
 `;
 
 function Nav() {
-  const { user, setUser } = useUser();
+  const { user } = useUser();
 
   return (
     <>
