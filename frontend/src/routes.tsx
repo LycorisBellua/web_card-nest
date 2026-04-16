@@ -8,6 +8,7 @@ import Profile from 'pages/Profile';
 import PrivacyPolicy from 'pages/PrivacyPolicy';
 import TermsOfService from 'pages/TermsOfService';
 import Credits from 'pages/Credits';
+import PlayGame from 'pages/PlayGame';
 import NotFound from 'pages/NotFound';
 import VerifyError from 'pages/VerifyError';
 import VerifySuccess from 'pages/VerifySuccess';
@@ -26,6 +27,7 @@ const routes = [
       { path: 'privacy-policy', element: <PrivacyPolicy /> },
       { path: 'terms-of-service', element: <TermsOfService /> },
       { path: 'credits', element: <Credits /> },
+      { path: 'play-game', element: <PlayGame /> },
       { path: '*', element: <NotFound /> },
       { path: 'verify-success', element: <VerifySuccess /> },
       { path: 'verify-error', element: <VerifyError /> },
