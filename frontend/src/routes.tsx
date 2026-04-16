@@ -7,7 +7,7 @@ import VerifyError from 'pages/todo/VerifyError';
 import VerifySuccess from 'pages/todo/VerifySuccess';
 import Users from 'pages/Users';
 import Profile from 'pages/todo/Profile';
-import Play from 'pages/Play';
+import Play from 'game/Play';
 import PrivacyPolicy from 'pages/PrivacyPolicy';
 import TermsOfService from 'pages/TermsOfService';
 import Credits from 'pages/Credits';

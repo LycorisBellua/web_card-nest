@@ -2,9 +2,12 @@
 - Add the friends list, visible at all times unless responsiveness (only when 
 the user is logged in).
 - Add the lobby chat with placeholder content.
+- Add DM threads (with no posts, it's okay).
 - Do check responsiveness.
 
 - Rework all the old pages so that they have nice components instead of being 
-monoliths.
+monoliths. Don't touch the game part though (it has been isolated in game/). 
+Let Hong finish her current issue first.
 - Add the other styled components.
 - Complete the placeholder pages so that they're placeholders no more.
+- Is anything amiss when it comes to aesthetics?
