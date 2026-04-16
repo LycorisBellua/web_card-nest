@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { UserProvider } from 'context/UserContext';
 import GlobalStyle from 'components/global/GlobalStyle';
 import Border from 'components/global/Border';
 import Nav from 'components/global/Nav';
@@ -9,13 +10,15 @@ function Layout() {
   return (
     <>
       <GlobalStyle />
-      <Border>
-        <Nav />
-        <Content>
-          <Outlet />
-        </Content>
-      </Border>
-      <Footer />
+      <UserProvider>
+        <Border>
+          <Nav />
+          <Content>
+            <Outlet />
+          </Content>
+        </Border>
+        <Footer />
+      </UserProvider>
     </>
   );
 }

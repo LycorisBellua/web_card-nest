@@ -1,4 +1,3 @@
-- User state shouldn't be in <Nav>, it should be at the top of the project.
 - Add the friends list, visible at all times unless responsiveness (only when 
 the user is logged in).
 - Add the lobby chat with placeholder content.

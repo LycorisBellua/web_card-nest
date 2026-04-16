@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useUser } from "context/UserContext";
 import styled from 'styled-components';
 import Button from 'components/Button';
 
@@ -135,16 +136,8 @@ const SubNav = styled.nav`
   }
 `;
 
-/*
-   TODO
-   - `UserBtn` needs dynamic data: the username and the avatar.
-*/
-
 function Nav() {
-  const isLoggedIn = false;
-  const username = 'Wolf-Hart';
-  const avatar =
-    'https://cdn.displate.com/artwork/270x380/2025-04-29/5d9a490e-781f-418f-ac6b-0d7cf866de6c.jpg';
+  const { user, setUser } = useUser();
 
   return (
     <>
@@ -167,11 +160,11 @@ function Nav() {
           </Link>
         </TopNav>
         <TopBarRight>
-          {isLoggedIn ? (
+          {user ? (
             <Link to="/profile">
               <UserBtn>
-                <Avatar src={avatar} />
-                <Username>{username}</Username>
+                <Avatar src={user.avatar} />
+                <Username>{user.username}</Username>
               </UserBtn>
             </Link>
           ) : (
