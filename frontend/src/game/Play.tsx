@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { PlayTableStyle, TableWrapper, PlayerCountStyle, Overlay, OverlayStyle, RecordTableStyle, ShowFinishedStyle} from '../components/style/GameTableStyle';
+import { PlayTableStyle, TableWrapper, PlayerCountStyle, Overlay, OverlayStyle, RecordTableStyle, ShowFinishedStyle} from 'game/GameTableStyle';
 import { initialGame } from "game/state/initialState";
 import { dealInitialCards } from "game/logic/deck";
 import { hit, stand } from "game/logic/game";

@@ -14,7 +14,7 @@ function Home() {
         <Link to="/login">
           <button>Log In</button>
         </Link>
-        <Link to="/play-game">
+        <Link to="/play">
           <button>Play Black Crown</button>
         </Link>
       </div>
