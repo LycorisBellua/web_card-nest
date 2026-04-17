@@ -12,7 +12,7 @@ function Layout() {
   return (
     <>
       <UserProvider>
-      <GlobalStyle />
+        <GlobalStyle />
         <Border>
           <Nav />
           <Content>

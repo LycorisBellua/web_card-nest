@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom';
 import { useUser } from 'hooks/UserContext';
 import styled from 'styled-components';
 import Button from 'components/Button';
-import Avatar from 'components/Avatar';
-import Username from 'components/Username';
+import UserBtn from 'components/UserBtn';
 
 const TopBar = styled.div`
   display: flex;
@@ -77,24 +76,6 @@ const TopBarRight = styled.div`
   }
 `;
 
-const UserBtn = styled.button`
-  font: inherit;
-  background: none;
-  border: 0;
-  cursor: pointer;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
-  border-radius: 10px;
-  transition: background 0.15s;
-
-  &:hover {
-    background: rgba(212, 160, 112, 0.09);
-  }
-`;
-
 const SubNav = styled.nav`
   display: none;
   height: 2.375rem;
@@ -144,16 +125,15 @@ function Nav() {
         <TopBarRight>
           {user ? (
             <Link to="/profile">
-              <UserBtn>
-                <Avatar src={user.avatar} />
-                <Username>{user.username}</Username>
-              </UserBtn>
+              <UserBtn
+                username={user.username}
+                avatar={user.avatar}
+                isOnline={true}
+              />
             </Link>
           ) : (
             <Link to="/auth">
-              <UserBtn>
-                <Username>Log In</Username>
-              </UserBtn>
+              <UserBtn username="Log In" />
             </Link>
           )}
         </TopBarRight>

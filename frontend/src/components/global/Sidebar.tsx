@@ -1,6 +1,6 @@
+import { useUser } from 'hooks/UserContext';
 import styled from 'styled-components';
-import Avatar from 'components/Avatar';
-import Username from 'components/Username';
+import UserBtn from 'components/UserBtn';
 
 const Bar = styled.div`
   width: 11rem;
@@ -15,7 +15,7 @@ const Bar = styled.div`
   overflow-y: auto;
   transition: transform 0.25s ease;
 
-  @media (max-width: 680px) {
+  @media (max-width: 600px) {
     position: absolute;
     top: 0;
     left: 0;
@@ -50,18 +50,9 @@ const UserList = styled.div`
   gap: 3px;
 `;
 
-const UserItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s;
-
-  &:hover {
-    background: rgba(212, 160, 112, 0.09);
-  }
+const EmptyMsg = styled.p`
+  font-style: italic;
+  font-size: 0.7rem;
 `;
 
 const Dots = styled.div`
@@ -103,7 +94,7 @@ const Suits1 = styled.div`
   overflow: hidden;
 
   &::before {
-    content: "♥ ♠";
+    content: '♥ ♠';
     white-space: pre;
     position: absolute;
     bottom: 60px;
@@ -127,7 +118,7 @@ const Suits2 = styled.div`
   overflow: hidden;
 
   &::before {
-    content: "♦ ♣";
+    content: '♦ ♣';
     white-space: pre;
     position: absolute;
     bottom: 10px;
@@ -141,37 +132,26 @@ const Suits2 = styled.div`
   }
 `;
 
-/*
-   TODO
-   - Get the friends list from the context, and populate UserList with it.
-*/
-
 function Sidebar() {
+  const { user } = useUser();
+
+  if (!user) return <></>;
   return (
     <Bar>
       <Section>
         <Header>Friends</Header>
         <UserList>
-          <UserItem>
-            <Avatar src="https://pics.craiyon.com/2023-11-16/Gf0MaOtPQDeq60d49Ai6uA.webp" />
-            <Username>Espresso</Username>
-          </UserItem>
-          <UserItem>
-            <Avatar src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRR_uvplX64OVu7oEysYZ5HjfMVUgjb9LEzEllowZk8UA&s" />
-            <Username>Jookebox</Username>
-          </UserItem>
-          <UserItem>
-            <Avatar src="https://college.taylors.edu.my/content/dam/taylorsrevamp/college/student-life/news-and-articles/2024/shadows-in-the-candles-glow-bringing-sustainability-to-light/taylors-article-shadows-in-the-candles-glow-hero-banner-mobile-768x650.png/jcr:content/renditions/cq5dam.web.768.650.webp" />
-            <Username>Lumière</Username>
-          </UserItem>
-          <UserItem>
-            <Avatar src="https://www.shutterstock.com/image-photo/kawaiistyle-chocolate-muffin-smiling-big-600nw-2758545531.jpg" />
-            <Username>MuffinTop</Username>
-          </UserItem>
-          <UserItem>
-            <Avatar src="https://thumbs.dreamstime.com/b/cute-kawaii-teapot-cartoon-floral-accent-illustration-cheerful-yellow-pink-lid-teal-handle-adorned-flower-style-445328393.jpg" />
-            <Username>Tealeaf</Username>
-          </UserItem>
+          {!user.friends?.length ? (
+            <EmptyMsg>Empty friend list</EmptyMsg>
+          ) : (
+            user.friends.map((e) => (
+              <UserBtn key={e.username}
+                username={e.username}
+                avatar={e.avatar}
+                isOnline={e.isOnline}
+              />
+            ))
+          )}
         </UserList>
       </Section>
       <Dots />
