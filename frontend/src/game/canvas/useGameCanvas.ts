@@ -92,6 +92,30 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 		})
 	}, [started, game])
 
+	function getVisiblePoints(playerIdx: number, currentPlayerIdx: number) : string {
+		const player = gameRef.current!.players[playerIdx]
+		if (playerIdx == currentPlayerIdx)
+			return `${player.score}`
+		
+		const visibleCards = player.cards.filter((_, i) => i != 1)
+		let points =0
+		let hasAces = false
+
+		visibleCards.forEach((card)=> {
+			if (card.rank == 'A') {
+				points += 1
+				hasAces = true
+			} else if (card.rank == '10' || card.rank == 'J'
+				|| card.rank == 'Q' || card.rank =='K')
+				points += 10
+			else
+				points += Number(card.rank)
+		})
+		if (hasAces && points + 10 <= 21) 
+			return `${points}+ or ${points + 10}+`
+		return `${points}+`
+	}
+
 	useEffect(()=>{
 		if (!started || !game) return
 		const canvas = canvasRef.current
@@ -114,9 +138,10 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 					if (gameRef.current!.gameStatus !== "finished") {
 						if (isCurrent)
 							card.flipped = false
-						else
+						else {
 							if (i === 1)
 								card.flipped = true
+						}
 					} else {
 						card.flipped = false
 						isCurrent = false
@@ -125,10 +150,10 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 					card.draw(ctx, isCurrent)
 				})
 
-				const label = `Player ${playerIdx + 1}`
+				const label = `Player ${playerIdx + 1} : ${getVisiblePoints(playerIdx, gameRef.current!.currentPlayerIdx)}`
     			ctx.save()
     			ctx.font = "bold 16px Arial"
-    			ctx.fillStyle = isCurrent ? "#FFD700" : "rgba(255,255,255,0.8)"  // 当前玩家金色
+    			ctx.fillStyle = isCurrent ? "#FFD700" : "rgba(255,255,255,0.8)"
     			ctx.textAlign = "center"
 				const relativeIndex = getRelativeIndex(playerIdx, gameRef.current!.currentPlayerIdx, gameRef.current!.players.length)
 				const position = getPlayerPosition(relativeIndex, gameRef.current!.players.length)	
@@ -152,6 +177,10 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 				    ctx.font = "bold 16px Arial"
     				ctx.fillStyle = "#c0110f"
 					ctx.fillText("BUST", labelX, labelY + 20)
+				} else if (gameRef.current!.players[playerIdx].hasStood) {
+				    ctx.font = "bold 16px Arial"
+    				ctx.fillStyle = "rgba(255,255,255,0.8)"
+					ctx.fillText("STAND", labelX, labelY + 20)
 				}
 				if (gameRef.current!.players[playerIdx].hasBlackCrown) {
 					ctx.font = "bold 16px Arial"
