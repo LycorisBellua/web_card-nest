@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { UserProvider } from 'hooks/UserProvider';
 import GlobalStyle from 'components/global/GlobalStyle';
@@ -9,14 +10,19 @@ import Page from 'components/global/Page';
 import Footer from 'components/global/Footer';
 
 function Layout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <>
       <UserProvider>
         <GlobalStyle />
         <Border>
-          <Nav />
+          <Nav onDMsClick={() => setSidebarOpen(true)} />
           <Content>
-            <Sidebar />
+            <Sidebar
+              isOpen={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+            />
             <Page>
               <Outlet />
             </Page>

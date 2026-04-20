@@ -99,7 +99,7 @@ const SubNav = styled.nav`
   }
 `;
 
-function Nav() {
+function Nav({ onDMsClick }: { onDMsClick: () => void }) {
   const { user } = useUser();
 
   return (
@@ -139,6 +139,9 @@ function Nav() {
         </TopBarRight>
       </TopBar>
       <SubNav>
+        <div>
+          <Button onClick={onDMsClick}>DMs</Button>
+        </div>
         <Link to="/">
           <Button>💬 Lobby</Button>
         </Link>

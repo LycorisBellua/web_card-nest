@@ -2,7 +2,19 @@ import { useUser } from 'hooks/useUser';
 import styled from 'styled-components';
 import UserBtn from 'components/UserBtn';
 
-const Bar = styled.div`
+const Backdrop = styled.div<{ $isOpen: boolean }>`
+  display: none;
+
+  @media (max-width: 600px) {
+    display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};
+    position: absolute;
+    inset: 0;
+    z-index: 9;
+    background: rgba(0, 0, 0, 0.4);
+  }
+`;
+
+const Bar = styled.div<{ $isOpen: boolean }>`
   width: 11rem;
   flex-shrink: 0;
   background: #0e0a08;
@@ -16,14 +28,13 @@ const Bar = styled.div`
   transition: transform 0.25s ease;
 
   @media (max-width: 600px) {
+    transform: translateX(${({ $isOpen }) => ($isOpen ? '0' : '-110%')});
     position: absolute;
     top: 0;
     left: 0;
     bottom: 0;
     z-index: 10;
     width: min(11rem, 80vw);
-    transform: translateX(-110%);
-    transform: translateX(0);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.55);
   }
 `;
@@ -132,33 +143,42 @@ const Suits2 = styled.div`
   }
 `;
 
-function Sidebar() {
+function Sidebar({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const { user } = useUser();
 
   if (!user) return <></>;
   return (
-    <Bar>
-      <Section>
-        <Header>Friends</Header>
-        <UserList>
-          {!user.friends?.length ? (
-            <EmptyMsg>Empty friend list</EmptyMsg>
-          ) : (
-            user.friends.map((e) => (
-              <UserBtn
-                key={e.username}
-                username={e.username}
-                avatar={e.avatar}
-                isOnline={e.isOnline}
-              />
-            ))
-          )}
-        </UserList>
-      </Section>
-      <Dots />
-      <Suits1 />
-      <Suits2 />
-    </Bar>
+    <>
+      <Backdrop $isOpen={isOpen} onClick={onClose} />
+      <Bar $isOpen={isOpen}>
+        <Section>
+          <Header>Friends</Header>
+          <UserList>
+            {!user.friends?.length ? (
+              <EmptyMsg>Empty friend list</EmptyMsg>
+            ) : (
+              user.friends.map((e) => (
+                <UserBtn
+                  key={e.username}
+                  username={e.username}
+                  avatar={e.avatar}
+                  isOnline={e.isOnline}
+                />
+              ))
+            )}
+          </UserList>
+        </Section>
+        <Dots />
+        <Suits1 />
+        <Suits2 />
+      </Bar>
+    </>
   );
 }
 
