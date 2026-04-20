@@ -1,5 +1,8 @@
 import defaultUserAvatar from 'assets/default_user.png';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useUser } from 'hooks/useUser';
+import type { User } from 'hooks/UserTypes';
+import NotFound from 'pages/NotFound';
 import Button from 'components/Button';
 import {
   sanitizeUsername,
@@ -15,41 +18,18 @@ import {
   validateAvatar,
 } from 'functions/UserValidation';
 
-type User = {
-  id: string;
-  username: string;
-  email: string;
-  unverifiedEmail: string;
-  rank: string;
-  description: string;
-  avatarURL: string;
-  registered: Date;
-};
+type UpdateUserFieldHandler = (
+  field: keyof NonNullable<User> | 'password',
+  value: unknown,
+) => Promise<void>;
 
 function Profile() {
-  const [user, setUser] = useState<User | null>(null);
-  const [errors, setErrors] = useState<string[]>([]);
+  const { user, setUser } = useUser();
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetch('/api/users/1', { credentials: 'include' });
-        if (!res.ok) {
-          setErrors([`Error ${res.status}: ${res.statusText}`]);
-          return;
-        }
-        const data = (await res.json()) as User;
-        setUser(data);
-      } catch {
-        setErrors(['Network error, please try again.']);
-      }
-    }
-    void fetchUser();
-  }, []);
+  if (!user) return <NotFound />;
 
   async function updateUserField(
-    field: keyof User | 'password',
-    value: unknown,
+    ...[field, value]: Parameters<UpdateUserFieldHandler>
   ) {
     if (!value) return;
     await fetch('/api/users/1', {
@@ -64,42 +44,35 @@ function Profile() {
 
   return (
     <div>
-      <UserInfo user={user} OnUpdateUserField={updateUserField} />
-      {errors.length > 0 && <div>{errors}</div>}
+      <UserInfo user={user} onUpdateUserField={updateUserField} />
     </div>
   );
 }
 
 type UserInfoProps = {
-  user: User | null;
-  OnUpdateUserField: (
-    field: keyof User | 'password',
-    value: unknown,
-  ) => Promise<void>;
+  user: User;
+  onUpdateUserField: UpdateUserFieldHandler;
 };
 
-function UserInfo({ user, OnUpdateUserField }: UserInfoProps) {
-  if (!user) return;
+function UserInfo({ user, onUpdateUserField }: UserInfoProps) {
+  if (!user) return null;
   const {
     username,
     email,
     unverifiedEmail,
     rank,
     description,
-    avatarURL,
+    avatar,
     registered,
   } = user;
 
   return (
     <div>
-      <UpdateUserAvatar
-        avatarURL={avatarURL}
-        OnUpdateUserField={OnUpdateUserField}
-      />
+      <UpdateUserAvatar avatar={avatar} onUpdateUserField={onUpdateUserField} />
       <div className="main">
         <UpdateUsername
           username={username}
-          OnUpdateUserField={OnUpdateUserField}
+          onUpdateUserField={onUpdateUserField}
         />
         <div>
           <p>Rank: {rank}</p>
@@ -113,13 +86,13 @@ function UserInfo({ user, OnUpdateUserField }: UserInfoProps) {
         <UpdatePassword
           username={username}
           email={email}
-          OnUpdateUserField={OnUpdateUserField}
+          onUpdateUserField={onUpdateUserField}
         />
-        <UpdateUserEmail email={email} OnUpdateUserField={OnUpdateUserField} />
+        <UpdateUserEmail email={email} onUpdateUserField={onUpdateUserField} />
         {unverifiedEmail && <VerifyEmail unverifiedEmail={unverifiedEmail} />}
         <UpdateUserDescription
           description={description}
-          OnUpdateUserField={OnUpdateUserField}
+          onUpdateUserField={onUpdateUserField}
         />
       </div>
     </div>
@@ -127,13 +100,13 @@ function UserInfo({ user, OnUpdateUserField }: UserInfoProps) {
 }
 
 type UpdateUserAvatarProps = {
-  avatarURL: string;
-  OnUpdateUserField: (field: keyof User, value: unknown) => Promise<void>;
+  avatar: string;
+  onUpdateUserField: UpdateUserFieldHandler;
 };
 
 function UpdateUserAvatar({
-  avatarURL,
-  OnUpdateUserField,
+  avatar,
+  onUpdateUserField,
 }: UpdateUserAvatarProps) {
   const imgInputRef = useRef<HTMLInputElement | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
@@ -143,7 +116,7 @@ function UpdateUserAvatar({
   }
 
   async function removeAvatar() {
-    await OnUpdateUserField('avatarURL', defaultUserAvatar);
+    await onUpdateUserField('avatar', defaultUserAvatar);
   }
 
   async function handleUpdateAvatar(e: React.ChangeEvent<HTMLInputElement>) {
@@ -162,15 +135,15 @@ function UpdateUserAvatar({
     });
     if (!res.ok) return;
     const data = (await res.json()) as { url: string };
-    await OnUpdateUserField('avatarURL', data.url);
+    await onUpdateUserField('avatar', data.url);
     //const imgUrl = URL.createObjectURL(file)
-    //await OnUpdateUserField("avatarURL", imgUrl)
+    //await onUpdateUserField("avatar", imgUrl)
     setErrors([]);
   }
 
   return (
     <div>
-      <img src={avatarURL ? avatarURL : defaultUserAvatar} alt="avatar" />
+      <img src={avatar ? avatar : defaultUserAvatar} alt="avatar" />
       <div className="btn">
         <Button onClick={handleAvatar}>Edit🖊️</Button>
         <Button onClick={() => void removeAvatar()}>Remove🗑️</Button>
@@ -192,10 +165,10 @@ function UpdateUserAvatar({
 
 type UpdateUsernameProps = {
   username: string;
-  OnUpdateUserField: (field: keyof User, value: unknown) => Promise<void>;
+  onUpdateUserField: UpdateUserFieldHandler;
 };
 
-function UpdateUsername({ username, OnUpdateUserField }: UpdateUsernameProps) {
+function UpdateUsername({ username, onUpdateUserField }: UpdateUsernameProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [edit, setEdit] = useState(false);
@@ -217,7 +190,7 @@ function UpdateUsername({ username, OnUpdateUserField }: UpdateUsernameProps) {
       setValue('');
       return;
     }
-    await OnUpdateUserField('username', username);
+    await onUpdateUserField('username', username);
     setEdit(false);
     setErrors([]);
   }
@@ -252,16 +225,13 @@ function UpdateUsername({ username, OnUpdateUserField }: UpdateUsernameProps) {
 type UpdatePasswordProps = {
   username: string;
   email: string;
-  OnUpdateUserField: (
-    field: keyof User | 'password',
-    value: unknown,
-  ) => Promise<void>;
+  onUpdateUserField: UpdateUserFieldHandler;
 };
 
 function UpdatePassword({
   username,
   email,
-  OnUpdateUserField,
+  onUpdateUserField,
 }: UpdatePasswordProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [edit, setEdit] = useState(false);
@@ -276,7 +246,10 @@ function UpdatePassword({
   }, [edit]);
   async function handleSaving() {
     setErrors([]);
-    if (!value || !confirm) setErrors(["'Please fill all fields."]);
+    if (!value || !confirm) {
+      setErrors(["'Please fill all fields."]);
+      return;
+    }
     const password = sanitizePassword(value);
     const allErrors = [
       ...validatePassword(password, username, email),
@@ -286,7 +259,7 @@ function UpdatePassword({
       setErrors(allErrors);
       return;
     }
-    await OnUpdateUserField('password', password);
+    await onUpdateUserField('password', password);
     setEdit(false);
     setValue('');
     setConfirm('');
@@ -334,10 +307,10 @@ function UpdatePassword({
 
 type UpdateUserEmailProps = {
   email: string;
-  OnUpdateUserField: (field: keyof User, value: unknown) => Promise<void>;
+  onUpdateUserField: UpdateUserFieldHandler;
 };
 
-function UpdateUserEmail({ email, OnUpdateUserField }: UpdateUserEmailProps) {
+function UpdateUserEmail({ email, onUpdateUserField }: UpdateUserEmailProps) {
   const [edit, setEdit] = useState(false);
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -359,7 +332,7 @@ function UpdateUserEmail({ email, OnUpdateUserField }: UpdateUserEmailProps) {
       setValue('');
       return;
     }
-    await OnUpdateUserField('unverifiedEmail', userEmail);
+    await onUpdateUserField('unverifiedEmail', userEmail);
     setEdit(false);
     setErrors([]);
   }
@@ -425,15 +398,15 @@ function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
   );
 }
 
-type UpdateUserDescription = {
+type UpdateUserDescriptionProps = {
   description: string;
-  OnUpdateUserField: (field: keyof User, value: unknown) => Promise<void>;
+  onUpdateUserField: UpdateUserFieldHandler;
 };
 
 function UpdateUserDescription({
   description,
-  OnUpdateUserField,
-}: UpdateUserDescription) {
+  onUpdateUserField,
+}: UpdateUserDescriptionProps) {
   const [edit, setEdit] = useState(false);
   const [value, setValue] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -450,7 +423,7 @@ function UpdateUserDescription({
       setErrors(allErrors);
       return;
     }
-    await OnUpdateUserField('description', userDesc);
+    await onUpdateUserField('description', userDesc);
     setEdit(false);
     setValue('');
     setErrors([]);

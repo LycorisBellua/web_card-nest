@@ -13,9 +13,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   */
 
   const [user, setUser] = useState<User>({
+    id: 'bbf5432o0qgurft60ujvd',
     username: 'Wolf-Hart',
     avatar:
       'https://cdn.displate.com/artwork/270x380/2025-04-29/5d9a490e-781f-418f-ac6b-0d7cf866de6c.jpg',
+    rank: 'User',
+    email: 'wolfhart@gmail.com',
+    unverifiedEmail: '',
+    description: 'Too school for cool 😎',
+    registered: new Date('2026-03-12'),
     friends: [
       {
         username: 'Espresso',
