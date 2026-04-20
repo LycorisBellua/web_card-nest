@@ -166,10 +166,10 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 					labelX = W / 2
 					labelY = CARD_H + 55
     			} else if (position === "left") {
-					labelX = CARD_W + 65 + 40
+					labelX = CARD_W + 120
 					labelY = H / 2
     			} else if (position === "right") {
-					labelX =  W - CARD_W - 105
+					labelX =  W - CARD_W - 120
 					labelY = H / 2
     			}
 				ctx.fillText(label, labelX, labelY)
