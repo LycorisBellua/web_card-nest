@@ -12,7 +12,7 @@ import { RelService } from './relationships/rel.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from './auth/auth.constants';
+import { jwtConstants } from './auth/jwt/auth.jwt-secret';
 
 @Module({
   imports: [
