@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import type { UserLimited } from 'hooks/UserTypes';
 
 const Btn = styled.div`
   display: flex;
@@ -61,7 +62,7 @@ const Username = styled.div`
   text-overflow: ellipsis;
 `;
 
-function UserBtn({ username, avatar, isOnline }) {
+function UserBtn({ username, avatar, isOnline }: UserLimited) {
   return (
     <Btn>
       {avatar && (

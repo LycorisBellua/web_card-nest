@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useUser } from 'hooks/UserContext';
+import { useUser } from 'hooks/useUser';
 import styled from 'styled-components';
 import Button from 'components/Button';
 import UserBtn from 'components/UserBtn';
@@ -133,7 +133,7 @@ function Nav() {
             </Link>
           ) : (
             <Link to="/auth">
-              <UserBtn username="Log In" />
+              <UserBtn username="Log In" avatar="" isOnline={false} />
             </Link>
           )}
         </TopBarRight>

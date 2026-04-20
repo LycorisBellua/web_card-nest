@@ -1,4 +1,4 @@
-import { useUser } from 'hooks/UserContext';
+import { useUser } from 'hooks/useUser';
 import styled from 'styled-components';
 import UserBtn from 'components/UserBtn';
 
@@ -145,7 +145,8 @@ function Sidebar() {
             <EmptyMsg>Empty friend list</EmptyMsg>
           ) : (
             user.friends.map((e) => (
-              <UserBtn key={e.username}
+              <UserBtn
+                key={e.username}
                 username={e.username}
                 avatar={e.avatar}
                 isOnline={e.isOnline}

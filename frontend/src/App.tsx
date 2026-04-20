@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { UserProvider } from 'hooks/UserContext';
+import { UserProvider } from 'hooks/UserProvider';
 import GlobalStyle from 'components/global/GlobalStyle';
 import Border from 'components/global/Border';
 import Nav from 'components/global/Nav';
