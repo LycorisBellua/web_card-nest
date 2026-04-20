@@ -10,6 +10,14 @@ import {
 import { sanitizeEmail, sanitizePassword } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 
+type LoginResponse = {
+  access_token: string;
+  user: {
+    id: string;
+    username: string;
+  };
+};
+
 function LogIn() {
   const [logMail, setLogMail] = useState('');
   const [logPwd, setLogPwd] = useState('');
@@ -33,7 +41,7 @@ function LogIn() {
       return;
     }
     try {
-      const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,11 +51,13 @@ function LogIn() {
           upassword: loginPwd,
         }),
       });
-      const data = (await res.json()) as { message: string };
+      const data: LoginResponse = await res.json();
       if (!res.ok) {
-        setErrors([data.message]);
+        setErrors([`${res.status}: ${res.statusText}`]);
         return;
       }
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       setMessage('Login success! Redirecting to your profile...');
       setLogMail('');
       setLogPwd('');
