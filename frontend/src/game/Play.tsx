@@ -272,9 +272,13 @@ function DisplayRecord({ game, history }: DisplayRecordProps) {
         <thead>
           <tr>
             <th>Round</th>
-            {game.players.map((p, i) => (
-              <th key={i}>Player {p.id + 1}</th>
-            ))}
+            {game.players.map((p, i) =>
+              p.username ? (
+                <th key={i}>{p.username}</th>
+              ) : (
+                <th key={i}>Guest {p.id + 1}</th>
+              ),
+            )}
             <th>Winner</th>
           </tr>
         </thead>
