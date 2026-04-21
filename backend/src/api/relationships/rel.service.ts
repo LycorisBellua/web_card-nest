@@ -73,7 +73,15 @@ export class RelService {
     await this.userService.userExistsOrThrow(originId);
     return await this.findAccepted(originId);
   }
-
+  async fetchFriendsList(originId: string) {
+    
+    const RawData = await this.fetchFriends(originId);
+    const FriendIdList = RawData.map(item => item.requesterId !== originId ? item.requesterId : item.addresseeId);
+    console.log("FriendId : ", FriendIdList);
+    const FriendsList = await Promise.all(FriendIdList.map(item => this.userService.getUsernameById(item)));
+     console.log("FriendId : ", FriendsList);
+    return {FriendsList};
+  }
   async fetchSentRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
     return await this.findSentPending(originId);

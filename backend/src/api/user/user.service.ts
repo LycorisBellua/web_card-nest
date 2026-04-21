@@ -134,6 +134,18 @@ export class UserService {
     };
   }
 
+  async getUsernameById(toFind: string) {
+    const found = await this.prisma.user.findUnique({
+      where: { id: toFind },
+      select: { 
+        username: true,
+        id:true },
+    });
+    if (!found) {
+      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
+    }
+    return {found};
+  }
   async getUserByUsername(toFind: string) {
     const found = await this.prisma.user.findFirst({
       where: { username: { equals: toFind, mode: 'insensitive' } },
