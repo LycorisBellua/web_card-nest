@@ -19,6 +19,7 @@ import {
   getToken,
   newPasswordContainsUsername,
   newPasswordContainsEmail,
+  getRefreshTimeout,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
 
@@ -278,6 +279,7 @@ export class UserService {
     const result = await this.modifyRefreshToken(
       userId,
       await createHash(token),
+      getRefreshTimeout(),
     );
     if (
       !result.refreshToken ||
@@ -290,7 +292,7 @@ export class UserService {
 
   async removeRefreshToken(userId: string) {
     await this.userExistsOrThrow(userId);
-    const result = await this.modifyRefreshToken(userId, null);
+    const result = await this.deleteRefreshToken(userId);
     if (result.refreshToken !== null) {
       throw new InternalServerErrorException(ErrorMessages.REF_TOK_DEL_ERR);
     }
@@ -398,10 +400,22 @@ export class UserService {
     });
   }
 
-  private async modifyRefreshToken(userId: string, newToken: string | null) {
+  private async modifyRefreshToken(
+    userId: string,
+    newToken: string | null,
+    timeout: Date,
+  ) {
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { refreshToken: newToken },
+      data: { refreshToken: newToken, refreshTimeout: timeout },
+      select: { refreshToken: true },
+    });
+  }
+
+  private async deleteRefreshToken(userId: string) {
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null, refreshTimeout: null },
       select: { refreshToken: true },
     });
   }
@@ -419,6 +433,7 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
+        refreshTimeout: true,
       },
     });
     if (!found) {
@@ -439,6 +454,7 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
+        refreshTimeout: true,
       },
     });
   }
