@@ -11,6 +11,7 @@ import { RelController } from './relationships/rel.controller';
 import { RelService } from './relationships/rel.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
+import { WebsocketServer } from './websocketHandling/server/WebsocketServer.gateway';
 
 @Module({
   controllers: [
@@ -28,6 +29,7 @@ import { AuthService } from './auth/auth.service';
     UserEmailsService,
     RelService,
     AuthService,
+    WebsocketServer,
   ],
 })
 export class ApiModule {}
