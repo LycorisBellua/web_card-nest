@@ -2,6 +2,12 @@
 - Add DM threads (with no posts, it's okay).
 - Do check responsiveness.
 
+- Chat: scroll to bottom on load.
+```
+const msgs = document.getElementById('div_all_msgs');
+msgs.scrollTop = msgs.scrollHeight;
+```
+
 ---
 
 - Rework all the old pages so that they have nice components instead of being 

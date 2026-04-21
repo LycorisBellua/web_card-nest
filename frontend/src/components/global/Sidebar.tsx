@@ -168,6 +168,7 @@ function Sidebar({
                   key={e.username}
                   username={e.username}
                   avatar={e.avatar}
+                  rank={e.rank}
                   isOnline={e.isOnline}
                 />
               ))

@@ -1,6 +1,7 @@
 export type UserLimited = {
   username: string;
   avatar: string;
+  rank: string;
   isOnline: boolean;
 };
 

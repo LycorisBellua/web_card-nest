@@ -128,12 +128,13 @@ function Nav({ onDMsClick }: { onDMsClick: () => void }) {
               <UserBtn
                 username={user.username}
                 avatar={user.avatar}
+                rank={user.rank}
                 isOnline={true}
               />
             </Link>
           ) : (
             <Link to="/auth">
-              <UserBtn username="Log In" avatar="" isOnline={false} />
+              <UserBtn username="Log In" avatar="" rank="" isOnline={false} />
             </Link>
           )}
         </TopBarRight>
