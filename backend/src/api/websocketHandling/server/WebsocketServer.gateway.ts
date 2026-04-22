@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { Server } from 'socket.io';
-import {MessageBody, SubscribeMessage, WebSocketServer, WebSocketGateway} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import {ConnectedSocket, MessageBody, SubscribeMessage, WebSocketServer, WebSocketGateway} from '@nestjs/websockets';
 import {RelService} from  '../../relationships/rel.service';
 
 @WebSocketGateway()
@@ -12,11 +12,12 @@ constructor(
 server: Server;
 
 @SubscribeMessage('FriendList')
-async onNewMessage(@MessageBody() body: string)
+async onNewMessage(@MessageBody() body: string,  @ConnectedSocket() socket: Socket)
 {
     const friendlist = await this.RelService.fetchFriendsList(body);
     console.log("Websocket FriendList : ",friendlist);
-    return friendlist;
+    socket.emit('FriendList', friendlist);
+    // return friendlist;
 }
 
 }

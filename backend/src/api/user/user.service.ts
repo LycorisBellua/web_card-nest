@@ -139,7 +139,8 @@ export class UserService {
       where: { id: toFind },
       select: { 
         username: true,
-        id:true },
+        id: true,
+        online: true },
     });
     if (!found) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);

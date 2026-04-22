@@ -24,6 +24,7 @@ model User {
   receivedRequests Friend[]   @relation("addressee")
   blocked          Block[]    @relation("blocker")
   blockedBy        Block[]    @relation("blocked")
+  online           Int        @default(0)
 }
 
 enum Ranks {
