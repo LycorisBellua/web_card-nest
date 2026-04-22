@@ -144,7 +144,7 @@ export class UserService {
     if (!found) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
-    return {found};
+    return {...found};
   }
   async getUserByUsername(toFind: string) {
     const found = await this.prisma.user.findFirst({

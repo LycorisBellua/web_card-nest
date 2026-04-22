@@ -79,6 +79,7 @@ export class RelService {
     const FriendIdList = RawData.map(item => item.requesterId !== originId ? item.requesterId : item.addresseeId);
     console.log("FriendId : ", FriendIdList);
     const FriendsList = await Promise.all(FriendIdList.map(item => this.userService.getUsernameById(item)));
+
      console.log("FriendId : ", FriendsList);
     return {FriendsList};
   }

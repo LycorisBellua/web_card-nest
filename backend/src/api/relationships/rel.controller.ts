@@ -68,6 +68,7 @@ export class RelController {
   async fetchSentRequests(@Param('originId', ParseUUIDPipe) originId: string) {
     return await this.relService.fetchSentRequests(originId);
   }
+  
 
   @Get('friend/:originId/received')
   async fetchReceivedRequests(
