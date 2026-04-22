@@ -16,3 +16,8 @@ export type User = {
   registered: Date;
   friends: UserLimited[];
 } | null;
+
+export type Msg = {
+  created: Date;
+  content: string;
+};

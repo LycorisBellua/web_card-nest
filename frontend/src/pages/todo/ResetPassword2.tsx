@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ScrollablePage } from 'components/general/Scrollable';
 import Button from 'components/Button';
 import { sanitizePassword } from 'functions/UserSanitation';
 import { validatePassword } from 'functions/UserValidation';
@@ -87,7 +88,7 @@ function ResetPasswordSecond() {
   }
 
   return (
-    <>
+    <ScrollablePage>
       <h1>Reset a new password</h1>
       <p>Email: {email}</p>
       <form
@@ -127,7 +128,7 @@ function ResetPasswordSecond() {
       </form>
       {message && <p>{message}</p>}
       <Link to="/auth">Go back to login page 👈</Link>
-    </>
+    </ScrollablePage>
   );
 }
 

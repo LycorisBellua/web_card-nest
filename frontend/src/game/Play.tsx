@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ScrollablePage } from 'components/general/Scrollable';
 import {
   PlayTableStyle,
   TableWrapper,
@@ -138,7 +139,7 @@ function Play() {
   }, [game?.gameStatus]);
 
   return (
-    <div>
+    <ScrollablePage>
       {started && game && (
         <>
           <TableWrapper>
@@ -206,7 +207,7 @@ function Play() {
       {!started && displayRecord && !local && !online && (
         <DisplayRecord game={game} history={history} />
       )}
-    </div>
+    </ScrollablePage>
   );
 }
 

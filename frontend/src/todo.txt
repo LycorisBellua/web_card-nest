@@ -1,12 +1,7 @@
-- Add the lobby chat with placeholder content.
-- Add DM threads (with no posts, it's okay).
-- Do check responsiveness.
-
-- Chat: scroll to bottom on load.
-```
-const msgs = document.getElementById('div_all_msgs');
-msgs.scrollTop = msgs.scrollHeight;
-```
+- Add DM threads (with no message, it's okay).
+- Click on usernames in chat to reach the user's profile page.
+- Add proper icons everywhere in the website.
+- Add markdown and emoticon support to chat.
 
 ---
 
@@ -16,4 +11,4 @@ Let Hong finish her current issue first.
 - Add the other styled components.
 - Complete the placeholder pages so that they're placeholders no more.
 - Is anything amiss when it comes to aesthetics?
-- Fix any ESLint issue.
+- Fix any ESLint issue you have introduced.

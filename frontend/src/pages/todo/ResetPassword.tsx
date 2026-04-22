@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ScrollablePage } from 'components/general/Scrollable';
 import Button from 'components/Button';
 import { sanitizeEmail } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
@@ -49,7 +50,7 @@ function ResetPassword() {
   }
 
   return (
-    <>
+    <ScrollablePage>
       <h1>Reset Password</h1>
       <form
         onSubmit={(e) => {
@@ -71,7 +72,7 @@ function ResetPassword() {
       </form>
       {message && <p>{message}</p>}
       <Link to="/auth">Go back to login page 👈</Link>
-    </>
+    </ScrollablePage>
   );
 }
 

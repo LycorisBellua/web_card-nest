@@ -1,6 +1,6 @@
 import { /*useEffect,*/ useState } from 'react';
 import { UserContext } from 'hooks/UserContext';
-import type { User } from 'hooks/UserTypes';
+import type { User } from 'hooks/Types';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   /*

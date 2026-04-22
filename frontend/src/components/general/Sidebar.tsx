@@ -1,5 +1,6 @@
 import { useUser } from 'hooks/useUser';
 import styled from 'styled-components';
+import { ScrollableArea } from 'components/general/Scrollable';
 import UserBtn from 'components/UserBtn';
 
 const Backdrop = styled.div<{ $isOpen: boolean }>`
@@ -14,7 +15,7 @@ const Backdrop = styled.div<{ $isOpen: boolean }>`
   }
 `;
 
-const Bar = styled.div<{ $isOpen: boolean }>`
+const Bar = styled(ScrollableArea)<{ $isOpen: boolean }>`
   width: 11rem;
   flex-shrink: 0;
   background: #0e0a08;

@@ -13,7 +13,7 @@ const GlobalStyle = createGlobalStyle`
     font-size: clamp(16px, 0.8vw + 1.1vh, 22px);
     height: 100%;
     background: #090808;
-    color: #e0c498;
+    color: #d0a888;
   }
 
   body
@@ -26,7 +26,7 @@ const GlobalStyle = createGlobalStyle`
   #root
   {
     min-width: 300px;
-    min-height: 100vh;
+	height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: stretch;

@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import type { UserLimited } from 'hooks/UserTypes';
+import type { UserLimited } from 'hooks/Types';
 import Avatar from 'components/Avatar';
 import Username from 'components/Username';
 
