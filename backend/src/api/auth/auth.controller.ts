@@ -64,6 +64,15 @@ export class AuthController {
     return await this.authService.verifyEmail(userId, token);
   }
 
+  @Get('/:userId/:token/verify/cancel')
+  @Redirect(`${process.env.HOME_URL}/verify-cancel`)
+  async cancelVerificationRequest(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Param('token') token: string,
+  ) {
+    return await this.authService.cancelVerification(userId, token);
+  }
+
   @Get('/:userId/resend')
   async resendVerificationEmail(
     @Param('userId', ParseUUIDPipe) userId: string,

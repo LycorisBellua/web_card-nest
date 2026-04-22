@@ -252,6 +252,25 @@ export class UserService {
     return verified;
   }
 
+  async cancelVerification(userId: string, token: string) {
+    const found = await this.userExists(userId);
+    if (
+      !found ||
+      !found.verifyToken ||
+      !(await compareHash(token, found.verifyToken))
+    ) {
+      return null;
+    }
+    const data: Record<string, unknown> = {};
+    data.email_unverified = null;
+    data.verifyToken = null;
+    data.verifyTimeout = null;
+    if (found.email) {
+      return await this.modifyVerificationData(userId, data);
+    }
+    return await this.deleteUser(userId);
+  }
+
   async resendVerificationEmail(userId: string) {
     const found = await this.userExistsOrThrow(userId);
     if (!found.email_unverified) {
@@ -468,8 +487,10 @@ export class UserService {
   }
 
   private async emailAddressIsTaken(toFind: string) {
-    const found = await this.prisma.user.findUnique({
-      where: { email: toFind },
+    const found = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: toFind }, { email_unverified: toFind }],
+      },
       select: { email: true },
     });
     return found !== null;

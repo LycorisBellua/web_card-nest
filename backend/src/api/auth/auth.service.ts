@@ -45,6 +45,10 @@ export class AuthService {
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
+  async cancelVerification(userId: string, token: string) {
+    return await this.userService.cancelVerification(userId, token);
+  }
+
   async resendVerificationEmail(userId: string) {
     return await this.userService.resendVerificationEmail(userId);
   }
