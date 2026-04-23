@@ -1,5 +1,6 @@
-import { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useUser } from 'context/useUser';
+import type { Msg } from 'context/Types';
 import ChatPage from 'components/chat/ChatPage';
 import ChatHead from 'components/chat/ChatHead';
 import ChatMsgArea from 'components/chat/ChatMsgArea';
@@ -9,11 +10,20 @@ import ChatMsg from 'components/chat/ChatMsg';
 import ChatInput from 'components/chat/ChatInput';
 
 function Lobby() {
+  // TODO: Real event appearing at the right time, in the middle of chat,
+  // instead of in a hardcoded spot.
   // TODO: Replace with real time data
   const { user, users, threads, postMessage } = useUser();
-  const thread = threads.find((t) => t.id === 'thread_group_lobby')!;
-  const lastMsg = thread?.messages.at(-1);
   const nbr_online = users.filter((u) => u.isOnline).length;
+  const thread = threads.find((t) => t.id === 'thread_group_lobby');
+  const lastMsg = thread?.messages.at(-1);
+  const grouped =
+    thread?.messages.reduce<Record<string, Msg[]>>((acc, msg) => {
+      const day = msg.created.toDateString();
+      if (!acc[day]) acc[day] = [];
+      acc[day].push(msg);
+      return acc;
+    }, {}) ?? {};
 
   const msgsEndRef = useRef<HTMLDivElement>(null);
 
@@ -27,24 +37,19 @@ function Lobby() {
     }
   }, [user?.id, lastMsg]);
 
-  // TODO: Real event instead of hardcoded.
-
   return (
     <ChatPage>
       <ChatHead title="the lobby" nbr_online={nbr_online} />
       <ChatMsgArea>
-        {thread?.messages.length && (
-          <ChatDate date={thread?.messages[0].created} />
-        )}
-        {thread?.messages.slice(0, 3).map((msg) => {
-          const author = users.find((u) => u.id === msg.authorId) ?? null;
-          return <ChatMsg key={msg.id} user={author} msg={msg} />;
-        })}
         <ChatEvent users={[users[5], users[1], users[2]]} table_size={4} />
-        {thread?.messages.slice(3).map((msg) => {
-          const author = users.find((u) => u.id === msg.authorId) ?? null;
-          return <ChatMsg key={msg.id} user={author} msg={msg} />;
-        })}
+        {Object.entries(grouped).map(([day, msgs]) => (
+          <React.Fragment key={day}>
+            <ChatDate date={new Date(day)} />
+            {msgs.map((msg) => (
+              <ChatMsg key={msg.id} msg={msg} />
+            ))}
+          </React.Fragment>
+        ))}
         <div ref={msgsEndRef} />
       </ChatMsgArea>
       <ChatInput
