@@ -34,6 +34,7 @@ env-file:
 		echo "PGDATA=/var/lib/postgresql/data/pgdata" >> $(ENV_FILE); \
 		echo "DEV_URL=http://$(shell hostname):3000" >> $(ENV_FILE); \
 		echo "PROD_URL=https://$(shell hostname):8080" >> $(ENV_FILE); \
+		echo "JWT_SECRET=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
 		cat $(GMAIL_FILE) >> $(ENV_FILE); \
 		echo "Generated .env file";\
 	fi
