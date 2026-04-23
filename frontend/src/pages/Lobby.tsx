@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import { useUser } from 'context/useUser';
 import ChatPage from 'components/chat/ChatPage';
 import ChatHead from 'components/chat/ChatHead';
 import ChatMsgArea from 'components/chat/ChatMsgArea';
@@ -8,83 +9,53 @@ import ChatMsg from 'components/chat/ChatMsg';
 import ChatInput from 'components/chat/ChatInput';
 
 function Lobby() {
-  const msgsEndRef = useRef<HTMLDivElement>(null);
+  // TODO: Replace with real time data
+  const { users } = useUser();
+  const nbr_online = users.filter(u => u.isOnline).length;
 
+  const msgsEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     msgsEndRef.current?.scrollIntoView({ behavior: 'instant' });
   }, []);
 
-  // TODO: Replace with real time data
-  const nbr_online = 42;
-  const users = [
-    {
-      username: 'Espresso',
-      avatar: 'https://pics.craiyon.com/2023-11-16/Gf0MaOtPQDeq60d49Ai6uA.webp',
-      rank: 'user',
-      isOnline: true,
-    },
-    {
-      username: 'Jookebox',
-      avatar:
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRR_uvplX64OVu7oEysYZ5HjfMVUgjb9LEzEllowZk8UA&s',
-      rank: 'admin',
-      isOnline: true,
-    },
-    {
-      username: 'Lumière',
-      avatar:
-        'https://college.taylors.edu.my/content/dam/taylorsrevamp/college/student-life/news-and-articles/2024/shadows-in-the-candles-glow-bringing-sustainability-to-light/taylors-article-shadows-in-the-candles-glow-hero-banner-mobile-768x650.png/jcr:content/renditions/cq5dam.web.768.650.webp',
-      rank: 'user',
-      isOnline: false,
-    },
-    {
-      username: 'MuffinTop',
-      avatar:
-        'https://www.shutterstock.com/image-photo/kawaiistyle-chocolate-muffin-smiling-big-600nw-2758545531.jpg',
-      rank: 'user',
-      isOnline: true,
-    },
-    {
-      username: 'Sagewick',
-      avatar:
-        'https://static.vecteezy.com/ti/vecteur-libre/p1/43511509-cerise-fleurs-illustration-vectoriel.jpg',
-      rank: 'mod',
-      isOnline: false,
-    },
-    {
-      username: 'Tealeaf',
-      avatar:
-        'https://thumbs.dreamstime.com/b/cute-kawaii-teapot-cartoon-floral-accent-illustration-cheerful-yellow-pink-lid-teal-handle-adorned-flower-style-445328393.jpg',
-      rank: 'mod',
-      isOnline: false,
-    },
-  ];
   const msgs = [
     {
+      id: 'msg_yvs8ks0gsh5sqyznon4au',
+      author_id: 'user_lcni7wrk8w8o3h486cpm0',
       created: new Date('April 19, 2026 21:14:32'),
       content:
         "good evening everyone ☕ rain's coming down outside. perfect night to stay in and play some cards?",
     },
     {
+      id: 'msg_lgudme5mmv8b9b6igg05m',
+      author_id: null,
       created: new Date('April 19, 2026 21:16:41'),
       content:
         "this place is so cozy!! I literally just stumbled in but I think I'll be staying a while 🥹",
     },
     {
+      id: 'msg_q7gggwrkfj7iqcsgkeedx',
+      author_id: 'user_870fc29zbxk4rtixmwyp6',
       created: new Date('April 19, 2026 21:17:18'),
       content:
         'welcome glad you found us. make yourself at home - the lobby is always open.',
     },
     {
+      id: 'msg_hc8q7ym2dr0fmh6fb0d3d',
+      author_id: 'user_2uxmmlor04x70ybmrpsrc',
       created: new Date('April 19, 2026 21:19:01'),
       content:
         'Come join, no pressure at all. Jookebox put some lo-fi on too so the vibes are immaculate rn',
     },
     {
+      id: 'msg_qk8r2qzewg0ejm2f2ml7h',
+      author_id: 'user_n9almh3164vtsjsdepzo9',
       created: new Date('April 19, 2026 21:21:21'),
       content: 'saving me a seat?? 🙏 be there in 5',
     },
     {
+      id: 'msg_x0gbww93f8t5inw3o4y8t',
+      author_id: 'user_bbyow98qw7h2ah96oiego',
       created: new Date('April 19, 2026 21:22:23'),
       content:
         "always 🧁 also just queued two more hours of lo-fi so we're set for the night ✨",

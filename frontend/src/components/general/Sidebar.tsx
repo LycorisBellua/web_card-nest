@@ -1,4 +1,4 @@
-import { useUser } from 'hooks/useUser';
+import { useUser } from 'context/useUser';
 import styled from 'styled-components';
 import { ScrollableArea } from 'components/general/Scrollable';
 import UserBtn from 'components/UserBtn';
@@ -151,7 +151,7 @@ function Sidebar({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const { user } = useUser();
+  const { user, friends } = useUser();
 
   if (!user) return <></>;
   return (
@@ -161,17 +161,11 @@ function Sidebar({
         <Section>
           <Header>Friends</Header>
           <UserList>
-            {!user.friends?.length ? (
+            {!friends.length ? (
               <EmptyMsg>Empty friend list</EmptyMsg>
             ) : (
-              user.friends.map((e) => (
-                <UserBtn
-                  key={e.username}
-                  username={e.username}
-                  avatar={e.avatar}
-                  rank={e.rank}
-                  isOnline={e.isOnline}
-                />
+              friends.map((e) => (
+                <UserBtn key={e.id} user={e} />
               ))
             )}
           </UserList>

@@ -1,4 +1,4 @@
-import type { UserLimited, Msg } from 'hooks/Types';
+import type { UserLimitedOrGuest, Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import src_guest from 'assets/default_guest.png';
 import styled, { css } from 'styled-components';
@@ -129,14 +129,14 @@ const Text = styled.div`
   }
 `;
 
-function ChatMsg({ user, msg }: { user: UserLimited; msg: Msg }) {
+function ChatMsg({ user, msg }: { user: UserLimitedOrGuest; msg: Msg }) {
   // TODO: Should a guest user be created (on the frontend only) instead of
   // doing this? We'll have the definitive answer once the guest profile page
   // is a thing.
-  const avatar = !user ? src_guest : user.avatar;
-  const isOnline = !user ? false : user.isOnline;
-  const rank = !user ? 'guest' : user.rank;
-  const username = !user ? 'Guest' : user.username;
+  const avatar =  user?.avatar ?? src_guest;
+  const isOnline = user?.isOnline ?? false;
+  const rank = user?.rank ?? 'guest';
+  const username = user?.username ?? 'Guest';
 
   return (
     <Row $rank={rank}>

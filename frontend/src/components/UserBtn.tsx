@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import type { UserLimited } from 'hooks/Types';
+import type { UserLimitedOrGuest } from 'context/Types';
 import Avatar from 'components/Avatar';
 import Username from 'components/Username';
 
@@ -17,11 +17,17 @@ const Btn = styled.div`
   }
 `;
 
-function UserBtn({ username, avatar, rank, isOnline }: UserLimited) {
+function UserBtn({ user }: {user: UserLimitedOrGuest }) {
+  if (!user)
+    return (
+      <Btn>
+        <Username rank="guest" value="Log In" />
+      </Btn>
+    );
   return (
     <Btn>
-      {avatar && <Avatar src={avatar} isOnline={isOnline} />}
-      <Username rank={rank} value={username} />
+      <Avatar src={user.avatar} isOnline={user.isOnline} />
+      <Username rank={user.rank} value={user.username} />
     </Btn>
   );
 }

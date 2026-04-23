@@ -1,4 +1,4 @@
-import type { UserLimited } from 'hooks/Types';
+import type { UserLimited } from 'context/Types';
 import styled from 'styled-components';
 
 const Card = styled.div`

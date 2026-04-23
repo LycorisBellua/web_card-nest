@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { UserProvider } from 'hooks/UserProvider';
+import { UserProvider } from 'context/UserProvider';
 import GlobalStyle from 'components/general/GlobalStyle';
 import Border from 'components/general/Border';
 import Nav from 'components/general/Nav';

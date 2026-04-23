@@ -1,7 +1,7 @@
 import defaultUserAvatar from 'assets/default_user.png';
 import { useEffect, useRef, useState } from 'react';
-import { useUser } from 'hooks/useUser';
-import type { User } from 'hooks/Types';
+import { useUser } from 'context/useUser';
+import type { User } from 'context/Types';
 import NotFound from 'pages/NotFound';
 import { ScrollablePage } from 'components/general/Scrollable';
 import Button from 'components/Button';

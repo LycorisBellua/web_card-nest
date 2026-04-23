@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useUser } from 'hooks/useUser';
+import { useUser } from 'context/useUser';
 import styled from 'styled-components';
 import Button from 'components/Button';
 import UserBtn from 'components/UserBtn';
@@ -123,20 +123,9 @@ function Nav({ onDMsClick }: { onDMsClick: () => void }) {
           </Link>
         </TopNav>
         <TopBarRight>
-          {user ? (
-            <Link to="/profile">
-              <UserBtn
-                username={user.username}
-                avatar={user.avatar}
-                rank={user.rank}
-                isOnline={true}
-              />
-            </Link>
-          ) : (
-            <Link to="/auth">
-              <UserBtn username="Log In" avatar="" rank="" isOnline={false} />
-            </Link>
-          )}
+          <Link to={user ? "/profile" : "/auth"}>
+            <UserBtn user={user} />
+          </Link>
         </TopBarRight>
       </TopBar>
       <SubNav>
