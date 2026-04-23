@@ -10,9 +10,10 @@ import { Ranks } from 'src/generated/prisma/enums';
 import { JwtPayload } from '../jwt/auth.jwt-payload';
 
 const rankLevel: Record<Ranks, number> = {
-  [Ranks.USER]: 0,
-  [Ranks.MODERATOR]: 1,
-  [Ranks.ADMIN]: 2,
+  [Ranks.PENDING]: 0,
+  [Ranks.USER]: 1,
+  [Ranks.MODERATOR]: 2,
+  [Ranks.ADMIN]: 3,
 };
 
 @Injectable()
