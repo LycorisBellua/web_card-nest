@@ -80,6 +80,10 @@ export class RelService {
     const FriendsList = await Promise.all(FriendIdList.map(item => this.userService.getUsernameById(item)));
     return {FriendsList};
   }
+  
+  
+  
+  
   async fetchSentRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
     return await this.findSentPending(originId);
@@ -217,6 +221,13 @@ export class RelService {
     return await this.findBlockedUsers(originId);
   }
 
+  async fetchBlockedList(originId:string)
+  {
+    const blockedRawData = await this.fetchBlocked(originId);
+    const blockedIdList = blockedRawData.map(item => item.blockedId);
+    const blockedList =  await Promise.all(blockedIdList.map(item => this.userService.getUsernameById(item)));
+    return {blockedList};
+  }
   // BLOCK DB ACTIONS
   async findBlock(blockerId: string, blockedId: string) {
     return await this.prisma.block.findUnique({
