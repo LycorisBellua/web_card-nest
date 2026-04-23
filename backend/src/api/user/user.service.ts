@@ -292,13 +292,16 @@ export class UserService {
     return result;
   }
 
-  async generateRefreshToken(userId: string): Promise<string> {
+  async generateRefreshToken(
+    userId: string,
+  ): Promise<{ token: string; timeout: Date }> {
     await this.userExistsOrThrow(userId);
     const token = getToken();
+    const timeout = getRefreshTimeout();
     const result = await this.modifyRefreshToken(
       userId,
       await createHash(token),
-      getRefreshTimeout(),
+      timeout,
     );
     if (
       !result.refreshToken ||
@@ -306,7 +309,7 @@ export class UserService {
     ) {
       throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
     }
-    return token;
+    return { token: token, timeout: timeout };
   }
 
   async removeRefreshToken(userId: string) {
@@ -461,6 +464,26 @@ export class UserService {
     return found;
   }
 
+  async userExistsByEmail(toFind: string) {
+    return await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: toFind }, { email_unverified: toFind }],
+      },
+      select: {
+        id: true,
+        email: true,
+        email_unverified: true,
+        rank: true,
+        password: true,
+        username: true,
+        verifyToken: true,
+        verifyTimeout: true,
+        refreshToken: true,
+        refreshTimeout: true,
+      },
+    });
+  }
+
   private async userExists(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },
@@ -491,7 +514,7 @@ export class UserService {
       where: {
         OR: [{ email: toFind }, { email_unverified: toFind }],
       },
-      select: { email: true },
+      select: { id: true, email: true, email_unverified: true },
     });
     return found !== null;
   }
