@@ -6,6 +6,7 @@ PROD_COMPOSE_FILE = ./containers/docker-compose.prod.yml
 
 # Environment / Certs / Volume Dirs
 ENV_FILE = ./containers/.env
+GMAIL_FILE = ./containers/gmail_cred.txt
 NGINX_CERTS_DIR = ./containers/nginx/certs
 VOLUME_DIRS = ./frontend/node_modules ./backend/node_modules ./backend/dist \
 	./backend/client ./backend/src/generated
@@ -34,7 +35,7 @@ env-file:
 		echo "DEV_URL=http://$(shell hostname):3000" >> $(ENV_FILE); \
 		echo "PROD_URL=https://$(shell hostname):8080" >> $(ENV_FILE); \
 		echo "JWT_SECRET=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
-		cat ../gmail_cred.txt >> $(ENV_FILE); \
+		cat $(GMAIL_FILE) >> $(ENV_FILE); \
 		echo "Generated .env file";\
 	fi
 
