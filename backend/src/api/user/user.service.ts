@@ -246,8 +246,6 @@ export class UserService {
     if (!verified || !verified.email) {
       return null;
     }
-    await this.deleteUnverifiedWithTakenEmail(verified.email);
-    await this.modifyVerifiedWithTakenEmail(verified.email);
     await this.userEmailsService.sendVerificationSuccess(verified.email);
     return verified;
   }
@@ -366,19 +364,6 @@ export class UserService {
       where: { id: userId },
       data: newData,
       select: { id: true },
-    });
-  }
-
-  private async deleteUnverifiedWithTakenEmail(address: string | null) {
-    return await this.prisma.user.deleteMany({
-      where: { email: null, email_unverified: address },
-    });
-  }
-
-  private async modifyVerifiedWithTakenEmail(address: string | null) {
-    return await this.prisma.user.updateMany({
-      where: { email_unverified: address },
-      data: { email_unverified: null, verifyTimeout: null, verifyToken: null },
     });
   }
 
