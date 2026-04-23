@@ -1,3 +1,6 @@
+- Lobby: Currently, the date is hardcoded to be the one of the first message, 
+instead of showing every new day of messages.
+
 - Add DM threads (with no message, it's okay).
 - Click on usernames in chat to reach the user's profile page.
 - Add proper icons everywhere in the website.

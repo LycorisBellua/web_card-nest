@@ -6,18 +6,26 @@ export type UserLimited = {
   isOnline: boolean;
 };
 
-export type User = (UserLimited & {
-  email: string;
-  unverifiedEmail: string;
-  description: string;
-  registered: Date;
-}) | null;
+export type User =
+  | (UserLimited & {
+      email: string;
+      unverifiedEmail: string;
+      description: string;
+      registered: Date;
+    })
+  | null;
 
 export type UserLimitedOrGuest = UserLimited | null;
 
 export type Msg = {
   id: string;
-  author_id: string | null;
+  authorId: string | null;
   created: Date;
   content: string;
+};
+
+export type Thread = {
+  id: string;
+  type: 'group' | 'dm';
+  messages: Msg[];
 };

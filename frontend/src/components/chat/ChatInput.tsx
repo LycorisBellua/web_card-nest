@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { sanitizeMessage } from 'functions/UserSanitation';
 import styled from 'styled-components';
 
 const Wrap = styled.div`
@@ -65,12 +67,27 @@ const Send = styled.button`
   }
 `;
 
-function ChatInput() {
+function ChatInput({ onSend }: { onSend: (content: string) => void }) {
+  const [value, setValue] = useState('');
+
+  function handleSubmit() {
+    const sanitized = sanitizeMessage(value);
+    if (!sanitized) return;
+    onSend(sanitized);
+    setValue('');
+  }
+
   return (
     <Wrap>
       <Box>
-        <Field name="chat_input" placeholder="Say something..." />
-        <Send>➤</Send>
+        <Field
+          name="chat_input"
+          placeholder="Say something..."
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+        />
+        <Send onClick={handleSubmit}>➤</Send>
       </Box>
     </Wrap>
   );

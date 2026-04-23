@@ -122,6 +122,8 @@ const Text = styled.div`
   font-weight: 600;
   color: #d0a888;
   line-height: 1.62;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 
   em {
     color: #f0c06a;
@@ -133,7 +135,7 @@ function ChatMsg({ user, msg }: { user: UserLimitedOrGuest; msg: Msg }) {
   // TODO: Should a guest user be created (on the frontend only) instead of
   // doing this? We'll have the definitive answer once the guest profile page
   // is a thing.
-  const avatar =  user?.avatar ?? src_guest;
+  const avatar = user?.avatar ?? src_guest;
   const isOnline = user?.isOnline ?? false;
   const rank = user?.rank ?? 'guest';
   const username = user?.username ?? 'Guest';

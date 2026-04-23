@@ -17,7 +17,7 @@ const Btn = styled.div`
   }
 `;
 
-function UserBtn({ user }: {user: UserLimitedOrGuest }) {
+function UserBtn({ user }: { user: UserLimitedOrGuest }) {
   if (!user)
     return (
       <Btn>

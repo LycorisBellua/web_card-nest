@@ -48,7 +48,7 @@ const LogoText = styled.div`
   font-size: 0.95rem;
   font-weight: 700;
   color: #f0e2cc;
-  white-space: nowrap;
+  white-space: pre-wrap;
 
   span {
     color: #f5c842;
@@ -123,7 +123,7 @@ function Nav({ onDMsClick }: { onDMsClick: () => void }) {
           </Link>
         </TopNav>
         <TopBarRight>
-          <Link to={user ? "/profile" : "/auth"}>
+          <Link to={user ? '/profile' : '/auth'}>
             <UserBtn user={user} />
           </Link>
         </TopBarRight>

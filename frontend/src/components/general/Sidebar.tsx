@@ -164,9 +164,7 @@ function Sidebar({
             {!friends.length ? (
               <EmptyMsg>Empty friend list</EmptyMsg>
             ) : (
-              friends.map((e) => (
-                <UserBtn key={e.id} user={e} />
-              ))
+              friends.map((e) => <UserBtn key={e.id} user={e} />)
             )}
           </UserList>
         </Section>

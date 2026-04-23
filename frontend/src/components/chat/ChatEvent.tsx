@@ -58,7 +58,7 @@ const WatchBtn = styled.button`
   font-size: 0.68rem;
   font-weight: 700;
   cursor: pointer;
-  white-space: nowrap;
+  white-space: pre-wrap;
   flex-shrink: 0;
   transition:
     background 0.15s,
@@ -82,7 +82,7 @@ const JoinBtn = styled.button`
   font-size: 0.68rem;
   font-weight: 700;
   cursor: pointer;
-  white-space: nowrap;
+  white-space: pre-wrap;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(144, 96, 192, 0.35);
   transition:
@@ -146,7 +146,7 @@ function ChatEvent({
       </Text>
       <Btns>
         <WatchBtn>Watch</WatchBtn>
-        <JoinBtn>Join</JoinBtn>
+        {free_seats > 0 && <JoinBtn>Join</JoinBtn>}
       </Btns>
     </Card>
   );
