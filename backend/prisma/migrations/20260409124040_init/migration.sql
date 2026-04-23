@@ -67,5 +67,4 @@ ALTER TABLE "Block" ADD CONSTRAINT "Block_blockerId_fkey" FOREIGN KEY ("blockerI
 -- AddForeignKey
 ALTER TABLE "Block" ADD CONSTRAINT "Block_blockedId_fkey" FOREIGN KEY ("blockedId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AddOnlineBool
-ALTER TABLE "User" ADD COLUMN "online" INTEGER NOT NULL DEFAULT 0;
+
