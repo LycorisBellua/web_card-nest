@@ -246,10 +246,27 @@ export class UserService {
     if (!verified || !verified.email) {
       return null;
     }
-    await this.deleteUnverifiedWithTakenEmail(verified.email);
-    await this.modifyVerifiedWithTakenEmail(verified.email);
     await this.userEmailsService.sendVerificationSuccess(verified.email);
     return verified;
+  }
+
+  async cancelVerification(userId: string, token: string) {
+    const found = await this.userExists(userId);
+    if (
+      !found ||
+      !found.verifyToken ||
+      !(await compareHash(token, found.verifyToken))
+    ) {
+      return null;
+    }
+    const data: Record<string, unknown> = {};
+    data.email_unverified = null;
+    data.verifyToken = null;
+    data.verifyTimeout = null;
+    if (found.email) {
+      return await this.modifyVerificationData(userId, data);
+    }
+    return await this.deleteUser(userId);
   }
 
   async resendVerificationEmail(userId: string) {
@@ -273,13 +290,16 @@ export class UserService {
     return result;
   }
 
-  async generateRefreshToken(userId: string): Promise<string> {
+  async generateRefreshToken(
+    userId: string,
+  ): Promise<{ token: string; timeout: Date }> {
     await this.userExistsOrThrow(userId);
     const token = getToken();
+    const timeout = getRefreshTimeout();
     const result = await this.modifyRefreshToken(
       userId,
       await createHash(token),
-      getRefreshTimeout(),
+      timeout,
     );
     if (
       !result.refreshToken ||
@@ -287,7 +307,7 @@ export class UserService {
     ) {
       throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
     }
-    return token;
+    return { token: token, timeout: timeout };
   }
 
   async removeRefreshToken(userId: string) {
@@ -344,19 +364,6 @@ export class UserService {
       where: { id: userId },
       data: newData,
       select: { id: true },
-    });
-  }
-
-  private async deleteUnverifiedWithTakenEmail(address: string | null) {
-    return await this.prisma.user.deleteMany({
-      where: { email: null, email_unverified: address },
-    });
-  }
-
-  private async modifyVerifiedWithTakenEmail(address: string | null) {
-    return await this.prisma.user.updateMany({
-      where: { email_unverified: address },
-      data: { email_unverified: null, verifyTimeout: null, verifyToken: null },
     });
   }
 
@@ -442,6 +449,26 @@ export class UserService {
     return found;
   }
 
+  async userExistsByEmail(toFind: string) {
+    return await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: toFind }, { email_unverified: toFind }],
+      },
+      select: {
+        id: true,
+        email: true,
+        email_unverified: true,
+        rank: true,
+        password: true,
+        username: true,
+        verifyToken: true,
+        verifyTimeout: true,
+        refreshToken: true,
+        refreshTimeout: true,
+      },
+    });
+  }
+
   private async userExists(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },
@@ -457,7 +484,6 @@ export class UserService {
         refreshTimeout: true,
       },
     });
-    return found !== null;
   }
 
   private async usernameIsTaken(toFind: string) {
@@ -469,9 +495,11 @@ export class UserService {
   }
 
   private async emailAddressIsTaken(toFind: string) {
-    const found = await this.prisma.user.findUnique({
-      where: { email: toFind },
-      select: { email: true },
+    const found = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: toFind }, { email_unverified: toFind }],
+      },
+      select: { id: true, email: true, email_unverified: true },
     });
     return found !== null;
   }

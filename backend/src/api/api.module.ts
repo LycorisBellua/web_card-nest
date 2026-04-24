@@ -11,12 +11,8 @@ import { RelController } from './relationships/rel.controller';
 import { RelService } from './relationships/rel.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
-import { GdprController } from './gdpr/gdpr.controller';
-import { GdprService } from './gdpr/gdpr.service';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './auth/jwt/auth.jwt-secret';
-
-
 
 @Module({
   imports: [
@@ -32,7 +28,6 @@ import { jwtConstants } from './auth/jwt/auth.jwt-secret';
     UserController,
     RelController,
     AuthController,
-    GdprController,
   ],
   providers: [
     HelloService,
@@ -42,7 +37,6 @@ import { jwtConstants } from './auth/jwt/auth.jwt-secret';
     UserEmailsService,
     RelService,
     AuthService,
-    GdprService,
   ],
 })
 export class ApiModule {}

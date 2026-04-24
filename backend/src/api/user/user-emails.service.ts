@@ -7,15 +7,19 @@ export class UserEmailsService {
   constructor(private readonly sendMailService: SendMailService) {}
 
   async sendVerificationEmail(userId: string, address: string, token: string) {
-    let url = process.env.HOME_URL;
+    const url = process.env.HOME_URL;
     if (url === undefined) {
       throw new InternalServerErrorException('Unable to verify Card Nest URL');
     }
-    url += '/api/auth/' + userId + '/' + token + '/verify';
+    const verify_url = url + '/api/auth/' + userId + '/' + token + '/verify';
+    const cancel_url = verify_url + '/cancel';
     await this.sendMailService.sendMail(
       address,
       EmailContents.VER_OBJ,
-      EmailContents.VER_MSG.replace('URL', url),
+      EmailContents.VER_MSG.replace('VERIFY_URL', verify_url).replace(
+        'CANCEL_URL',
+        cancel_url,
+      ),
     );
   }
 

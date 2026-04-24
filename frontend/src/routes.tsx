@@ -6,6 +6,7 @@ import ResetPassword from 'pages/ResetPassword';
 import ResetPasswordSecond from 'pages/ResetPassword2';
 import VerifySuccess from 'pages/VerifySuccess';
 import VerifyError from 'pages/VerifyError';
+import VerifyCancel from 'pages/VerifyCancel';
 import Profile from 'pages/Profile';
 import Play from 'game/Play';
 import PrivacyPolicy from 'pages/PrivacyPolicy';
@@ -25,6 +26,7 @@ const routes = [
       { path: 'reset-pwd2', element: <ResetPasswordSecond /> },
       { path: 'verify-success', element: <VerifySuccess /> },
       { path: 'verify-error', element: <VerifyError /> },
+      { path: 'verify-cancel', element: <VerifyCancel /> },
       { path: 'profile', element: <Profile /> },
       { path: 'play', element: <Play /> },
       { path: 'privacy-policy', element: <PrivacyPolicy /> },

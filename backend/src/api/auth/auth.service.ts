@@ -16,6 +16,27 @@ export class AuthService {
     return await this.userService.addUser(createUserDto);
   }
 
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ refreshToken: string; timeout: Date; accessToken: string }> {
+    const found = await this.userService.userExistsByEmail(email);
+    if (
+      !found ||
+      (found.email && found.email !== email) ||
+      !(await compareHash(password, found.password))
+    ) {
+      throw new UnauthorizedException('Email address or password incorrect.');
+    }
+    const refresh = await this.userService.generateRefreshToken(found.id);
+    const access = await this.generateJwtToken(found.id);
+    return {
+      refreshToken: refresh.token,
+      timeout: refresh.timeout,
+      accessToken: access,
+    };
+  }
+
   async logout(userId: string) {
     return await this.userService.removeRefreshToken(userId);
   }
@@ -43,6 +64,10 @@ export class AuthService {
       return { url: `${process.env.HOME_URL}/verify-error` };
     }
     return { url: `${process.env.HOME_URL}/verify-success` };
+  }
+
+  async cancelVerification(userId: string, token: string) {
+    return await this.userService.cancelVerification(userId, token);
   }
 
   async resendVerificationEmail(userId: string) {
