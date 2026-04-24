@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,6 +21,8 @@ import {
   newPasswordContainsUsername,
   newPasswordContainsEmail,
   getRefreshTimeout,
+  encodeSingleAvatar,
+  encodeMultipleAvatars,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
 
@@ -122,58 +125,44 @@ export class UserService {
     return await this.modifyRank(userId, newRank);
   }
 
-  async getUserById(toFind: string) {
-    const found = await this.prisma.user.findUnique({
-      where: { id: toFind },
-      omit: { password: true },
-    });
+  async getOwnProfile(userId: string) {
+    const found = await this.findOwnProfile(userId);
     if (!found) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
-    return {
-      ...found,
-      avatar: found.avatar
-        ? Buffer.from(found.avatar).toString('base64')
-        : null,
-    };
+    return encodeSingleAvatar(found);
   }
 
-  async getUserByUsername(toFind: string) {
-    const found = await this.prisma.user.findFirst({
-      where: { username: { equals: toFind, mode: 'insensitive' } },
-      omit: { password: true },
-    });
-    if (!found) {
+  async getUserById(rank: Ranks, userId: string, toFind: string) {
+    const found = await this.findProfileById(toFind);
+    if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
-    return {
-      ...found,
-      avatar: found.avatar
-        ? Buffer.from(found.avatar).toString('base64')
-        : null,
-    };
+    return encodeSingleAvatar(found);
   }
 
-  async getAllSortByUsername() {
-    const users = await this.prisma.user.findMany({
-      omit: { password: true },
-      orderBy: { username: 'asc' },
-    });
-    return users.map((user) => ({
-      ...user,
-      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
-    }));
+  async getUserByUsername(rank: Ranks, userId: string, toFind: string) {
+    const found = await this.findProfileByUsername(toFind);
+    if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
+      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
+    }
+    return encodeSingleAvatar(found);
   }
 
-  async getAllSortByDate() {
-    const users = await this.prisma.user.findMany({
-      omit: { password: true },
-      orderBy: { date: 'asc' },
-    });
-    return users.map((user) => ({
-      ...user,
-      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
-    }));
+  async getAllSortByUsername(rank: Ranks) {
+    const includePending = rank === Ranks.USER ? false : true;
+    const users = await this.listAllByUsername(includePending);
+    return encodeMultipleAvatars(users);
+  }
+
+  async getAllSortByDate(rank: Ranks) {
+    const includePending = rank === Ranks.USER ? false : true;
+    const users = await this.listAllByDate(includePending);
+    return encodeMultipleAvatars(users);
+  }
+
+  getGuestProfile() {
+    return { id: '', username: 'guest', avatar: null, rank: '' };
   }
 
   // CALLED FROM USER-TASKS SERVICE
@@ -239,9 +228,16 @@ export class UserService {
     ) {
       return null;
     }
+    let newRank: Ranks;
+    if (found.rank === Ranks.PENDING) {
+      newRank = Ranks.USER;
+    } else {
+      newRank = found.rank;
+    }
     const verified = await this.modifyVerifyEmail(
       userId,
       found.email_unverified,
+      newRank,
     );
     if (!verified || !verified.email) {
       return null;
@@ -343,11 +339,16 @@ export class UserService {
     });
   }
 
-  private async modifyVerifyEmail(userId: string, address: string) {
+  private async modifyVerifyEmail(
+    userId: string,
+    address: string,
+    rank: Ranks,
+  ) {
     return await this.prisma.user.update({
       where: { id: userId },
       data: {
         email: address,
+        rank: rank,
         email_unverified: null,
         verifyTimeout: null,
         verifyToken: null,
@@ -424,6 +425,50 @@ export class UserService {
       where: { id: userId },
       data: { refreshToken: null, refreshTimeout: null },
       select: { refreshToken: true },
+    });
+  }
+
+  private async findOwnProfile(userId: string) {
+    return await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        email: true,
+        email_unverified: true,
+      },
+    });
+  }
+
+  private async findProfileById(toFind: string) {
+    return await this.prisma.user.findUnique({
+      where: { id: toFind },
+      select: { id: true, username: true, avatar: true, rank: true },
+    });
+  }
+
+  private async findProfileByUsername(toFind: string) {
+    return await this.prisma.user.findFirst({
+      where: { username: { equals: toFind, mode: 'insensitive' } },
+      select: { id: true, username: true, avatar: true, rank: true },
+    });
+  }
+
+  private async listAllByUsername(incPending: boolean) {
+    return await this.prisma.user.findMany({
+      where: incPending ? {} : { rank: { not: Ranks.PENDING } },
+      select: { id: true, username: true, avatar: true, rank: true },
+      orderBy: { username: 'asc' },
+    });
+  }
+
+  private async listAllByDate(incPending: boolean) {
+    return await this.prisma.user.findMany({
+      where: incPending ? {} : { rank: { not: Ranks.PENDING } },
+      select: { id: true, username: true, avatar: true, rank: true },
+      orderBy: { date: 'asc' },
     });
   }
 
