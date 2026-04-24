@@ -15,6 +15,7 @@ export class GdprController{
         res.setHeader('Content-Type', 'application/JSON');
         res.setHeader('Content-Disposition', `attachment; filename="GRPD_compliance_personal_data.json"`);
         res.send(JSON.stringify(data,null,2));
+        await this.GdprService.SendExctractDataConfirmationEmail(originId);
     }
 
     @Get(':originId/exportCSV')
@@ -33,6 +34,7 @@ export class GdprController{
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="GRPD_compliance_personal_data.csv"`);
         res.send(data);
+        await this.GdprService.SendExctractDataConfirmationEmail(originId);
     }
 
 

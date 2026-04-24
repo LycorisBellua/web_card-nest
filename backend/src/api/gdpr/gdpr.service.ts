@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, } from '@nestjs/common';
 import { RelService } from '../relationships/rel.service';
 import { UserService } from '../user/user.service';
 import { ErrorMessages } from '../user/error_messages/ErrorMessages';
+import { SendMailService } from '../sendMail/sendMail.service';
 
 
 @Injectable()
@@ -9,6 +10,7 @@ export class GdprService{
   constructor(
     private readonly RelService: RelService,
     private readonly UserService: UserService,
+    private readonly SendMailService: SendMailService,
   ) {}
   
   
@@ -30,6 +32,15 @@ export class GdprService{
         userFriendReceivedRequest_info,
         userFriendship,
     };
+  }
+
+  async SendExctractDataConfirmationEmail(userid: string)
+  {
+    const user = await this.UserService.getUserById(userid);
+    const email = (user.email) ? user.email : user.email_unverified;
+
+    const message = "Dear " + user.username + ",\n" + "Your personnal data have been successfully exported.\n" + "Best regards,\n" + "Web-Nest-Card Team.\n"
+    await this.SendMailService.sendMail(email, "WEB-NEST-CARD DATA EXTRACTION CONFIRMATION", message);
   }
 
   // async GetUserPersonalData(userid: string)
