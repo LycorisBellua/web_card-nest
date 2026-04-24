@@ -1,9 +1,8 @@
 import type { Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
-import src_guest from 'assets/default_guest.png';
 import styled, { css } from 'styled-components';
-import Avatar from 'components/Avatar';
+import { Avatar } from 'components/Avatar';
 import Username from 'components/Username';
 
 const Row = styled.div<{ $rank: string }>`
@@ -139,14 +138,14 @@ function ChatMsg({ msg }: { msg: Msg }) {
   const { users } = useUser();
   const author = users.find((u) => u.id === msg.authorId) ?? null;
 
-  const avatar = author?.avatar ?? src_guest;
+  const avatar = author?.avatar ?? '';
   const isOnline = author?.isOnline ?? false;
   const rank = author?.rank ?? 'guest';
   const username = author?.username ?? 'Guest';
 
   return (
     <Row $rank={rank}>
-      <Avatar src={avatar} isOnline={isOnline} />
+      <Avatar src={avatar} rank={rank} isOnline={isOnline} />
       <Body>
         <Meta>
           <NameWrap $rank={rank}>

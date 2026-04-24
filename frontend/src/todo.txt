@@ -1,4 +1,3 @@
-- Change color of default avatars, because they're hard to see in black.
 - Add DM threads (with no message, it's okay).
 - Click on usernames in chat to reach the user's profile page.
 - Add proper icons everywhere in the website.

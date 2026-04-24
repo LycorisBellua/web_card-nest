@@ -29,8 +29,7 @@ const otherUsers: UserLimited[] = [
   {
     id: 'user_n9almh3164vtsjsdepzo9',
     username: 'MuffinTop',
-    avatar:
-      'https://www.shutterstock.com/image-photo/kawaiistyle-chocolate-muffin-smiling-big-600nw-2758545531.jpg',
+    avatar: '',
     rank: 'user',
     isOnline: true,
   },

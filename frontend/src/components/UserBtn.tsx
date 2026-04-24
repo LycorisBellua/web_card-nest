@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import type { UserLimitedOrGuest } from 'context/Types';
-import Avatar from 'components/Avatar';
+import { Avatar } from 'components/Avatar';
 import Username from 'components/Username';
 
 const Btn = styled.div`
@@ -26,7 +26,7 @@ function UserBtn({ user }: { user: UserLimitedOrGuest }) {
     );
   return (
     <Btn>
-      <Avatar src={user.avatar} isOnline={user.isOnline} />
+      <Avatar src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
       <Username rank={user.rank} value={user.username} />
     </Btn>
   );

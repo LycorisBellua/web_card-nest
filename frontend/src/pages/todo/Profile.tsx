@@ -1,10 +1,7 @@
-import defaultUserAvatar from 'assets/default_user.png';
 import { useEffect, useRef, useState } from 'react';
 import { useUser } from 'context/useUser';
 import type { User } from 'context/Types';
 import NotFound from 'pages/NotFound';
-import { ScrollablePage } from 'components/general/Scrollable';
-import Button from 'components/Button';
 import {
   sanitizeUsername,
   sanitizeEmail,
@@ -18,11 +15,19 @@ import {
   validateDescription,
   validateAvatar,
 } from 'functions/UserValidation';
+import { ScrollablePage } from 'components/general/Scrollable';
+import Button from 'components/Button';
+import { AvatarBig } from 'components/Avatar';
 
 type UpdateUserFieldHandler = (
   field: keyof NonNullable<User> | 'password',
   value: unknown,
 ) => Promise<void>;
+
+type UserInfoProps = {
+  user: NonNullable<User>;
+  onUpdateUserField: UpdateUserFieldHandler;
+};
 
 function Profile() {
   const { user, setUser } = useUser();
@@ -50,65 +55,31 @@ function Profile() {
   );
 }
 
-type UserInfoProps = {
-  user: User;
-  onUpdateUserField: UpdateUserFieldHandler;
-};
-
 function UserInfo({ user, onUpdateUserField }: UserInfoProps) {
-  if (!user) return null;
-  const {
-    username,
-    email,
-    unverifiedEmail,
-    rank,
-    description,
-    avatar,
-    registered,
-  } = user;
-
   return (
     <div>
-      <UpdateUserAvatar avatar={avatar} onUpdateUserField={onUpdateUserField} />
+      <UpdateUserAvatar user={user} onUpdateUserField={onUpdateUserField} />
       <div className="main">
-        <UpdateUsername
-          username={username}
-          onUpdateUserField={onUpdateUserField}
-        />
+        <UpdateUsername user={user} onUpdateUserField={onUpdateUserField} />
         <div>
-          <p>Rank: {rank}</p>
+          <p>Rank: {user.rank}</p>
         </div>
         <div>
           <p>
             Registration date:{' '}
-            {user?.registered ? registered.toISOString().slice(0, 10) : 'N/A'}
+            {user.registered?.toISOString().slice(0, 10) ?? 'N/A'}
           </p>
         </div>
-        <UpdatePassword
-          username={username}
-          email={email}
-          onUpdateUserField={onUpdateUserField}
-        />
-        <UpdateUserEmail email={email} onUpdateUserField={onUpdateUserField} />
-        {unverifiedEmail && <VerifyEmail unverifiedEmail={unverifiedEmail} />}
-        <UpdateUserDescription
-          description={description}
-          onUpdateUserField={onUpdateUserField}
-        />
+        <UpdatePassword user={user} onUpdateUserField={onUpdateUserField} />
+        <UpdateUserEmail user={user} onUpdateUserField={onUpdateUserField} />
+        {user.unverifiedEmail && <VerifyEmail user={user} />}
+        <UpdateUserDescription user={user} onUpdateUserField={onUpdateUserField} />
       </div>
     </div>
   );
 }
 
-type UpdateUserAvatarProps = {
-  avatar: string;
-  onUpdateUserField: UpdateUserFieldHandler;
-};
-
-function UpdateUserAvatar({
-  avatar,
-  onUpdateUserField,
-}: UpdateUserAvatarProps) {
+function UpdateUserAvatar({ user, onUpdateUserField }: UserInfoProps) {
   const imgInputRef = useRef<HTMLInputElement | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -117,7 +88,7 @@ function UpdateUserAvatar({
   }
 
   async function removeAvatar() {
-    await onUpdateUserField('avatar', defaultUserAvatar);
+    await onUpdateUserField('avatar', '');
   }
 
   async function handleUpdateAvatar(e: React.ChangeEvent<HTMLInputElement>) {
@@ -137,14 +108,12 @@ function UpdateUserAvatar({
     if (!res.ok) return;
     const data = (await res.json()) as { url: string };
     await onUpdateUserField('avatar', data.url);
-    //const imgUrl = URL.createObjectURL(file)
-    //await onUpdateUserField("avatar", imgUrl)
     setErrors([]);
   }
 
   return (
     <div>
-      <img src={avatar ? avatar : defaultUserAvatar} alt="avatar" />
+      <AvatarBig src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
       <div className="btn">
         <Button onClick={handleAvatar}>Edit🖊️</Button>
         <Button onClick={() => void removeAvatar()}>Remove🗑️</Button>
@@ -164,12 +133,7 @@ function UpdateUserAvatar({
   );
 }
 
-type UpdateUsernameProps = {
-  username: string;
-  onUpdateUserField: UpdateUserFieldHandler;
-};
-
-function UpdateUsername({ username, onUpdateUserField }: UpdateUsernameProps) {
+function UpdateUsername({ user, onUpdateUserField }: UserInfoProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [edit, setEdit] = useState(false);
@@ -178,6 +142,7 @@ function UpdateUsername({ username, onUpdateUserField }: UpdateUsernameProps) {
   useEffect(() => {
     if (edit) inputRef.current?.focus();
   }, [edit]);
+
   async function handleSaving() {
     const username = sanitizeUsername(value);
     if (!username) {
@@ -195,6 +160,7 @@ function UpdateUsername({ username, onUpdateUserField }: UpdateUsernameProps) {
     setEdit(false);
     setErrors([]);
   }
+
   return (
     <div>
       <div>
@@ -211,29 +177,19 @@ function UpdateUsername({ username, onUpdateUserField }: UpdateUsernameProps) {
               autoComplete="off"
             />
           ) : (
-            username
+            user.username
           )}
         </p>
         <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
         </Button>
       </div>
-      {errors && errors.map((err, i) => <div key={i}>{err}</div>)}
+      {errors.map((err, i) => <div key={i}>{err}</div>)}
     </div>
   );
 }
 
-type UpdatePasswordProps = {
-  username: string;
-  email: string;
-  onUpdateUserField: UpdateUserFieldHandler;
-};
-
-function UpdatePassword({
-  username,
-  email,
-  onUpdateUserField,
-}: UpdatePasswordProps) {
+function UpdatePassword({ user, onUpdateUserField }: UserInfoProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [edit, setEdit] = useState(false);
   const [value, setValue] = useState('');
@@ -241,10 +197,9 @@ function UpdatePassword({
   const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
-    if (edit) {
-      inputRef.current?.focus();
-    }
+    if (edit) inputRef.current?.focus();
   }, [edit]);
+
   async function handleSaving() {
     setErrors([]);
     if (!value || !confirm) {
@@ -253,7 +208,7 @@ function UpdatePassword({
     }
     const password = sanitizePassword(value);
     const allErrors = [
-      ...validatePassword(password, username, email),
+      ...validatePassword(password, user.username, user.email),
       ...(confirm !== password ? ["Passwords don't match."] : []),
     ];
     if (allErrors.length > 0) {
@@ -301,17 +256,12 @@ function UpdatePassword({
           </div>
         </div>
       )}
-      {errors && errors.map((err, i) => <div key={i}>{err}</div>)}
+      {errors.map((err, i) => <div key={i}>{err}</div>)}
     </div>
   );
 }
 
-type UpdateUserEmailProps = {
-  email: string;
-  onUpdateUserField: UpdateUserFieldHandler;
-};
-
-function UpdateUserEmail({ email, onUpdateUserField }: UpdateUserEmailProps) {
+function UpdateUserEmail({ user, onUpdateUserField }: UserInfoProps) {
   const [edit, setEdit] = useState(false);
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -320,6 +270,7 @@ function UpdateUserEmail({ email, onUpdateUserField }: UpdateUserEmailProps) {
   useEffect(() => {
     if (edit) inputRef.current?.focus();
   }, [edit]);
+
   async function handleSaving() {
     const userEmail = sanitizeEmail(value);
     if (!userEmail) {
@@ -354,19 +305,19 @@ function UpdateUserEmail({ email, onUpdateUserField }: UpdateUserEmailProps) {
               autoComplete="off"
             />
           ) : (
-            email
+            user.email
           )}
         </p>
         <Button onClick={edit ? handleSaving : () => setEdit(true)}>
           {edit ? 'save' : '🖊️'}
         </Button>
       </div>
-      {errors && errors.map((err, i) => <div key={i}>{err}</div>)}
+      {errors.map((err, i) => <div key={i}>{err}</div>)}
     </div>
   );
 }
 
-function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
+function VerifyEmail({ user }: { user: NonNullable<User> }) {
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -375,7 +326,7 @@ function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
       const res = await fetch('/api/users/1/verify_email', {
         method: 'POST',
         headers: { 'Content-type': 'application/json' },
-        body: JSON.stringify({ unverifiedEmail: unverifiedEmail }),
+        body: JSON.stringify({ unverifiedEmail: user.unverifiedEmail }),
       });
       if (!res.ok) {
         setErrors([`Error ${res.status} : ${res.statusText}`]);
@@ -390,24 +341,16 @@ function VerifyEmail({ unverifiedEmail }: { unverifiedEmail: string }) {
   return (
     <div>
       <div>
-        <p>Unverified email: {unverifiedEmail}</p>
+        <p>Unverified email: {user.unverifiedEmail}</p>
         <Button onClick={() => void handleVerifyEmail()}>Verify🖊️</Button>
       </div>
-      {errors && errors.map((err, i) => <div key={i}>{err}</div>)}
+      {errors.map((err, i) => <div key={i}>{err}</div>)}
       {message && <p>{message}</p>}
     </div>
   );
 }
 
-type UpdateUserDescriptionProps = {
-  description: string;
-  onUpdateUserField: UpdateUserFieldHandler;
-};
-
-function UpdateUserDescription({
-  description,
-  onUpdateUserField,
-}: UpdateUserDescriptionProps) {
+function UpdateUserDescription({ user, onUpdateUserField }: UserInfoProps) {
   const [edit, setEdit] = useState(false);
   const [value, setValue] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -452,7 +395,7 @@ function UpdateUserDescription({
             <p>{value.length} / 200</p>
           </>
         ) : (
-          <p>{description}</p>
+          <p>{user.description}</p>
         )}
       </div>
       {errors.map((err, i) => (
