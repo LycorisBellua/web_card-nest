@@ -38,6 +38,10 @@ export class GdprService{
   {
     const user = await this.UserService.getUserById(userid);
     const email = (user.email) ? user.email : user.email_unverified;
+    if (!email)
+    {
+      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
+    }
 
     const message = "Dear " + user.username + ",\n" + "Your personnal data have been successfully exported.\n" + "Best regards,\n" + "Web-Nest-Card Team.\n"
     await this.SendMailService.sendMail(email, "WEB-NEST-CARD DATA EXTRACTION CONFIRMATION", message);
