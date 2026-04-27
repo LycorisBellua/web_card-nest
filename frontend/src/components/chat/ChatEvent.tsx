@@ -95,58 +95,36 @@ const JoinBtn = styled.button`
   }
 `;
 
-function TablePlayers({ users }: { users: UserLimited[] }) {
-  if (users.length === 0) return null;
-  if (users.length === 1) return <strong>{users[0].username}</strong>;
-  if (users.length === 2)
-    return (
-      <>
-        <strong>{users[0].username}</strong> and{' '}
-        <strong>{users[1].username}</strong>
-      </>
-    );
-  return (
-    <>
-      {users.map((u, i) => {
-        const isLast = i === users.length - 1;
-        const isSecondLast = i === users.length - 2;
-        let separator = '';
-        if (!isLast) {
-          separator = isSecondLast ? ' and ' : ', ';
-        }
-        return (
-          <span key={i}>
-            <strong>{u.username}</strong>
-            {separator}
-          </span>
-        );
-      })}
-    </>
-  );
-}
-
 function ChatEvent({
   users,
+  table_number,
   table_size,
 }: {
   users: UserLimited[];
+  table_number: number;
   table_size: number;
 }) {
   if (!users.length || table_size < users.length) return <></>;
-  const free_seats = table_size - users.length;
+  const players_needed = users.length < table_size;
   return (
     <Card>
       <Icon>🃏</Icon>
       <Text>
-        <TablePlayers users={users} />
-        {users.length == 1 && ' has a Black Crown table going'}
-        {users.length > 1 && ' have a Black Crown table going'}
-        {free_seats == 1 && ' · 1 seat free'}
-        {free_seats > 1 && ' · ' + free_seats + ' seats free'}
+        {players_needed ? (
+          <>
+            <strong>Table {table_number}</strong> asks for a player:{' '}
+            {users.length}/{table_size}
+          </>
+        ) : (
+          <>
+            <strong>Table {table_number}</strong> is full: {users.length}/
+            {table_size}
+          </>
+        )}
       </Text>
       <Btns>
         <WatchBtn>Watch</WatchBtn>
-        {free_seats > 0 && <JoinBtn>Join</JoinBtn>}
+        {players_needed && <JoinBtn>Join</JoinBtn>}
       </Btns>
     </Card>
   );

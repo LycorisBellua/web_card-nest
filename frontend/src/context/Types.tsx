@@ -3,6 +3,8 @@ export type UserLimited = {
   username: string;
   avatar: string;
   rank: string;
+  registered: Date;
+  description: string;
   isOnline: boolean;
 };
 
@@ -10,8 +12,6 @@ export type User =
   | (UserLimited & {
       email: string;
       unverifiedEmail: string;
-      description: string;
-      registered: Date;
     })
   | null;
 

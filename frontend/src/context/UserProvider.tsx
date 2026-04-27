@@ -8,6 +8,8 @@ const otherUsers: UserLimited[] = [
     username: 'Espresso',
     avatar: 'https://pics.craiyon.com/2023-11-16/Gf0MaOtPQDeq60d49Ai6uA.webp',
     rank: 'user',
+    registered: new Date('2026-03-02'),
+    description: '',
     isOnline: true,
   },
   {
@@ -16,6 +18,8 @@ const otherUsers: UserLimited[] = [
     avatar:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRR_uvplX64OVu7oEysYZ5HjfMVUgjb9LEzEllowZk8UA&s',
     rank: 'admin',
+    registered: new Date('2026-03-02'),
+    description: '',
     isOnline: true,
   },
   {
@@ -24,6 +28,8 @@ const otherUsers: UserLimited[] = [
     avatar:
       'https://college.taylors.edu.my/content/dam/taylorsrevamp/college/student-life/news-and-articles/2024/shadows-in-the-candles-glow-bringing-sustainability-to-light/taylors-article-shadows-in-the-candles-glow-hero-banner-mobile-768x650.png/jcr:content/renditions/cq5dam.web.768.650.webp',
     rank: 'user',
+    registered: new Date('2026-03-02'),
+    description: '',
     isOnline: false,
   },
   {
@@ -31,6 +37,8 @@ const otherUsers: UserLimited[] = [
     username: 'MuffinTop',
     avatar: '',
     rank: 'user',
+    registered: new Date('2026-03-02'),
+    description: '',
     isOnline: true,
   },
   {
@@ -39,6 +47,8 @@ const otherUsers: UserLimited[] = [
     avatar:
       'https://static.vecteezy.com/ti/vecteur-libre/p1/43511509-cerise-fleurs-illustration-vectoriel.jpg',
     rank: 'mod',
+    registered: new Date('2026-03-02'),
+    description: '',
     isOnline: false,
   },
   {
@@ -47,6 +57,8 @@ const otherUsers: UserLimited[] = [
     avatar:
       'https://thumbs.dreamstime.com/b/cute-kawaii-teapot-cartoon-floral-accent-illustration-cheerful-yellow-pink-lid-teal-handle-adorned-flower-style-445328393.jpg',
     rank: 'mod',
+    registered: new Date('2026-03-02'),
+    description: '',
     isOnline: false,
   },
 ];

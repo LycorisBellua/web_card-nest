@@ -41,7 +41,16 @@ function Lobby() {
     <ChatPage>
       <ChatHead title="the lobby" nbr_online={nbr_online} />
       <ChatMsgArea>
-        <ChatEvent users={[users[5], users[1], users[2]]} table_size={4} />
+        <ChatEvent
+          users={[users[5], users[1], users[2]]}
+          table_number={12}
+          table_size={4}
+        />
+        <ChatEvent
+          users={[users[5], users[1], users[2], users[3]]}
+          table_number={12}
+          table_size={4}
+        />
         {Object.entries(grouped).map(([day, msgs]) => (
           <React.Fragment key={day}>
             <ChatDate date={new Date(day)} />

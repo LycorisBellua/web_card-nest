@@ -1,12 +1,13 @@
 import Layout from 'App';
 import Lobby from 'pages/Lobby';
 import Auth from 'pages/Auth';
-import ResetPassword from 'pages/todo/ResetPassword';
-import ResetPasswordSecond from 'pages/todo/ResetPassword2';
-import VerifyError from 'pages/todo/VerifyError';
-import VerifySuccess from 'pages/todo/VerifySuccess';
+import ResetPassword from 'pages/ResetPassword';
+import ResetPasswordSecond from 'pages/ResetPassword2';
+import VerifyError from 'pages/VerifyError';
+import VerifySuccess from 'pages/VerifySuccess';
 import Users from 'pages/Users';
-import Profile from 'pages/todo/Profile';
+import PublicProfile from 'pages/PublicProfile';
+import PrivateProfile from 'pages/PrivateProfile';
 import Play from 'game/Play';
 import PrivacyPolicy from 'pages/PrivacyPolicy';
 import TermsOfService from 'pages/TermsOfService';
@@ -25,7 +26,8 @@ const routes = [
       { path: 'verify-success', element: <VerifySuccess /> },
       { path: 'verify-error', element: <VerifyError /> },
       { path: 'users', element: <Users /> },
-      { path: 'profile', element: <Profile /> },
+      { path: 'user/:username', element: <PublicProfile /> },
+      { path: 'profile', element: <PrivateProfile /> },
       { path: 'play', element: <Play /> },
       { path: 'privacy-policy', element: <PrivacyPolicy /> },
       { path: 'terms-of-service', element: <TermsOfService /> },
