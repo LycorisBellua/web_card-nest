@@ -3,7 +3,6 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -25,6 +24,7 @@ import {
   encodeMultipleAvatars,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
+import { AdminUpdateUserDto } from '../admin/dto/admin-update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -44,32 +44,32 @@ export class UserService {
     return result;
   }
 
-  async updateUser(userId: string, updateUserDto: UpdateUserDto) {
+  async updateUser(userId: string, dto: UpdateUserDto) {
     await this.userExistsOrThrow(userId);
     const data: Record<string, unknown> = {};
     const token = getToken();
 
-    if (updateUserDto.username !== undefined) {
-      if (await this.usernameIsTaken(updateUserDto.username)) {
+    if (dto.username !== undefined) {
+      if (await this.usernameIsTaken(dto.username)) {
         throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
       }
-      data.username = updateUserDto.username;
+      data.username = dto.username;
     }
 
-    if (updateUserDto.email_unverified !== undefined) {
-      if (await this.emailAddressIsTaken(updateUserDto.email_unverified)) {
+    if (dto.email_unverified !== undefined) {
+      if (await this.emailAddressIsTaken(dto.email_unverified)) {
         throw new ConflictException(ErrorMessages.EMAIL_USED);
       }
-      data.email_unverified = updateUserDto.email_unverified;
+      data.email_unverified = dto.email_unverified;
       data.verifyToken = await createHash(token);
       data.verifyTimeout = getVerificationTimeout();
     }
 
-    if (updateUserDto.avatar !== undefined) {
-      if (updateUserDto.avatar === '') {
+    if (dto.avatar !== undefined) {
+      if (dto.avatar === '') {
         data.avatar = null;
       } else {
-        const decoded = decodeAvatarBase64(updateUserDto.avatar);
+        const decoded = decodeAvatarBase64(dto.avatar);
         if (decoded === null) {
           throw new BadRequestException(ErrorMessages.INVALID_AVATAR);
         }
@@ -77,11 +77,11 @@ export class UserService {
       }
     }
 
-    if (updateUserDto.desc !== undefined) {
-      if (updateUserDto.desc === '') {
+    if (dto.desc !== undefined) {
+      if (dto.desc === '') {
         data.desc = null;
       } else {
-        data.desc = updateUserDto.desc;
+        data.desc = dto.desc;
       }
     }
 
@@ -312,6 +312,40 @@ export class UserService {
     if (result.refreshToken !== null) {
       throw new InternalServerErrorException(ErrorMessages.REF_TOK_DEL_ERR);
     }
+  }
+
+  //CALLED FROM ADMIN SERVICE
+  async adminUpdateUser(dto: AdminUpdateUserDto) {
+    const data: Record<string, unknown> = {};
+
+    if (dto.username !== undefined) {
+      if (await this.usernameIsTaken(dto.username)) {
+        throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
+      }
+      data.username = dto.username;
+    }
+
+    if (dto.avatar !== undefined) {
+      if (dto.avatar === '') {
+        data.avatar = null;
+      } else {
+        const decoded = decodeAvatarBase64(dto.avatar);
+        if (decoded === null) {
+          throw new BadRequestException(ErrorMessages.INVALID_AVATAR);
+        }
+        data.avatar = decoded;
+      }
+    }
+
+    if (dto.desc !== undefined) {
+      if (dto.desc === '') {
+        data.desc = null;
+      } else {
+        data.desc = dto.desc;
+      }
+    }
+
+    return await this.modifyUserInfo(dto.targetId, data);
   }
 
   // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
