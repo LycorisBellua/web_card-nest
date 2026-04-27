@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -15,9 +16,10 @@ import {
   createHash,
   getCurrentTime,
   getVerificationTimeout,
-  getVerificationToken,
+  getToken,
   newPasswordContainsUsername,
   newPasswordContainsEmail,
+  getRefreshTimeout,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
 
@@ -43,6 +45,7 @@ export class UserService {
     await this.userExistsOrThrow(userId);
     const data: Record<string, unknown> = {};
     const token = getVerificationToken();
+    const token = getToken();
 
     if (updateUserDto.username !== undefined) {
       if (await this.usernameIsTaken(updateUserDto.username)) {
@@ -208,6 +211,7 @@ export class UserService {
     }
     createUserDto.password = await createHash(createUserDto.password);
     const token = getVerificationToken();
+    const token = getToken();
     const timeout = getVerificationTimeout();
     const created = await this.createUser(
       createUserDto,
@@ -244,10 +248,27 @@ export class UserService {
     if (!verified || !verified.email) {
       return null;
     }
-    await this.deleteUnverifiedWithTakenEmail(verified.email);
-    await this.modifyVerifiedWithTakenEmail(verified.email);
     await this.userEmailsService.sendVerificationSuccess(verified.email);
     return verified;
+  }
+
+  async cancelVerification(userId: string, token: string) {
+    const found = await this.userExists(userId);
+    if (
+      !found ||
+      !found.verifyToken ||
+      !(await compareHash(token, found.verifyToken))
+    ) {
+      return null;
+    }
+    const data: Record<string, unknown> = {};
+    data.email_unverified = null;
+    data.verifyToken = null;
+    data.verifyTimeout = null;
+    if (found.email) {
+      return await this.modifyVerificationData(userId, data);
+    }
+    return await this.deleteUser(userId);
   }
 
   async resendVerificationEmail(userId: string) {
@@ -257,6 +278,7 @@ export class UserService {
     }
     const data: Record<string, unknown> = {};
     const token = getVerificationToken();
+    const token = getToken();
     data.verifyToken = await createHash(token);
     data.verifyTimeout = getVerificationTimeout();
     const result = await this.modifyVerificationData(userId, data);
@@ -269,6 +291,34 @@ export class UserService {
       );
     }
     return result;
+  }
+
+  async generateRefreshToken(
+    userId: string,
+  ): Promise<{ token: string; timeout: Date }> {
+    await this.userExistsOrThrow(userId);
+    const token = getToken();
+    const timeout = getRefreshTimeout();
+    const result = await this.modifyRefreshToken(
+      userId,
+      await createHash(token),
+      timeout,
+    );
+    if (
+      !result.refreshToken ||
+      !(await compareHash(token, result.refreshToken))
+    ) {
+      throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
+    }
+    return { token: token, timeout: timeout };
+  }
+
+  async removeRefreshToken(userId: string) {
+    await this.userExistsOrThrow(userId);
+    const result = await this.deleteRefreshToken(userId);
+    if (result.refreshToken !== null) {
+      throw new InternalServerErrorException(ErrorMessages.REF_TOK_DEL_ERR);
+    }
   }
 
   // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
@@ -320,19 +370,6 @@ export class UserService {
     });
   }
 
-  private async deleteUnverifiedWithTakenEmail(address: string | null) {
-    return await this.prisma.user.deleteMany({
-      where: { email: null, email_unverified: address },
-    });
-  }
-
-  private async modifyVerifiedWithTakenEmail(address: string | null) {
-    return await this.prisma.user.updateMany({
-      where: { email_unverified: address },
-      data: { email_unverified: null, verifyTimeout: null, verifyToken: null },
-    });
-  }
-
   private async deleteExpiredUnverified(time: Date) {
     await this.prisma.user.deleteMany({
       where: { verifyTimeout: { lt: time }, email: null },
@@ -373,6 +410,26 @@ export class UserService {
     });
   }
 
+  private async modifyRefreshToken(
+    userId: string,
+    newToken: string | null,
+    timeout: Date,
+  ) {
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: newToken, refreshTimeout: timeout },
+      select: { refreshToken: true },
+    });
+  }
+
+  private async deleteRefreshToken(userId: string) {
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null, refreshTimeout: null },
+      select: { refreshToken: true },
+    });
+  }
+
   // USER LOOKUP (INTERNAL USE ONLY)
   async userExistsOrThrow(toFind: string) {
     const found = await this.prisma.user.findUnique({
@@ -380,10 +437,13 @@ export class UserService {
       select: {
         email: true,
         email_unverified: true,
+        rank: true,
         password: true,
         username: true,
         verifyToken: true,
         verifyTimeout: true,
+        refreshToken: true,
+        refreshTimeout: true,
       },
     });
     if (!found) {
@@ -392,16 +452,39 @@ export class UserService {
     return found;
   }
 
+  async userExistsByEmail(toFind: string) {
+    return await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: toFind }, { email_unverified: toFind }],
+      },
+      select: {
+        id: true,
+        email: true,
+        email_unverified: true,
+        rank: true,
+        password: true,
+        username: true,
+        verifyToken: true,
+        verifyTimeout: true,
+        refreshToken: true,
+        refreshTimeout: true,
+      },
+    });
+  }
+
   private async userExists(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },
       select: {
         email: true,
         email_unverified: true,
+        rank: true,
         password: true,
         username: true,
         verifyToken: true,
         verifyTimeout: true,
+        refreshToken: true,
+        refreshTimeout: true,
       },
     });
   }
@@ -415,9 +498,11 @@ export class UserService {
   }
 
   private async emailAddressIsTaken(toFind: string) {
-    const found = await this.prisma.user.findUnique({
-      where: { email: toFind },
-      select: { email: true },
+    const found = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: toFind }, { email_unverified: toFind }],
+      },
+      select: { id: true, email: true, email_unverified: true },
     });
     return found !== null;
   }

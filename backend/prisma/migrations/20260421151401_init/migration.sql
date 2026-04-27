@@ -17,6 +17,8 @@ CREATE TABLE "User" (
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "verifyToken" TEXT,
     "verifyTimeout" TIMESTAMP(3),
+    "refreshToken" TEXT,
+    "refreshTimeout" TIMESTAMP(3),
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -48,6 +50,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_verifyToken_key" ON "User"("verifyToken");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_refreshToken_key" ON "User"("refreshToken");
 
 -- CreateIndex
 CREATE INDEX "Friend_addresseeId_idx" ON "Friend"("addresseeId");
