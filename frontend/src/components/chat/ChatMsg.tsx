@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
@@ -77,6 +78,10 @@ const NameWrap = styled.div<{ $rank: string }>`
         return '';
     }
   }}
+
+  a {
+    text-decoration: none;
+  }
 `;
 
 const RankBadge = styled.span<{ $rank: string }>`
@@ -145,11 +150,23 @@ function ChatMsg({ msg }: { msg: Msg }) {
 
   return (
     <Row $rank={rank}>
-      <Avatar src={avatar} rank={rank} isOnline={isOnline} />
+      {rank == 'guest' ? (
+        <Avatar src={avatar} rank={rank} isOnline={isOnline} />
+      ) : (
+        <Link to={`user/${username}`}>
+          <Avatar src={avatar} rank={rank} isOnline={isOnline} />
+        </Link>
+      )}
       <Body>
         <Meta>
           <NameWrap $rank={rank}>
-            <Username rank={rank} value={username} />
+            {rank == 'guest' ? (
+              <Username rank={rank} value={username} />
+            ) : (
+              <Link to={`user/${username}`}>
+                <Username rank={rank} value={username} />
+              </Link>
+            )}
             {(rank == 'admin' || rank == 'mod') && (
               <RankBadge $rank={rank}>{rank}</RankBadge>
             )}
