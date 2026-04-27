@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom';
 import { useUser } from 'context/useUser';
+import { IsLoggedIn } from 'functions/Ranks';
 import styled from 'styled-components';
 import { ScrollableArea } from 'components/general/Scrollable';
 import UserBtn from 'components/UserBtn';
@@ -60,6 +62,10 @@ const UserList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 3px;
+
+  a {
+    text-decoration: none;
+  }
 `;
 
 const EmptyMsg = styled.p`
@@ -151,9 +157,9 @@ function Sidebar({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const { user, friends } = useUser();
+  const { friends } = useUser();
 
-  if (!user) return <></>;
+  if (!IsLoggedIn()) return <></>;
   return (
     <>
       <Backdrop $isOpen={isOpen} onClick={onClose} />
@@ -164,7 +170,11 @@ function Sidebar({
             {!friends.length ? (
               <EmptyMsg>Empty friend list</EmptyMsg>
             ) : (
-              friends.map((e) => <UserBtn key={e.id} user={e} />)
+              friends.map((e) => (
+                <Link key={e.id} to={`chat/${e.username}`} onClick={onClose}>
+                  <UserBtn user={e} />
+                </Link>
+              ))
             )}
           </UserList>
         </Section>

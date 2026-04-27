@@ -8,6 +8,7 @@ import VerifySuccess from 'pages/VerifySuccess';
 import Users from 'pages/Users';
 import PublicProfile from 'pages/PublicProfile';
 import PrivateProfile from 'pages/PrivateProfile';
+import DM from 'pages/DM';
 import Play from 'game/Play';
 import PrivacyPolicy from 'pages/PrivacyPolicy';
 import TermsOfService from 'pages/TermsOfService';
@@ -28,6 +29,7 @@ const routes = [
       { path: 'users', element: <Users /> },
       { path: 'user/:username', element: <PublicProfile /> },
       { path: 'profile', element: <PrivateProfile /> },
+      { path: 'chat/:username', element: <DM /> },
       { path: 'play', element: <Play /> },
       { path: 'privacy-policy', element: <PrivacyPolicy /> },
       { path: 'terms-of-service', element: <TermsOfService /> },

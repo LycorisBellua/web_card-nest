@@ -1,4 +1,4 @@
-- Add DM threads (with no message, it's okay).
+- Users list.
 
 ---
 

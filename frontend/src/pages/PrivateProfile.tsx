@@ -15,6 +15,7 @@ import {
   validateDescription,
   validateAvatar,
 } from 'functions/UserValidation';
+import { IsLoggedIn } from 'functions/Ranks';
 import { ScrollablePage } from 'components/general/Scrollable';
 import Button from 'components/Button';
 import { AvatarBig } from 'components/Avatar';
@@ -36,7 +37,7 @@ type UserInfoProps = {
 function PrivateProfile() {
   const { user } = useUser();
 
-  if (!user) return <NotFound />;
+  if (!IsLoggedIn()) return <NotFound />;
 
   return (
     <ScrollablePage>

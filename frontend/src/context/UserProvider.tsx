@@ -94,14 +94,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   const users = (user ? [user, ...otherUsers] : otherUsers).sort((a, b) =>
-    a.username.localeCompare(b.username),
+    a.username.localeCompare(b.username, undefined, { sensitivity: 'base' }),
   );
 
   const friends = !user
     ? []
     : otherUsers
         .filter((u) => friendUsernames.includes(u.username))
-        .sort((a, b) => a.username.localeCompare(b.username));
+        .sort((a, b) =>
+          a.username.localeCompare(b.username, undefined, {
+            sensitivity: 'base',
+            numeric: true,
+          }),
+        );
 
   function addFriend(username: string) {
     setFriendUsernames((prev) => [...prev, username]);
@@ -160,7 +165,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       ],
     },
     ...friends.map((u) => ({
-      id: 'thread_dm_' + u.username,
+      id: 'thread_dm_' + u.username.toLowerCase(),
       type: 'dm' as const,
       messages: [],
     })),

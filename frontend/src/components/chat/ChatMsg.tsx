@@ -153,7 +153,7 @@ function ChatMsg({ msg }: { msg: Msg }) {
       {rank == 'guest' ? (
         <Avatar src={avatar} rank={rank} isOnline={isOnline} />
       ) : (
-        <Link to={`user/${username}`}>
+        <Link to={`/user/${username}`}>
           <Avatar src={avatar} rank={rank} isOnline={isOnline} />
         </Link>
       )}
@@ -163,7 +163,7 @@ function ChatMsg({ msg }: { msg: Msg }) {
             {rank == 'guest' ? (
               <Username rank={rank} value={username} />
             ) : (
-              <Link to={`user/${username}`}>
+              <Link to={`/user/${username}`}>
                 <Username rank={rank} value={username} />
               </Link>
             )}
