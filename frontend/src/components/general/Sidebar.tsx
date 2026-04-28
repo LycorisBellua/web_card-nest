@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useUser } from 'context/useUser';
 import { IsLoggedIn } from 'functions/Ranks';
 import styled from 'styled-components';
@@ -62,10 +61,6 @@ const UserList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 3px;
-
-  a {
-    text-decoration: none;
-  }
 `;
 
 const EmptyMsg = styled.p`
@@ -171,9 +166,12 @@ function Sidebar({
               <EmptyMsg>Empty friend list</EmptyMsg>
             ) : (
               friends.map((e) => (
-                <Link key={e.id} to={`chat/${e.username}`} onClick={onClose}>
-                  <UserBtn user={e} />
-                </Link>
+                <UserBtn
+                  key={e.id}
+                  user={e}
+                  path={`/chat/${e.username}`}
+                  onClick={onClose}
+                />
               ))
             )}
           </UserList>

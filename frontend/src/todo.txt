@@ -1,7 +1,3 @@
-- Users list.
-
----
-
 PrivateProfile
 - Display all info at the top of the page.
 - Add a button to display the editing form.

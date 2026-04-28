@@ -70,10 +70,6 @@ const TopBarRight = styled.div`
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-
-  a {
-    text-decoration: none;
-  }
 `;
 
 const SubNav = styled.nav`
@@ -123,9 +119,7 @@ function Nav({ onDMsClick }: { onDMsClick: () => void }) {
           </Link>
         </TopNav>
         <TopBarRight>
-          <Link to={user ? '/profile' : '/auth'}>
-            <UserBtn user={user} />
-          </Link>
+          <UserBtn user={user} path={user ? '/profile' : '/auth'} />
         </TopBarRight>
       </TopBar>
       <SubNav>
