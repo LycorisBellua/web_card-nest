@@ -10,4 +10,5 @@ export enum ErrorMessages {
   INVALID_AVATAR = 'Invalid avatar provided.',
   REF_TOK_UPD_ERR = 'Error updating refresh token.',
   REF_TOK_DEL_ERR = 'Error removing refresh token.',
+  PENDING_USER = 'A PENDING user may only be promoted by verifying their email address',
 }

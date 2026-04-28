@@ -25,6 +25,7 @@ import {
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
 import { AdminUpdateUserDto } from '../admin/dto/admin-update-user.dto';
+import { UpdateRankDto } from '../admin/dto/update-rank.dto';
 
 @Injectable()
 export class UserService {
@@ -118,11 +119,6 @@ export class UserService {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
     return await this.modifyPassword(userId, await createHash(newPassword));
-  }
-
-  async updateRank(userId: string, newRank: Ranks) {
-    await this.userExistsOrThrow(userId);
-    return await this.modifyRank(userId, newRank);
   }
 
   async getOwnProfile(userId: string) {
@@ -348,6 +344,23 @@ export class UserService {
     return await this.modifyUserInfo(dto.targetId, data);
   }
 
+  async updateRank(dto: UpdateRankDto) {
+    const found = await this.userExistsOrThrow(dto.targetId);
+    if (found.rank === Ranks.PENDING) {
+      throw new BadRequestException(ErrorMessages.PENDING_USER);
+    }
+    return await this.modifyRank(dto);
+  }
+
+  async updateSwapAdmins(currentAdmin: string, newAdmin: string) {
+    await this.userExistsOrThrow(currentAdmin);
+    const found = await this.userExistsOrThrow(newAdmin);
+    if (found.rank === Ranks.PENDING) {
+      throw new BadRequestException(ErrorMessages.PENDING_USER);
+    }
+    return await this.modifyRankAdminSwap(currentAdmin, newAdmin);
+  }
+
   // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
   private async createUser(
     createUserDto: CreateUserDto,
@@ -434,11 +447,25 @@ export class UserService {
     });
   }
 
-  private async modifyRank(userId: string, newRank: Ranks) {
+  private async modifyRank(newData: UpdateRankDto) {
     return await this.prisma.user.update({
-      where: { id: userId },
-      data: { rank: newRank },
-      select: { rank: true },
+      where: { id: newData.targetId },
+      data: { rank: newData.rank },
+      select: { id: true, rank: true },
+    });
+  }
+
+  private async modifyRankAdminSwap(currentAdmin: string, newAdmin: string) {
+    return await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: newAdmin },
+        data: { rank: Ranks.ADMIN },
+      });
+      await tx.user.update({
+        where: { id: currentAdmin },
+        data: { rank: Ranks.MODERATOR },
+      });
+      return { id: newAdmin, rank: Ranks.ADMIN };
     });
   }
 
