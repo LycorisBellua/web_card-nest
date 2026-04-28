@@ -41,7 +41,7 @@ function PrivateProfile() {
 
   return (
     <ScrollablePage>
-      <UserInfo user={user} />
+      <UserInfo user={user as NonNullable<User>} />
     </ScrollablePage>
   );
 }
