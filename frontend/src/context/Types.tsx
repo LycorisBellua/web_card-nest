@@ -12,6 +12,7 @@ export type User =
   | (UserLimited & {
       email: string;
       unverifiedEmail: string;
+      accessToken: string;
     })
   | null;
 

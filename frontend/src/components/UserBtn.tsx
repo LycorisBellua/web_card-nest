@@ -24,7 +24,15 @@ const Btn = styled.div`
   }
 `;
 
-function UserBtn({ user, path, onClick }: { user: UserLimitedOrGuest; path: string; onClick?: () => void; }) {
+function UserBtn({
+  user,
+  path,
+  onClick,
+}: {
+  user: UserLimitedOrGuest;
+  path: string;
+  onClick?: () => void;
+}) {
   if (!user)
     return (
       <Wrapper>

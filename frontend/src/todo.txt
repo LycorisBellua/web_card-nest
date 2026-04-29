@@ -8,15 +8,13 @@ request.
 - The password is a separate request as well.
 - You need to see the changes before clicking on Save. These are in a "pending" 
 block.
+- Add a button to log out.
 
 ---
 
-- Rework all the old pages so that they have nice components instead of being 
-monoliths. Don't touch the game part though (it has been isolated in game/). 
-Let Hong finish her current issue first.
-- Add the other styled components.
-- Complete the placeholder pages so that they're placeholders no more.
-- Is anything amiss when it comes to aesthetics?
+- Add the other styled components, and integrate them into the existing pages.
+- Is anything amiss when it comes to aesthetics or content? What's missing 
+besides the connection to the backend?
 - Fix any ESLint issue you have introduced.
 
 ---

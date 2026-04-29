@@ -78,11 +78,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     avatar:
       'https://cdn.displate.com/artwork/270x380/2025-04-29/5d9a490e-781f-418f-ac6b-0d7cf866de6c.jpg',
     rank: 'user',
+    registered: new Date('2026-03-12'),
+    description: 'Too school for cool 😎',
     isOnline: true,
     email: 'wolfhart@gmail.com',
     unverifiedEmail: '',
-    description: 'Too school for cool 😎',
-    registered: new Date('2026-03-12'),
+    accessToken: '',
   });
 
   const [friendUsernames, setFriendUsernames] = useState<string[]>([
