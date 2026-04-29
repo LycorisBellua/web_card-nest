@@ -9,8 +9,13 @@ services:
       - app-net
 
   nginx:
-    image: nginx:1.29.5-alpine
+    build:
+      context: ..
+      dockerfile: containers/nginx/Dockerfile
     container_name: nginx
+    environment:
+      DB_USER: ${DB_ACCESS_USER}
+      DB_PASS: ${DB_ACCESS_PASSWORD}
     restart: unless-stopped
     ports:
       - '8080:8080'
