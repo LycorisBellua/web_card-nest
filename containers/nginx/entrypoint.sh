@@ -2,9 +2,10 @@
 
 set -e
 
-htpasswd -cb /etc/nginx/db_password $DB_USER $DB_PASS
+export DOCKER_IP=$(ip route | awk '/default/ { print $3 }')
 
-echo "DONE"
-echo $DB_USER $DB_PASS
+envsubst '${DOCKER_IP}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+
+htpasswd -cb /etc/nginx/db_password $DB_USER $DB_PASS
 
 exec /docker-entrypoint.sh nginx -g 'daemon off;'
