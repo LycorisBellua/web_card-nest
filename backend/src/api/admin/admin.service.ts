@@ -14,17 +14,23 @@ export class AdminService {
   constructor(private readonly userService: UserService) {}
 
   async adminModifyUser(userId: string, rank: Ranks, dto: AdminUpdateUserDto) {
+    await this.jwtRankIsValid(userId, rank);
     if (userId === dto.targetId) {
       throw new BadRequestException(AdmErrMsg.OWN_PROFILE);
     }
     const target = await this.userService.userExistsOrThrow(dto.targetId);
-    if (rank === Ranks.MODERATOR && target.rank !== Ranks.USER) {
+    if (
+      rank === Ranks.MODERATOR &&
+      target.rank !== Ranks.USER &&
+      target.rank !== Ranks.PENDING
+    ) {
       throw new UnauthorizedException(AdmErrMsg.WRONG_RANK);
     }
     return this.userService.adminUpdateUser(dto);
   }
 
   async adminModifyRank(userId: string, rank: Ranks, dto: UpdateRankDto) {
+    await this.jwtRankIsValid(userId, rank);
     if (dto.rank === Ranks.PENDING) {
       throw new BadRequestException(AdmErrMsg.NO_PENDING);
     }
@@ -48,10 +54,18 @@ export class AdminService {
     }
   }
 
-  async adminRemoveUser(adminId: string, targetId: string) {
+  async adminRemoveUser(adminId: string, adminRank: Ranks, targetId: string) {
+    await this.jwtRankIsValid(adminId, adminRank);
     if (adminId === targetId) {
       throw new BadRequestException(AdmErrMsg.OWN_PROFILE);
     }
     return await this.userService.removeUser(targetId);
+  }
+
+  private async jwtRankIsValid(userId: string, rank: Ranks) {
+    const found = await this.userService.userExistsOrThrow(userId);
+    if (rank !== found.rank) {
+      throw new UnauthorizedException(AdmErrMsg.JWT_RANK_INVALID);
+    }
   }
 }

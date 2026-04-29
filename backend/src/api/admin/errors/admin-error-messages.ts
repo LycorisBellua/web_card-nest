@@ -4,4 +4,5 @@ export enum AdmErrMsg {
   ADMIN_OTHER = 'Only the Admin account may change the rank of another user.',
   ADMIN_PROMOTE = 'Moderators may only change their own rank to USER',
   NO_PENDING = 'The rank may not be set to PENDING',
+  JWT_RANK_INVALID = 'The rank provided by the JWT no longer matches the user.',
 }

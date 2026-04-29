@@ -60,6 +60,10 @@ export class AdminController {
     @Param('userId', ParseUUIDPipe) targetId: string,
   ) {
     const user = req['user'] as JwtPayload;
-    return await this.adminService.adminRemoveUser(user.id, targetId);
+    return await this.adminService.adminRemoveUser(
+      user.id,
+      user.rank as Ranks,
+      targetId,
+    );
   }
 }
