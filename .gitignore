@@ -36,6 +36,7 @@ coverage/
 *.sw?
 
 # IDE - VSCode
+.vscode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -68,4 +69,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 containers/nginx/certs
 
 # Secrets
-gmail_cred.txt
+variable_imports.txt

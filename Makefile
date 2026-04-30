@@ -6,10 +6,11 @@ PROD_COMPOSE_FILE = ./containers/docker-compose.prod.yml
 
 # Environment / Certs / Volume Dirs
 ENV_FILE = ./containers/.env
-GMAIL_FILE = ./containers/gmail_cred.txt
+VARIABLE_IMPORTS = ./containers/variable_imports.txt
 NGINX_CERTS_DIR = ./containers/nginx/certs
 VOLUME_DIRS = ./frontend/node_modules ./backend/node_modules ./backend/dist \
 	./backend/client ./backend/src/generated
+HOST_IP := $(shell ip route get 1 | awk '/src/ {print $$7; exit}')
 
 # Docker Commands
 COMPOSE = docker compose
@@ -32,10 +33,12 @@ env-file:
 		echo "POSTGRES_PASSWORD=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
 		echo "POSTGRES_DB=transcendence" >> $(ENV_FILE); \
 		echo "PGDATA=/var/lib/postgresql/data/pgdata" >> $(ENV_FILE); \
-		echo "DEV_URL=http://$(shell hostname):3000" >> $(ENV_FILE); \
-		echo "PROD_URL=https://$(shell hostname):8080" >> $(ENV_FILE); \
+		echo "DEV_URL=http://$(HOST_IP):3000" >> $(ENV_FILE); \
+		echo "PROD_URL=https://$(HOST_IP):8080" >> $(ENV_FILE); \
 		echo "JWT_SECRET=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
-		cat $(GMAIL_FILE) >> $(ENV_FILE); \
+		echo "DB_ACCESS_USER=db_admin" >> $(ENV_FILE); \
+		echo "DB_ACCESS_PASSWORD=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
+		cat $(VARIABLE_IMPORTS) >> $(ENV_FILE); \
 		echo "Generated .env file";\
 	fi
 
