@@ -18,11 +18,6 @@ export function getCurrentTime(): Date {
   return new Date();
 }
 
-export async function createHash(plain: string) {
-  return await bcrypt.hash(plain, 12);
-}
-
-export async function compareHash(plain: string, hashed: string) {
 export async function createHash(plain: string): Promise<string> {
   return await bcrypt.hash(plain, 12);
 }

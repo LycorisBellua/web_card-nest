@@ -48,7 +48,6 @@ export class UserService {
   async updateUser(userId: string, dto: UpdateUserDto) {
     await this.userExistsOrThrow(userId);
     const data: Record<string, unknown> = {};
-    const token = getVerificationToken();
     const token = getToken();
 
     if (dto.username !== undefined) {
@@ -130,7 +129,7 @@ export class UserService {
     return encodeSingleAvatar(found);
   }
 
-  async getUserById(rank: Ranks, userId: string, toFind: string) {
+  async getUserById(rank: Ranks, toFind: string) {
     const found = await this.findProfileById(toFind);
     if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
@@ -138,7 +137,7 @@ export class UserService {
     return encodeSingleAvatar(found);
   }
 
-  async getUserByUsername(rank: Ranks, userId: string, toFind: string) {
+  async getUserByUsername(rank: Ranks, toFind: string) {
     const found = await this.findProfileByUsername(toFind);
     if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
@@ -195,7 +194,6 @@ export class UserService {
       throw new ConflictException(ErrorMessages.EMAIL_USED);
     }
     createUserDto.password = await createHash(createUserDto.password);
-    const token = getVerificationToken();
     const token = getToken();
     const timeout = getVerificationTimeout();
     const created = await this.createUser(
@@ -269,7 +267,6 @@ export class UserService {
       return { id: userId };
     }
     const data: Record<string, unknown> = {};
-    const token = getVerificationToken();
     const token = getToken();
     data.verifyToken = await createHash(token);
     data.verifyTimeout = getVerificationTimeout();

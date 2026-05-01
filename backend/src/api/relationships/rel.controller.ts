@@ -7,10 +7,20 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { RelService } from './rel.service';
 import { RelUuidDto } from './dto/rel-uuid.dto';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { RankGuard } from '../auth/guards/auth.rankguard';
+import { RequiredRank } from '../auth/guards/auth.rank-decorator';
+import { Ranks } from 'src/generated/prisma/enums';
+import type { Request as ExpressRequest } from 'express';
+import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 
+@UseGuards(AuthGuard, RankGuard)
+@RequiredRank(Ranks.USER)
 @Controller('api/rel')
 export class RelController {
   constructor(private readonly relService: RelService) {}
@@ -56,9 +66,10 @@ export class RelController {
     return await this.relService.cancelRequest(originId, targetId);
   }
 
-  @Get('friend/:originId')
-  async fetchFriends(@Param('originId', ParseUUIDPipe) originId: string) {
-    return await this.relService.fetchFriends(originId);
+  @Get('friend')
+  async fetchFriends(@Req() req: ExpressRequest) {
+    const user = req['user'] as JwtPayload;
+    return await this.relService.fetchFriends(user.id);
   }
 
   @Get('friend/:originId/sent')
