@@ -12,7 +12,8 @@ block.
 
 ---
 
-- Add the other styled components, and integrate them into the existing pages.
+- Integrate the other styled components into the existing pages. They are 
+currently polluting the Users page.
 - Is anything amiss when it comes to aesthetics or content? What's missing 
 besides the connection to the backend?
 - Fix any ESLint issue you have introduced.
