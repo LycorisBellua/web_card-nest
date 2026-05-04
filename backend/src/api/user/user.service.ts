@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -129,12 +130,34 @@ export class UserService {
     return encodeSingleAvatar(found);
   }
 
+  async getOwnProfile(userId: string) {
+    const found = await this.findOwnProfile(userId);
+    if (!found) {
+      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
+    }
+    return encodeSingleAvatar(found);
+  }
+
   async getUserById(rank: Ranks, userId: string, toFind: string) {
     const found = await this.findProfileById(toFind);
     if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
     return encodeSingleAvatar(found);
+  }
+
+  async getUsernameById(toFind: string) {
+    const found = await this.prisma.user.findUnique({
+      where: { id: toFind },
+      select: {
+        username: true,
+        id: true,
+      },
+    });
+    if (!found) {
+      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
+    }
+    return { ...found };
   }
 
   async getUserByUsername(rank: Ranks, userId: string, toFind: string) {
