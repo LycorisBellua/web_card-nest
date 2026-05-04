@@ -166,26 +166,14 @@ export class UserService {
     };
   }
 
-  async getAllSortByUsername() {
-    const users = await this.prisma.user.findMany({
-      omit: { password: true },
-      orderBy: { username: 'asc' },
-    });
-    return users.map((user) => ({
-      ...user,
-      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
-    }));
+  async getAllSortByUsername(rank: Ranks) {
+    const includePending = rank === Ranks.USER ? false : true;
+    return await this.listAllByUsername(includePending);
   }
 
-  async getAllSortByDate() {
-    const users = await this.prisma.user.findMany({
-      omit: { password: true },
-      orderBy: { date: 'asc' },
-    });
-    return users.map((user) => ({
-      ...user,
-      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
-    }));
+  async getAllSortByDate(rank: Ranks) {
+    const includePending = rank === Ranks.USER ? false : true;
+    return await this.listAllByDate(includePending);
   }
 
   // CALLED FROM USER-TASKS SERVICE
@@ -251,9 +239,16 @@ export class UserService {
     ) {
       return null;
     }
+    let newRank: Ranks;
+    if (found.rank === Ranks.PENDING) {
+      newRank = Ranks.USER;
+    } else {
+      newRank = found.rank;
+    }
     const verified = await this.modifyVerifyEmail(
       userId,
       found.email_unverified,
+      newRank,
     );
     if (!verified || !verified.email) {
       return null;
@@ -355,11 +350,16 @@ export class UserService {
     });
   }
 
-  private async modifyVerifyEmail(userId: string, address: string) {
+  private async modifyVerifyEmail(
+    userId: string,
+    address: string,
+    rank: Ranks,
+  ) {
     return await this.prisma.user.update({
       where: { id: userId },
       data: {
         email: address,
+        rank: rank,
         email_unverified: null,
         verifyTimeout: null,
         verifyToken: null,
@@ -437,6 +437,30 @@ export class UserService {
       data: { refreshToken: null, refreshTimeout: null },
       select: { refreshToken: true },
     });
+  }
+
+  private async listAllByUsername(incPending: boolean) {
+    const users = await this.prisma.user.findMany({
+      where: incPending ? {} : { rank: { not: Ranks.PENDING } },
+      select: { id: true, username: true, avatar: true, rank: true },
+      orderBy: { username: 'asc' },
+    });
+    return users.map((user) => ({
+      ...user,
+      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
+    }));
+  }
+
+  private async listAllByDate(incPending: boolean) {
+    const users = await this.prisma.user.findMany({
+      where: incPending ? {} : { rank: { not: Ranks.PENDING } },
+      select: { id: true, username: true, avatar: true, rank: true },
+      orderBy: { date: 'asc' },
+    });
+    return users.map((user) => ({
+      ...user,
+      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
+    }));
   }
 
   // USER LOOKUP (INTERNAL USE ONLY)
