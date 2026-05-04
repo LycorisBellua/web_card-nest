@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SendMailService } from '../sendMail/sendMail.service';
 import { randomBytes } from 'crypto';
+import { createHash, compareHash } from '../user/utils/user.utils';
 
 @Injectable()
 export class PasswordResetService {
@@ -29,7 +30,7 @@ export class PasswordResetService {
         await this.prisma.user.update({
             where: { email },
             data: {
-                verifyToken: token,
+                verifyToken: await createHash(token),
                 verifyTimeout: expiry
             }
         })
@@ -61,25 +62,34 @@ export class PasswordResetService {
     }
 
     async resetPassword(token: string, newPassword: string) {
-        const user = await this.prisma.user.findUnique({
-            where: { verifyToken: token }
-        })
-
-        if (!user || !user.verifyTimeout || user.verifyTimeout < new Date()) {
-            return { success: false, message: "Lien invalide ou expiré." }
+    const users = await this.prisma.user.findMany({
+        where: {
+            verifyTimeout: { gt: new Date() },
+            verifyToken: { not: null }
         }
+    })
+    const user = await Promise.all(
+        users.map(async (u) => ({
+            user: u,
+            match: await compareHash(token, u.verifyToken!)
+        }))
+    ).then(results => results.find(r => r.match)?.user)
 
-        const hashed = await createHash(newPassword)
+    if (!user) {
+        return { success: false, message: "Lien invalide ou expiré." }
+    }
 
-        await this.prisma.user.update({
-            where: { id: user.id },
-            data: {
-                password: hashed,
-                verifyToken: null,
-                verifyTimeout: null
-            }
-        })
+    const hashed = await createHash(newPassword)
 
-        return { success: true, message: "Mot de passe mis à jour." }
+    await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+            password: hashed,
+            verifyToken: null,
+            verifyTimeout: null
+        }
+    })
+
+    return { success: true, message: "Mot de passe mis à jour." }
     }
 }
