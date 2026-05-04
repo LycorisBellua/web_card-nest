@@ -50,12 +50,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_verifyToken_key" ON "User"("verifyToken");
-<<<<<<<< HEAD:backend/prisma/migrations/20260421151401_init/migration.sql
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_refreshToken_key" ON "User"("refreshToken");
-========
->>>>>>>> edcb93b ([backend] email verification (#66)):backend/prisma/migrations/20260409124040_init/migration.sql
 
 -- CreateIndex
 CREATE INDEX "Friend_addresseeId_idx" ON "Friend"("addresseeId");
