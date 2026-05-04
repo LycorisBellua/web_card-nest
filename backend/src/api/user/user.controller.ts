@@ -10,7 +10,6 @@ import {
   Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UpdateRankDto } from './dto/update-rank.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
@@ -24,9 +23,6 @@ import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // ADD / REMOVE
-  // Add user moved to auth controller
-
   @Delete(':userId')
   async removeUser(@Param('userId', ParseUUIDPipe) userId: string) {
     return await this.userService.removeUser(userId);
@@ -34,14 +30,6 @@ export class UserController {
 
   // UPDATE ENTRIES
   // For Patch Methods: id can be taken from auth token once implemented
-  @Patch(':userId/rank')
-  async updateRank(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Body() updateRankDto: UpdateRankDto,
-  ) {
-    return await this.userService.updateRank(userId, updateRankDto.rank);
-  }
-
   @Patch(':userId/update')
   async updateUser(
     @Param('userId', ParseUUIDPipe) userId: string,

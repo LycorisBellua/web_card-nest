@@ -14,14 +14,17 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 FROM node:24-alpine AS prod
 WORKDIR /app
+COPY containers/app/prod_entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY frontend/ ./frontend/
 COPY backend/ ./backend/
-RUN cd frontend && npm install && npm run build
-RUN cd backend && npm install && npm run build
-RUN mv backend/dist ./ && \
+RUN chmod +x /usr/local/bin/entrypoint.sh && \
+    cd frontend && npm install && npm run build && \
+    cd /app/backend && npm install && npm run build && \
+    cd /app && \
+    mv backend/dist ./ && \
     mv backend/client ./ && \
     mv backend/node_modules ./ && \
     mv backend/prisma.config.ts ./ && \
     mv backend/prisma ./ && \
     rm -rf frontend backend
-CMD ["sh", "-c", "npx prisma migrate deploy && node ./dist/main.js"]
+CMD ["/usr/local/bin/entrypoint.sh"]
