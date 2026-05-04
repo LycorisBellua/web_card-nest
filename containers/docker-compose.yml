@@ -16,6 +16,7 @@ services:
       GMAIL_PASSWORD: ${GMAIL_PASSWORD}
       HOME_URL: ${DEV_URL}
       JWT_SECRET: ${JWT_SECRET}
+      ADMIN_USER: ${ADMIN_USER}
     networks:
       - db-net
     restart: unless-stopped
