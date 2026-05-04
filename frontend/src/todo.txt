@@ -1,14 +1,4 @@
-PrivateProfile
-- Display all info at the top of the page.
-- Add a button to display the editing form.
-- It has a save button at the end, which sends one request for all modified 
-fields (not all fields, just the modified ones).
-- There's a small "Verify" button next to the unverified email for a separate 
-request.
-- The password is a separate request as well.
-- You need to see the changes before clicking on Save. These are in a "pending" 
-block.
-- Add a button to log out.
+- Finish the PrivateProfile page.
 
 ---
 
@@ -17,6 +7,7 @@ currently polluting the Users page.
 - Is anything amiss when it comes to aesthetics or content? What's missing 
 besides the connection to the backend?
 - Fix any ESLint issue you have introduced.
+- Any TODO mention left in the codebase?
 
 ---
 

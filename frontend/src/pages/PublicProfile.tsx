@@ -1,10 +1,10 @@
 import { useParams } from 'react-router-dom';
+import type { User } from 'context/Types';
 import { useUser } from 'context/useUser';
-import { GetDate } from 'functions/Time';
 import { IsLoggedIn } from 'functions/Ranks';
 import NotFound from 'pages/NotFound';
+import DisplayPublicUserInfo from 'pages/DisplayPublicUserInfo';
 import { ScrollablePage } from 'components/general/Scrollable';
-import { AvatarBig } from 'components/Avatar';
 
 function PublicProfile() {
   const { username } = useParams<{ username: string }>();
@@ -21,11 +21,7 @@ function PublicProfile() {
 
   return (
     <ScrollablePage>
-      <AvatarBig src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
-      <p>Username: {user.username}</p>
-      <p>Rank: {user.rank}</p>
-      <p>Registered: {GetDate(user.registered)}</p>
-      <p>Description: {user.description}</p>
+      <DisplayPublicUserInfo user={user as NonNullable<User>} />
     </ScrollablePage>
   );
 }
