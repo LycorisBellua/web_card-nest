@@ -47,7 +47,6 @@ export class UserService {
   async updateUser(userId: string, updateUserDto: UpdateUserDto) {
     await this.userExistsOrThrow(userId);
     const data: Record<string, unknown> = {};
-    const token = getVerificationToken();
     const token = getToken();
 
     if (updateUserDto.username !== undefined) {
@@ -213,7 +212,6 @@ export class UserService {
       throw new ConflictException(ErrorMessages.EMAIL_USED);
     }
     createUserDto.password = await createHash(createUserDto.password);
-    const token = getVerificationToken();
     const token = getToken();
     const timeout = getVerificationTimeout();
     const created = await this.createUser(
@@ -298,7 +296,6 @@ export class UserService {
       return { id: userId };
     }
     const data: Record<string, unknown> = {};
-    const token = getVerificationToken();
     const token = getToken();
     data.verifyToken = await createHash(token);
     data.verifyTimeout = getVerificationTimeout();
