@@ -118,7 +118,8 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
         points += 10;
       else points += Number(card.rank);
     });
-    if (hasAces && points + 10 <= 21) return `${points}+ or ${points + 10}+`;
+    if (hasAces && points + 10 <= 21) 
+      return `${points}+ or ${points + 10}+`
     return `${points}+`;
   }
 
@@ -158,7 +159,17 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
         const playerName = player.username
           ? `#${playerIdx + 1} ${player.username}`
           : `#${playerIdx + 1} Guest`;
-        const label = `${playerName} : ${getVisiblePoints(playerIdx, gameRef.current!.currentPlayerIdx)}`;
+        // accroding to gamestatus to get only visible points or total score
+        let label = ""
+        const crown = player.hasBlackCrown ? "👑​" : ""
+        const isfinished = gameRef.current!.gameStatus === "finished"
+        if (isfinished) {
+          label = `${playerName} : ${player.score} ${crown}`
+        } else if (isCurrent) {
+          label = `${playerName} : ${player.score} ${crown}`;
+        } else
+          label = `${playerName} : ${getVisiblePoints(playerIdx, gameRef.current!.currentPlayerIdx)}`;
+          
         ctx.save();
         ctx.font = 'bold 16px Arial';
         ctx.fillStyle = isCurrent ? '#FFD700' : 'rgba(255,255,255,0.8)';

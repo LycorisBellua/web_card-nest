@@ -1,3 +1,4 @@
+import { PlayerCountStyle } from 'game/GameTableStyle';
 import type { Card, GameState } from 'game/logic/types';
 
 export function calculateScore(cards: Card[]): number {
@@ -29,7 +30,12 @@ export function checkBlackCrown(cards: Card[]): boolean {
 export function checkWinner(game: GameState): number {
   const validPlayer = game.players.filter((player) => !player.isBusted);
   if (validPlayer.length == 0) return -1;
+  validPlayer.forEach(player=>{
+    if (checkBlackCrown(player.cards))
+      return player.hasBlackCrown = true
+  })
   const blackCrown = validPlayer.filter((player) => player.hasBlackCrown);
+  console.log(blackCrown.length)
   if (blackCrown.length > 0) {
     if (blackCrown.length == 1) {
       return blackCrown[0].id;

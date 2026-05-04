@@ -75,5 +75,5 @@ export function giveCard(player: Player, gameState: GameState) {
     player.isBusted = true;
     return;
   }
-  player.hasBlackCrown = checkBlackCrown(player.cards);
+  // player.hasBlackCrown = checkBlackCrown(player.cards);
 }
