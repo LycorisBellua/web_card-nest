@@ -59,14 +59,42 @@ export class UserController {
   }
 
   // FETCH USERS
-  @Get('id/:userId')
-  async getUserById(@Param('userId', ParseUUIDPipe) userId: string) {
-    return await this.userService.getUserById(userId);
+  @UseGuards(AuthGuard, RankGuard)
+  @RequiredRank(Ranks.PENDING)
+  @Get('me')
+  async getOwnProfile(@Req() req: ExpressRequest) {
+    const user = req['user'] as JwtPayload;
+    return this.userService.getOwnProfile(user.id);
   }
 
+  @UseGuards(AuthGuard, RankGuard)
+  @RequiredRank(Ranks.USER)
+  @Get('id/:userId')
+  async getUserById(
+    @Req() req: ExpressRequest,
+    @Param('userId', ParseUUIDPipe) toFind: string,
+  ) {
+    const user = req['user'] as JwtPayload;
+    return await this.userService.getUserById(
+      user.rank as Ranks,
+      user.id,
+      toFind,
+    );
+  }
+
+  @UseGuards(AuthGuard, RankGuard)
+  @RequiredRank(Ranks.USER)
   @Get('username/:username')
-  async getUserByUsername(@Param('username') username: string) {
-    return await this.userService.getUserByUsername(username);
+  async getUserByUsername(
+    @Req() req: ExpressRequest,
+    @Param('username') toFind: string,
+  ) {
+    const user = req['user'] as JwtPayload;
+    return await this.userService.getUserByUsername(
+      user.rank as Ranks,
+      user.id,
+      toFind,
+    );
   }
 
   @UseGuards(AuthGuard, RankGuard)
@@ -83,5 +111,10 @@ export class UserController {
   async getAllSortByDate(@Req() req: ExpressRequest) {
     const user = req['user'] as JwtPayload;
     return await this.userService.getAllSortByDate(user.rank as Ranks);
+  }
+
+  @Get('guest')
+  getGuestProfile() {
+    return this.userService.getGuestProfile();
   }
 }
