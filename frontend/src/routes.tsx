@@ -13,8 +13,6 @@ import PrivacyPolicy from 'pages/PrivacyPolicy';
 import TermsOfService from 'pages/TermsOfService';
 import Credits from 'pages/Credits';
 import NotFound from 'pages/NotFound';
-import VerifyError from 'pages/VerifyError';
-import VerifySuccess from 'pages/VerifySuccess';
 
 const routes = [
   {
@@ -35,8 +33,6 @@ const routes = [
       { path: 'terms-of-service', element: <TermsOfService /> },
       { path: 'credits', element: <Credits /> },
       { path: '*', element: <NotFound /> },
-      { path: 'verify-success', element: <VerifySuccess /> },
-      { path: 'verify-error', element: <VerifyError /> },
     ],
   },
 ];
