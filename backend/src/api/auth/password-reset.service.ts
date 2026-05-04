@@ -59,4 +59,27 @@ export class PasswordResetService {
 
         return { success: true, message: "Si cet email existe, un lien a été envoyé." }
     }
+
+    async resetPassword(token: string, newPassword: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { verifyToken: token }
+        })
+
+        if (!user || !user.verifyTimeout || user.verifyTimeout < new Date()) {
+            return { success: false, message: "Lien invalide ou expiré." }
+        }
+
+        const hashed = await createHash(newPassword)
+
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: hashed,
+                verifyToken: null,
+                verifyTimeout: null
+            }
+        })
+
+        return { success: true, message: "Mot de passe mis à jour." }
+    }
 }

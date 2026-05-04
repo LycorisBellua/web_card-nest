@@ -11,4 +11,11 @@ export class PasswordResetController {
   ): Promise<{ success: boolean; message: string }> {
     return this.passwordResetService.execute(body.email);
   }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body() body: { token: string; newPassword: string },
+  ): Promise<{ success: boolean; message: string }> {
+    return this.passwordResetService.resetPassword(body.token, body.newPassword);
+  }
 }
