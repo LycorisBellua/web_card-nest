@@ -93,10 +93,10 @@ export class AuthController {
     return await this.authService.cancelVerification(userId, token);
   }
 
-  @Get('/:userId/resend')
-  async resendVerificationEmail(
-    @Param('userId', ParseUUIDPipe) userId: string,
-  ) {
-    return this.authService.resendVerificationEmail(userId);
+  @UseGuards(AuthGuard)
+  @Get('resend')
+  async resendVerificationEmail(@Req() req: ExpressRequest) {
+    const user = req['user'] as JwtPayload;
+    return this.authService.resendVerificationEmail(user.id);
   }
 }
