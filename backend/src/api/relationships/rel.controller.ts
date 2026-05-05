@@ -71,11 +71,15 @@ export class RelController {
     const user = req['user'] as JwtPayload;
     return await this.relService.fetchFriends(user.id);
   }
-
+  @Get('friendList/:originId')
+  async fetchFriendsList(@Param('originId', ParseUUIDPipe) originId: string) {
+    return await this.relService.fetchFriendsList(originId);
+  }
   @Get('friend/:originId/sent')
   async fetchSentRequests(@Param('originId', ParseUUIDPipe) originId: string) {
     return await this.relService.fetchSentRequests(originId);
   }
+  
 
   @Get('friend/:originId/received')
   async fetchReceivedRequests(
