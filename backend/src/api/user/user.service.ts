@@ -130,14 +130,6 @@ export class UserService {
     return encodeSingleAvatar(found);
   }
 
-  async getOwnProfile(userId: string) {
-    const found = await this.findOwnProfile(userId);
-    if (!found) {
-      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
-    }
-    return encodeSingleAvatar(found);
-  }
-
   async getUserById(rank: Ranks, userId: string, toFind: string) {
     const found = await this.findProfileById(toFind);
     if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
