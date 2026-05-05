@@ -1,6 +1,6 @@
 import { ScrollablePage } from 'components/general/Scrollable';
-import LogIn from 'pages/LogIn';
-import SignUp from 'pages/SignUp';
+import LogIn from 'pages/auth/LogIn';
+import SignUp from 'pages/auth/SignUp';
 
 function Auth() {
   return (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useUser } from 'context/useUser';
 import { ScrollablePage } from 'components/general/Scrollable';
-import UserBtn from 'components/UserBtn';
+import UserBtn from 'components/user_btn/UserBtn';
 
 import BtnAccent from 'components/tmp/btn/BtnAccent';
 import BtnDanger from 'components/tmp/btn/BtnDanger';

@@ -1,4 +1,4 @@
-- Finish the PrivateProfile page.
+- Finish Private Profile.
 
 ---
 

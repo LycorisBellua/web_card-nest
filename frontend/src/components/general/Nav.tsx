@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { useUser } from 'context/useUser';
 import styled from 'styled-components';
 import Button from 'components/Button';
-import UserBtn from 'components/UserBtn';
+import UserMenu from 'pages/profile/UserMenu';
 
 const TopBar = styled.div`
   display: flex;
@@ -96,8 +95,6 @@ const SubNav = styled.nav`
 `;
 
 function Nav({ onDMsClick }: { onDMsClick: () => void }) {
-  const { user } = useUser();
-
   return (
     <>
       <TopBar>
@@ -119,7 +116,7 @@ function Nav({ onDMsClick }: { onDMsClick: () => void }) {
           </Link>
         </TopNav>
         <TopBarRight>
-          <UserBtn user={user} path={user ? '/profile' : '/auth'} />
+          <UserMenu />
         </TopBarRight>
       </TopBar>
       <SubNav>

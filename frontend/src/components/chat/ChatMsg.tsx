@@ -3,8 +3,8 @@ import type { Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
 import styled, { css } from 'styled-components';
-import { Avatar } from 'components/Avatar';
-import Username from 'components/Username';
+import { Avatar } from 'components/user_btn/Avatar';
+import Username from 'components/user_btn/Username';
 
 const Row = styled.div<{ $rank: string }>`
   display: flex;

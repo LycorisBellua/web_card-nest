@@ -3,7 +3,7 @@ import type { User } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { IsLoggedIn } from 'functions/Ranks';
 import NotFound from 'pages/NotFound';
-import DisplayPublicUserInfo from 'pages/DisplayPublicUserInfo';
+import { DisplayPublicUserInfo } from 'pages/profile/DisplayUserInfo';
 import { ScrollablePage } from 'components/general/Scrollable';
 
 function PublicProfile() {

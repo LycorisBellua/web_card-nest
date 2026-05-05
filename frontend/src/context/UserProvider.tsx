@@ -82,7 +82,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     description: 'Too school for cool 😎',
     isOnline: true,
     email: 'wolfhart@gmail.com',
-    unverifiedEmail: '',
+    unverifiedEmail: 'cooler.wolfhart@gmail.com',
     accessToken: '',
   });
 

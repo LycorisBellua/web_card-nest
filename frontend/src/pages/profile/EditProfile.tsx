@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useUser } from 'context/useUser';
 import type { User } from 'context/Types';
-import NotFound from 'pages/NotFound';
-import DisplayPublicUserInfo from 'pages/DisplayPublicUserInfo';
 import {
   sanitizeUsername,
   sanitizeEmail,
@@ -16,10 +14,8 @@ import {
   validateDescription,
   validateAvatar,
 } from 'functions/UserValidation';
-import { IsLoggedIn } from 'functions/Ranks';
-import { ScrollablePage } from 'components/general/Scrollable';
 import Button from 'components/Button';
-import { AvatarBig } from 'components/Avatar';
+import { AvatarBig } from 'components/user_btn/Avatar';
 
 type PendingChanges = {
   avatar?: File | '';
@@ -28,63 +24,15 @@ type PendingChanges = {
   email?: string;
 };
 
-function PrivateProfile() {
-  const { user } = useUser();
-
-  if (!IsLoggedIn()) return <NotFound />;
-
+function EditProfile({ user }: { user: NonNullable<User> }) {
   /*
   TODO
-  - [x] Display all public info at the top of the page.
-  - [ ] Display an "Auth Data" section showing the email, unverified email, a 
-  button to verify the email, a way to modify the password, and a button to 
-  log out.
-
-  - [ ] Editing form:
-        - Add a button to display the editing form.
-        - It has a save button at the end, which sends one request for all 
-        modified fields (not all fields, just the modified ones). The email 
-        verification and password modification are already handled in Auth Data.
-        - You need to see the changes before clicking on Save. These are in a 
-        "pending" block.
-
-   - [ ] A button to delete the account.
+  - [ ] The Save button at the end sends one request for all modified fields. 
+  - [ ] Modify the password as a separate request, but which can be sent at the 
+        same time.
+  - [ ] See the changes before clicking on Save. These are in a "pending" block.
   */
 
-  return (
-    <ScrollablePage>
-      <DisplayPublicUserInfo user={user as NonNullable<User>} />
-      <hr />
-      <EditAuthData user={user as NonNullable<User>} />
-      <hr />
-      <EditOtherData user={user as NonNullable<User>} />
-      <hr />
-      <DeleteAccount user={user as NonNullable<User>} />
-    </ScrollablePage>
-  );
-}
-
-// -----------------------------------------------------------------------------
-// Auth Data
-// -----------------------------------------------------------------------------
-
-function EditAuthData({ user }: { user: NonNullable<User> }) {
-  return (
-    <div>
-      <h2>Auth Data</h2>
-      <p>Email: {user.email ?? '[None / Pending verification]'}</p>
-      {user.unverifiedEmail && <VerifyEmail user={user} />}
-      <UpdatePassword user={user} />
-      <Logout />
-    </div>
-  );
-}
-
-// -----------------------------------------------------------------------------
-// Edit other data (toggled form)
-// -----------------------------------------------------------------------------
-
-function EditOtherData({ user }: { user: NonNullable<User> }) {
   const { setUser } = useUser();
   const [open, setOpen] = useState(false);
   const [changes, setChanges] = useState<PendingChanges>({});
@@ -161,8 +109,9 @@ function EditOtherData({ user }: { user: NonNullable<User> }) {
 
   return (
     <div>
+      <h2>Edit Profile</h2>
       <Button onClick={() => setOpen((o) => !o)}>
-        {open ? 'Close editor' : 'Edit profile'}
+        {open ? 'Close editor' : 'Open editor'}
       </Button>
       {open && (
         <div>
@@ -183,6 +132,7 @@ function EditOtherData({ user }: { user: NonNullable<User> }) {
               user={user}
               onChange={(val) => setChange('email', val)}
             />
+            <UpdatePassword user={user} />
             <PendingChangesSummary changes={changes} />
             {globalErrors.map((err, i) => (
               <div key={i}>{err}</div>
@@ -228,83 +178,6 @@ function PendingChangesSummary({ changes }: { changes: PendingChanges }) {
           </li>
         ))}
       </ul>
-    </div>
-  );
-}
-
-// -----------------------------------------------------------------------------
-// Delete account
-// -----------------------------------------------------------------------------
-
-function DeleteAccount({ user }: { user: NonNullable<User> }) {
-  const { setUser } = useUser();
-  const [error, setError] = useState('');
-
-  async function handleDelete() {
-    setError('');
-    if (
-      !window.confirm(
-        'Are you sure you want to permanently delete your account? This cannot be undone.',
-      )
-    )
-      return;
-    try {
-      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        setError(`Error ${res.status}: ${res.statusText}`);
-        return;
-      }
-      setUser(null);
-      window.location.href = '/';
-    } catch {
-      setError('An error occurred. Please try again.');
-    }
-  }
-
-  return (
-    <div>
-      <h2>Danger zone</h2>
-      <Button onClick={() => void handleDelete()}>Delete account</Button>
-      {error && <p>{error}</p>}
-    </div>
-  );
-}
-
-// -----------------------------------------------------------------------------
-// Sub-components
-// -----------------------------------------------------------------------------
-
-function VerifyEmail({ user }: { user: NonNullable<User> }) {
-  const [message, setMessage] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
-
-  async function handleVerifyEmail() {
-    try {
-      const res = await fetch(`/api/users/${user.id}/verify_email`, {
-        method: 'POST',
-        headers: { 'Content-type': 'application/json' },
-        body: JSON.stringify({ unverifiedEmail: user.unverifiedEmail }),
-      });
-      if (!res.ok) {
-        setErrors([`Error ${res.status} : ${res.statusText}`]);
-        return;
-      }
-      setMessage("You'll receive a verification link shortly...");
-    } catch {
-      setErrors(['Error occurred']);
-    }
-  }
-
-  return (
-    <div>
-      <div>
-        <p>Unverified email: {user.unverifiedEmail}</p>
-        <Button onClick={() => void handleVerifyEmail()}>Verify🖊️</Button>
-      </div>
-      {errors.map((err, i) => (
-        <div key={i}>{err}</div>
-      ))}
-      {message && <p>{message}</p>}
     </div>
   );
 }
@@ -387,32 +260,6 @@ function UpdatePassword({ user }: { user: NonNullable<User> }) {
           {successMessage && <p>{successMessage}</p>}
         </div>
       )}
-    </div>
-  );
-}
-
-function Logout() {
-  const { setUser } = useUser();
-  const [error, setError] = useState('');
-
-  async function handleLogout() {
-    try {
-      const res = await fetch('/api/auth/logout', { method: 'POST' });
-      if (!res.ok) {
-        setError(`Logout failed: ${res.statusText}`);
-        return;
-      }
-      setUser(null);
-      window.location.href = '/';
-    } catch {
-      setError('An error occurred during logout.');
-    }
-  }
-
-  return (
-    <div>
-      <Button onClick={() => void handleLogout()}>Log out</Button>
-      {error && <p>{error}</p>}
     </div>
   );
 }
@@ -586,4 +433,4 @@ function UpdateEmail({
   );
 }
 
-export default PrivateProfile;
+export default EditProfile;
