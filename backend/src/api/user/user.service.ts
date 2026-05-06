@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,10 +21,14 @@ import {
   newPasswordContainsUsername,
   newPasswordContainsEmail,
   getRefreshTimeout,
+  encodeSingleAvatar,
+  encodeMultipleAvatars,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
 import { SendMailService } from '../sendMail/sendMail.service';
 import { EmailContents } from './email_data/EmailContents';
+import { AdminUpdateUserDto } from '../admin/dto/admin-update-user.dto';
+import { UpdateRankDto } from '../admin/dto/update-rank.dto';
 
 @Injectable()
 export class UserService {
@@ -44,32 +49,32 @@ export class UserService {
     return result;
   }
 
-  async updateUser(userId: string, updateUserDto: UpdateUserDto) {
+  async updateUser(userId: string, dto: UpdateUserDto) {
     await this.userExistsOrThrow(userId);
     const data: Record<string, unknown> = {};
     const token = getToken();
 
-    if (updateUserDto.username !== undefined) {
-      if (await this.usernameIsTaken(updateUserDto.username)) {
+    if (dto.username !== undefined) {
+      if (await this.usernameIsTaken(dto.username)) {
         throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
       }
-      data.username = updateUserDto.username;
+      data.username = dto.username;
     }
 
-    if (updateUserDto.email_unverified !== undefined) {
-      if (await this.emailAddressIsTaken(updateUserDto.email_unverified)) {
+    if (dto.email_unverified !== undefined) {
+      if (await this.emailAddressIsTaken(dto.email_unverified)) {
         throw new ConflictException(ErrorMessages.EMAIL_USED);
       }
-      data.email_unverified = updateUserDto.email_unverified;
+      data.email_unverified = dto.email_unverified;
       data.verifyToken = await createHash(token);
       data.verifyTimeout = getVerificationTimeout();
     }
 
-    if (updateUserDto.avatar !== undefined) {
-      if (updateUserDto.avatar === '') {
+    if (dto.avatar !== undefined) {
+      if (dto.avatar === '') {
         data.avatar = null;
       } else {
-        const decoded = decodeAvatarBase64(updateUserDto.avatar);
+        const decoded = decodeAvatarBase64(dto.avatar);
         if (decoded === null) {
           throw new BadRequestException(ErrorMessages.INVALID_AVATAR);
         }
@@ -77,11 +82,11 @@ export class UserService {
       }
     }
 
-    if (updateUserDto.desc !== undefined) {
-      if (updateUserDto.desc === '') {
+    if (dto.desc !== undefined) {
+      if (dto.desc === '') {
         data.desc = null;
       } else {
-        data.desc = updateUserDto.desc;
+        data.desc = dto.desc;
       }
     }
 
@@ -120,63 +125,58 @@ export class UserService {
     return await this.modifyPassword(userId, await createHash(newPassword));
   }
 
-  async updateRank(userId: string, newRank: Ranks) {
-    await this.userExistsOrThrow(userId);
-    return await this.modifyRank(userId, newRank);
+  async getOwnProfile(userId: string) {
+    const found = await this.findOwnProfile(userId);
+    if (!found) {
+      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
+    }
+    return encodeSingleAvatar(found);
   }
 
-  async getUserById(toFind: string) {
+  async getUserById(rank: Ranks, userId: string, toFind: string) {
+    const found = await this.findProfileById(toFind);
+    if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
+      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
+    }
+    return encodeSingleAvatar(found);
+  }
+
+  async getUsernameById(toFind: string) {
     const found = await this.prisma.user.findUnique({
       where: { id: toFind },
-      omit: { password: true },
+      select: {
+        username: true,
+        id: true,
+      },
     });
     if (!found) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
-    return {
-      ...found,
-      avatar: found.avatar
-        ? Buffer.from(found.avatar).toString('base64')
-        : null,
-    };
+    return { ...found };
   }
 
-  async getUserByUsername(toFind: string) {
-    const found = await this.prisma.user.findFirst({
-      where: { username: { equals: toFind, mode: 'insensitive' } },
-      omit: { password: true },
-    });
-    if (!found) {
+  async getUserByUsername(rank: Ranks, userId: string, toFind: string) {
+    const found = await this.findProfileByUsername(toFind);
+    if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
-    return {
-      ...found,
-      avatar: found.avatar
-        ? Buffer.from(found.avatar).toString('base64')
-        : null,
-    };
+    return encodeSingleAvatar(found);
   }
 
-  async getAllSortByUsername() {
-    const users = await this.prisma.user.findMany({
-      omit: { password: true },
-      orderBy: { username: 'asc' },
-    });
-    return users.map((user) => ({
-      ...user,
-      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
-    }));
+  async getAllSortByUsername(rank: Ranks) {
+    const includePending = rank === Ranks.USER ? false : true;
+    const users = await this.listAllByUsername(includePending);
+    return encodeMultipleAvatars(users);
   }
 
-  async getAllSortByDate() {
-    const users = await this.prisma.user.findMany({
-      omit: { password: true },
-      orderBy: { date: 'asc' },
-    });
-    return users.map((user) => ({
-      ...user,
-      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
-    }));
+  async getAllSortByDate(rank: Ranks) {
+    const includePending = rank === Ranks.USER ? false : true;
+    const users = await this.listAllByDate(includePending);
+    return encodeMultipleAvatars(users);
+  }
+
+  getGuestProfile() {
+    return { id: '', username: 'guest', avatar: null, rank: '' };
   }
 
   // CALLED FROM USER-TASKS SERVICE
@@ -242,9 +242,16 @@ export class UserService {
     ) {
       return null;
     }
+    let newRank: Ranks;
+    if (found.rank === Ranks.PENDING) {
+      newRank = Ranks.USER;
+    } else {
+      newRank = found.rank;
+    }
     const verified = await this.modifyVerifyEmail(
       userId,
       found.email_unverified,
+      newRank,
     );
     if (!verified || !verified.email) {
       return null;
@@ -321,6 +328,57 @@ export class UserService {
     }
   }
 
+  //CALLED FROM ADMIN SERVICE
+  async adminUpdateUser(dto: AdminUpdateUserDto) {
+    const data: Record<string, unknown> = {};
+
+    if (dto.username !== undefined) {
+      if (await this.usernameIsTaken(dto.username)) {
+        throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
+      }
+      data.username = dto.username;
+    }
+
+    if (dto.avatar !== undefined) {
+      if (dto.avatar === '') {
+        data.avatar = null;
+      } else {
+        const decoded = decodeAvatarBase64(dto.avatar);
+        if (decoded === null) {
+          throw new BadRequestException(ErrorMessages.INVALID_AVATAR);
+        }
+        data.avatar = decoded;
+      }
+    }
+
+    if (dto.desc !== undefined) {
+      if (dto.desc === '') {
+        data.desc = null;
+      } else {
+        data.desc = dto.desc;
+      }
+    }
+
+    return await this.modifyUserInfo(dto.targetId, data);
+  }
+
+  async updateRank(dto: UpdateRankDto) {
+    const found = await this.userExistsOrThrow(dto.targetId);
+    if (found.rank === Ranks.PENDING) {
+      throw new BadRequestException(ErrorMessages.PENDING_USER);
+    }
+    return await this.modifyRank(dto);
+  }
+
+  async updateSwapAdmins(currentAdmin: string, newAdmin: string) {
+    await this.userExistsOrThrow(currentAdmin);
+    const found = await this.userExistsOrThrow(newAdmin);
+    if (found.rank === Ranks.PENDING) {
+      throw new BadRequestException(ErrorMessages.PENDING_USER);
+    }
+    return await this.modifyRankAdminSwap(currentAdmin, newAdmin);
+  }
+
   // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
   private async createUser(
     createUserDto: CreateUserDto,
@@ -346,11 +404,16 @@ private async deleteUser(userId: string) {
     });
   }
 
-  private async modifyVerifyEmail(userId: string, address: string) {
+  private async modifyVerifyEmail(
+    userId: string,
+    address: string,
+    rank: Ranks,
+  ) {
     return await this.prisma.user.update({
       where: { id: userId },
       data: {
         email: address,
+        rank: rank,
         email_unverified: null,
         verifyTimeout: null,
         verifyToken: null,
@@ -402,11 +465,25 @@ private async deleteUser(userId: string) {
     });
   }
 
-  private async modifyRank(userId: string, newRank: Ranks) {
+  private async modifyRank(newData: UpdateRankDto) {
     return await this.prisma.user.update({
-      where: { id: userId },
-      data: { rank: newRank },
-      select: { rank: true },
+      where: { id: newData.targetId },
+      data: { rank: newData.rank },
+      select: { id: true, rank: true },
+    });
+  }
+
+  private async modifyRankAdminSwap(currentAdmin: string, newAdmin: string) {
+    return await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: newAdmin },
+        data: { rank: Ranks.ADMIN },
+      });
+      await tx.user.update({
+        where: { id: currentAdmin },
+        data: { rank: Ranks.MODERATOR },
+      });
+      return { id: newAdmin, rank: Ranks.ADMIN };
     });
   }
 
@@ -427,6 +504,50 @@ private async deleteUser(userId: string) {
       where: { id: userId },
       data: { refreshToken: null, refreshTimeout: null },
       select: { refreshToken: true },
+    });
+  }
+
+  private async findOwnProfile(userId: string) {
+    return await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        email: true,
+        email_unverified: true,
+      },
+    });
+  }
+
+  private async findProfileById(toFind: string) {
+    return await this.prisma.user.findUnique({
+      where: { id: toFind },
+      select: { id: true, username: true, avatar: true, rank: true },
+    });
+  }
+
+  private async findProfileByUsername(toFind: string) {
+    return await this.prisma.user.findFirst({
+      where: { username: { equals: toFind, mode: 'insensitive' } },
+      select: { id: true, username: true, avatar: true, rank: true },
+    });
+  }
+
+  private async listAllByUsername(incPending: boolean) {
+    return await this.prisma.user.findMany({
+      where: incPending ? {} : { rank: { not: Ranks.PENDING } },
+      select: { id: true, username: true, avatar: true, rank: true },
+      orderBy: { username: 'asc' },
+    });
+  }
+
+  private async listAllByDate(incPending: boolean) {
+    return await this.prisma.user.findMany({
+      where: incPending ? {} : { rank: { not: Ranks.PENDING } },
+      select: { id: true, username: true, avatar: true, rank: true },
+      orderBy: { date: 'asc' },
     });
   }
 

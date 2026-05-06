@@ -16,7 +16,7 @@ model User {
   password         String
   desc             String?    @db.VarChar(200)
   avatar           Bytes?
-  rank             Ranks      @default(USER)
+  rank             Ranks      @default(PENDING)
   date             DateTime   @default(now())
   verifyToken      String?    @unique
   verifyTimeout    DateTime?
@@ -29,6 +29,7 @@ model User {
 }
 
 enum Ranks {
+  PENDING
   USER
   MODERATOR
   ADMIN

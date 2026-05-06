@@ -11,12 +11,15 @@ import { RelController } from './relationships/rel.controller';
 import { RelService } from './relationships/rel.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
+import { WebsocketServer } from './websocketHandling/server/WebsocketServer.gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './auth/jwt/auth.jwt-secret';
 import { GdprController } from './gdpr/gdpr.controller';
 import { GdprService } from './gdpr/gdpr.service';
 import { PasswordResetController } from './auth/password-reset.controller';
 import { PasswordResetService } from './auth/password-reset.service';
+import { AdminController } from './admin/admin.controller';
+import { AdminService } from './admin/admin.service';
 
 @Module({
   imports: [
@@ -34,6 +37,7 @@ import { PasswordResetService } from './auth/password-reset.service';
     AuthController,
     GdprController,
     PasswordResetController,
+    AdminController,
   ],
   providers: [
     HelloService,
@@ -45,8 +49,7 @@ import { PasswordResetService } from './auth/password-reset.service';
     AuthService,
     GdprService,
     PasswordResetService,
-    RelService,
-    AuthService,
+    AdminService,
   ],
 })
 export class ApiModule {}

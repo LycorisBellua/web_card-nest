@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Ranks" AS ENUM ('USER', 'MODERATOR', 'ADMIN');
+CREATE TYPE "Ranks" AS ENUM ('PENDING', 'USER', 'MODERATOR', 'ADMIN');
 
 -- CreateEnum
 CREATE TYPE "FriendStatus" AS ENUM ('PENDING', 'ACCEPTED');
@@ -13,7 +13,7 @@ CREATE TABLE "User" (
     "password" TEXT NOT NULL,
     "desc" VARCHAR(200),
     "avatar" BYTEA,
-    "rank" "Ranks" NOT NULL DEFAULT 'USER',
+    "rank" "Ranks" NOT NULL DEFAULT 'PENDING',
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "verifyToken" TEXT,
     "verifyTimeout" TIMESTAMP(3),
@@ -47,6 +47,9 @@ CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_unverified_key" ON "User"("email_unverified");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_verifyToken_key" ON "User"("verifyToken");
