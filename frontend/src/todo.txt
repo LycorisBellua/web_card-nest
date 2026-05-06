@@ -1,15 +1,12 @@
-- Finish Private Profile.
+- In EditProfile, have actual text fields already filled with the original 
+values, not weird buttons. We also might not need the "Pending changes" block.
+- We need to fix the ESLint issues too.
 
----
+- Tackle the remaining of the backlog notes to see what can be removed, and 
+what needs to be done on both the frontend and backend. Tackle the TODO in 
+components/chat/ChatMsg.tsx too.
+- Do the frontend part.
+- Create issues for the backend (but wait until the demo meeting is done).
 
-- Integrate the other styled components into the existing pages. They are 
-currently polluting the Users page.
-- Is anything amiss when it comes to aesthetics or content? What's missing 
-besides the connection to the backend?
-- Fix any ESLint issue you have introduced.
-- Any TODO mention left in the codebase?
-
----
-
-- Add proper icons everywhere in the website.
-- Add markdown and emoticon support to chat.
+- Create a new issue to connect the frontend and the backend.
+- Tackle all the remaining TODOs.

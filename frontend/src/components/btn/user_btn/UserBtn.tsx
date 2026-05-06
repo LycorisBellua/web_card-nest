@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import type { UserLimitedOrGuest } from 'context/Types';
-import UserBtnBase from 'components/user_btn/UserBtnBase';
+import UserBtnBase from 'components/btn/user_btn/UserBtnBase';
 
 const Wrapper = styled.div`
   a {

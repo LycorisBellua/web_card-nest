@@ -1,5 +1,19 @@
 import styled from 'styled-components';
 
+/*
+  const [mode, setMode] = useState('casual');
+
+  <Radio
+    options={[
+      { label: 'Casual - play for fun', value: 'casual' },
+      { label: 'Competitive - track results', value: 'competitive' },
+      { label: 'Tournament - bracket mode', value: 'tournament' },
+    ]}
+    value={mode}
+    onChange={setMode}
+  />
+*/
+
 type Option = {
   label: string;
   value: string;

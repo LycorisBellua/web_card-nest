@@ -1,5 +1,15 @@
 import styled from 'styled-components';
 
+/*
+  const [done, setDone] = useState(true);
+
+  <Checkbox
+    label="Finish the game setup"
+    checked={done}
+    onChange={setDone}
+  />
+*/
+
 const Item = styled.div`
   display: flex;
   align-items: center;

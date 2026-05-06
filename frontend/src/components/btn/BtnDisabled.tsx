@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react';
-import BtnDefault from 'components/tmp/btn/BtnDefault';
+import BtnDefault from 'components/btn/BtnDefault';
 
 type BtnDefaultProps = React.ComponentProps<typeof BtnDefault>;
 

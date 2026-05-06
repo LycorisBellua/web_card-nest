@@ -14,27 +14,19 @@ import {
   validateDescription,
   validateAvatar,
 } from 'functions/UserValidation';
-import Button from 'components/Button';
-import { AvatarBig } from 'components/user_btn/Avatar';
+import BtnDefault from 'components/btn/BtnDefault';
+import { AvatarBig } from 'components/btn/user_btn/Avatar';
 
 type PendingChanges = {
   avatar?: File | '';
   username?: string;
   description?: string;
   email?: string;
+  password?: string;
 };
 
 function EditProfile({ user }: { user: NonNullable<User> }) {
-  /*
-  TODO
-  - [ ] The Save button at the end sends one request for all modified fields. 
-  - [ ] Modify the password as a separate request, but which can be sent at the 
-        same time.
-  - [ ] See the changes before clicking on Save. These are in a "pending" block.
-  */
-
   const { setUser } = useUser();
-  const [open, setOpen] = useState(false);
   const [changes, setChanges] = useState<PendingChanges>({});
   const [globalErrors, setGlobalErrors] = useState<string[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
@@ -51,25 +43,37 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     setSuccessMessage('');
     const errors: string[] = [];
 
-    if (changes.avatar instanceof File)
-      errors.push(...(await validateAvatar(changes.avatar)));
-    if (changes.username !== undefined)
-      errors.push(...validateUsername(sanitizeUsername(changes.username)));
-    if (changes.description !== undefined)
-      errors.push(
-        ...validateDescription(sanitizeDescription(changes.description)),
-      );
-    if (changes.email !== undefined)
-      errors.push(...validateEmail(sanitizeEmail(changes.email)));
+    const avatar = changes.avatar;
+    const username =
+      changes.username !== undefined
+        ? sanitizeUsername(changes.username)
+        : undefined;
+    const description =
+      changes.description !== undefined
+        ? sanitizeDescription(changes.description)
+        : undefined;
+    const email =
+      changes.email !== undefined ? sanitizeEmail(changes.email) : undefined;
+    const password = changes.password;
+
+    if (avatar instanceof File) errors.push(...(await validateAvatar(avatar)));
+    if (username !== undefined) errors.push(...validateUsername(username));
+    if (description !== undefined)
+      errors.push(...validateDescription(description));
+    if (email !== undefined) errors.push(...validateEmail(email));
+    if (password !== undefined)
+      errors.push(...validatePassword(password, user.username, user.email));
 
     if (errors.length > 0) {
       setGlobalErrors(errors);
       return;
     }
 
+    const requests: Promise<Response>[] = [];
+
     const body: Record<string, unknown> = {};
-    if (changes.avatar !== undefined) {
-      if (changes.avatar === '') {
+    if (avatar !== undefined) {
+      if (avatar === '') {
         body.avatar = '';
       } else {
         body.avatar = await new Promise<string>((resolve, reject) => {
@@ -78,28 +82,43 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
             resolve((reader.result as string).split(',')[1]);
           reader.onerror = () =>
             reject(new Error('Failed to read avatar file'));
-          reader.readAsDataURL(changes.avatar as File);
+          reader.readAsDataURL(avatar);
         });
       }
     }
-    if (changes.username !== undefined)
-      body.username = sanitizeUsername(changes.username);
-    if (changes.description !== undefined)
-      body.description = sanitizeDescription(changes.description);
-    if (changes.email !== undefined)
-      body.unverifiedEmail = sanitizeEmail(changes.email);
+    if (username !== undefined) body.username = username;
+    if (description !== undefined) body.description = description;
+    if (email !== undefined) body.unverifiedEmail = email;
 
     if (Object.keys(body).length > 0) {
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        setGlobalErrors([`Error ${res.status}: ${res.statusText}`]);
-        return;
-      }
-      const updated = (await res.json()) as Partial<NonNullable<User>>;
+      requests.push(
+        fetch(`/api/users/${user.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
+      );
+    }
+
+    if (password !== undefined) {
+      requests.push(
+        fetch(`/api/users/${user.id}/password`, {
+          method: 'PATCH',
+          headers: { 'Content-type': 'application/json' },
+          body: JSON.stringify({ password }),
+        }),
+      );
+    }
+
+    const responses = await Promise.all(requests);
+    const failed = responses.filter((r) => !r.ok);
+    if (failed.length > 0) {
+      setGlobalErrors(failed.map((r) => `Error ${r.status}: ${r.statusText}`));
+      return;
+    }
+
+    if (Object.keys(body).length > 0) {
+      const updated = (await responses[0].json()) as Partial<NonNullable<User>>;
       setUser((old) => (old ? { ...old, ...updated } : null));
     }
 
@@ -107,43 +126,45 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     setSuccessMessage('Changes saved successfully.');
   }
 
+  const hasPendingChanges = Object.keys(changes).length > 0;
+
   return (
     <div>
       <h2>Edit Profile</h2>
-      <Button onClick={() => setOpen((o) => !o)}>
-        {open ? 'Close editor' : 'Open editor'}
-      </Button>
-      {open && (
-        <div>
-          <UpdateAvatar
-            user={user}
-            onChange={(file) => setChange('avatar', file)}
-          />
-          <div className="main">
-            <UpdateUsername
-              user={user}
-              onChange={(val) => setChange('username', val)}
-            />
-            <UpdateDescription
-              user={user}
-              onChange={(val) => setChange('description', val)}
-            />
-            <UpdateEmail
-              user={user}
-              onChange={(val) => setChange('email', val)}
-            />
-            <UpdatePassword user={user} />
-            <PendingChangesSummary changes={changes} />
-            {globalErrors.map((err, i) => (
-              <div key={i}>{err}</div>
-            ))}
-            {successMessage && <p>{successMessage}</p>}
-            {Object.keys(changes).length > 0 && (
-              <Button onClick={() => void handleSave()}>Save</Button>
-            )}
-          </div>
-        </div>
-      )}
+      <UpdateAvatar
+        user={user}
+        pendingAvatar={changes.avatar}
+        onChange={(file) => setChange('avatar', file)}
+      />
+      <div className="main">
+        <UpdateUsername
+          user={user}
+          pendingValue={changes.username}
+          onChange={(val) => setChange('username', val)}
+        />
+        <UpdateDescription
+          user={user}
+          pendingValue={changes.description}
+          onChange={(val) => setChange('description', val)}
+        />
+        <UpdateEmail
+          user={user}
+          pendingValue={changes.email}
+          onChange={(val) => setChange('email', val)}
+        />
+        <UpdatePassword
+          user={user}
+          onChange={(val) => setChange('password', val)}
+        />
+        <PendingChangesSummary changes={changes} />
+        {globalErrors.map((err, i) => (
+          <div key={i}>{err}</div>
+        ))}
+        {successMessage && <p>{successMessage}</p>}
+        {hasPendingChanges && (
+          <BtnDefault onClick={() => void handleSave()}>Save</BtnDefault>
+        )}
+      </div>
     </div>
   );
 }
@@ -165,6 +186,8 @@ function PendingChangesSummary({ changes }: { changes: PendingChanges }) {
     });
   if (changes.email !== undefined)
     entries.push({ label: 'Email', value: changes.email });
+  if (changes.password !== undefined)
+    entries.push({ label: 'Password', value: '••••••••' });
 
   if (entries.length === 0) return null;
 
@@ -182,52 +205,253 @@ function PendingChangesSummary({ changes }: { changes: PendingChanges }) {
   );
 }
 
-function UpdatePassword({ user }: { user: NonNullable<User> }) {
+function UpdateAvatar({
+  user,
+  pendingAvatar,
+  onChange,
+}: {
+  user: NonNullable<User>;
+  pendingAvatar: File | '' | undefined;
+  onChange: (f: File | '') => void;
+}) {
+  const imgInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (pendingAvatar instanceof File) {
+      const url = URL.createObjectURL(pendingAvatar);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreviewUrl(null);
+  }, [pendingAvatar]);
+
+  const avatarSrc =
+    pendingAvatar === ''
+      ? undefined
+      : pendingAvatar instanceof File
+        ? previewUrl
+        : user.avatar;
+
+  return (
+    <div>
+      <AvatarBig src={avatarSrc} rank={user.rank} isOnline={user.isOnline} />
+      <div className="btn">
+        <BtnDefault onClick={() => imgInputRef.current?.click()}>
+          Edit
+        </BtnDefault>
+        <BtnDefault onClick={() => onChange('')}>Remove</BtnDefault>
+      </div>
+      <input
+        name="avatar"
+        id="avatar"
+        type="file"
+        accept=".png"
+        ref={imgInputRef}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            onChange(file);
+            e.target.value = '';
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+function UpdateUsername({
+  user,
+  pendingValue,
+  onChange,
+}: {
+  user: NonNullable<User>;
+  pendingValue: string | undefined;
+  onChange: (v: string) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState('');
-  const [confirmValue, setConfirmValue] = useState('');
-  const [globalErrors, setGlobalErrors] = useState<string[]>([]);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [value, setValue] = useState(pendingValue ?? '');
 
   useEffect(() => {
     if (edit) inputRef.current?.focus();
   }, [edit]);
 
-  async function OnEditPassword() {
-    if (edit) {
-      setGlobalErrors([]);
-      setSuccessMessage('');
-      const errors: string[] = [];
-      const sanitized = sanitizePassword(value);
-      errors.push(...validatePassword(sanitized, user.username, user.email));
-      if (value !== confirmValue) errors.push("Passwords don't match.");
-      if (errors.length > 0) {
-        setGlobalErrors(errors);
-        return;
-      }
-      const res = await fetch(`/api/users/${user.id}/password`, {
-        method: 'PATCH',
-        headers: { 'Content-type': 'application/json' },
-        body: JSON.stringify({
-          password: sanitized,
-        }),
-      });
-      if (!res.ok) {
-        setGlobalErrors([`Password update failed: ${res.statusText}`]);
-        return;
-      }
+  const displayed = edit ? value : (pendingValue ?? user.username);
+
+  return (
+    <div>
+      <div>
+        <p>
+          Username:{' '}
+          {edit ? (
+            <input
+              name="username"
+              id="username"
+              type="text"
+              ref={inputRef}
+              value={value}
+              onChange={(e) => {
+                setValue(e.target.value);
+                onChange(e.target.value);
+              }}
+              autoComplete="off"
+            />
+          ) : (
+            displayed
+          )}
+        </p>
+        <BtnDefault onClick={() => setEdit((e) => !e)}>
+          {edit ? 'Done' : 'Edit'}
+        </BtnDefault>
+      </div>
+    </div>
+  );
+}
+
+function UpdateDescription({
+  user,
+  pendingValue,
+  onChange,
+}: {
+  user: NonNullable<User>;
+  pendingValue: string | undefined;
+  onChange: (v: string) => void;
+}) {
+  const [edit, setEdit] = useState(false);
+  const [value, setValue] = useState(pendingValue ?? '');
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (edit) inputRef.current?.focus();
+  }, [edit]);
+
+  const displayed = edit ? value : (pendingValue ?? user.description);
+
+  return (
+    <>
+      <div>
+        <p>Description:</p>
+        <BtnDefault onClick={() => setEdit((e) => !e)}>
+          {edit ? 'Done' : 'Edit'}
+        </BtnDefault>
+      </div>
+      <div>
+        {edit ? (
+          <>
+            <textarea
+              name="user-description"
+              id="user-description"
+              ref={inputRef}
+              rows={4}
+              wrap="soft"
+              value={value}
+              onChange={(e) => {
+                setValue(e.target.value);
+                onChange(e.target.value);
+              }}
+            />
+            <p>{value.length} / 200</p>
+          </>
+        ) : (
+          <p>{displayed}</p>
+        )}
+      </div>
+    </>
+  );
+}
+
+function UpdateEmail({
+  user,
+  pendingValue,
+  onChange,
+}: {
+  user: NonNullable<User>;
+  pendingValue: string | undefined;
+  onChange: (v: string) => void;
+}) {
+  const [edit, setEdit] = useState(false);
+  const [value, setValue] = useState(pendingValue ?? '');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (edit) inputRef.current?.focus();
+  }, [edit]);
+
+  const displayed = edit ? value : (pendingValue ?? user.email);
+
+  return (
+    <div>
+      <div>
+        <p>
+          Email:{' '}
+          {edit ? (
+            <input
+              name="email"
+              id="email"
+              type="email"
+              value={value}
+              ref={inputRef}
+              onChange={(e) => {
+                setValue(e.target.value);
+                onChange(e.target.value);
+              }}
+              autoComplete="off"
+            />
+          ) : (
+            displayed
+          )}
+        </p>
+        <BtnDefault onClick={() => setEdit((e) => !e)}>
+          {edit ? 'Done' : 'Edit'}
+        </BtnDefault>
+      </div>
+    </div>
+  );
+}
+
+function UpdatePassword({
+  user,
+  onChange,
+}: {
+  user: NonNullable<User>;
+  onChange: (v: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [edit, setEdit] = useState(false);
+  const [value, setValue] = useState('');
+  const [confirmValue, setConfirmValue] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (edit) inputRef.current?.focus();
+  }, [edit]);
+
+  function handleDone() {
+    if (!edit) {
+      setEdit(true);
+      return;
     }
-    setEdit(!edit);
+
+    setErrors([]);
+    const localErrors: string[] = [];
+    const sanitized = sanitizePassword(value);
+    localErrors.push(...validatePassword(sanitized, user.username, user.email));
+    if (value !== confirmValue) localErrors.push("Passwords don't match.");
+    if (localErrors.length > 0) {
+      setErrors(localErrors);
+      return;
+    }
+
+    onChange(sanitized);
+    setEdit(false);
   }
 
   return (
     <div>
       <div>
         <p>Password: ••••••••</p>
-        <Button onClick={() => void OnEditPassword()}>
-          {edit ? 'done' : '🖊️'}
-        </Button>
+        <BtnDefault onClick={handleDone}>{edit ? 'Done' : 'Edit'}</BtnDefault>
       </div>
       {edit && (
         <div>
@@ -254,181 +478,11 @@ function UpdatePassword({ user }: { user: NonNullable<User> }) {
               autoComplete="new-password"
             />
           </div>
-          {globalErrors.map((err, i) => (
+          {errors.map((err, i) => (
             <div key={i}>{err}</div>
           ))}
-          {successMessage && <p>{successMessage}</p>}
         </div>
       )}
-    </div>
-  );
-}
-
-function UpdateAvatar({
-  user,
-  onChange,
-}: {
-  user: NonNullable<User>;
-  onChange: (f: File | '') => void;
-}) {
-  const imgInputRef = useRef<HTMLInputElement | null>(null);
-
-  return (
-    <div>
-      <AvatarBig src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
-      <div className="btn">
-        <Button onClick={() => imgInputRef.current?.click()}>Edit🖊️</Button>
-        <Button onClick={() => onChange('')}>Remove🗑️</Button>
-      </div>
-      <input
-        name="avatar"
-        id="avatar"
-        type="file"
-        accept=".png"
-        ref={imgInputRef}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) onChange(file);
-        }}
-      />
-    </div>
-  );
-}
-
-function UpdateUsername({
-  user,
-  onChange,
-}: {
-  user: NonNullable<User>;
-  onChange: (v: string) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState('');
-
-  useEffect(() => {
-    if (edit) inputRef.current?.focus();
-  }, [edit]);
-
-  return (
-    <div>
-      <div>
-        <p>
-          Username:{' '}
-          {edit ? (
-            <input
-              name="username"
-              id="username"
-              type="text"
-              ref={inputRef}
-              value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-                onChange(e.target.value);
-              }}
-              autoComplete="off"
-            />
-          ) : (
-            user.username
-          )}
-        </p>
-        <Button onClick={() => setEdit((e) => !e)}>
-          {edit ? 'done' : '🖊️'}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function UpdateDescription({
-  user,
-  onChange,
-}: {
-  user: NonNullable<User>;
-  onChange: (v: string) => void;
-}) {
-  const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState('');
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (edit) inputRef.current?.focus();
-  }, [edit]);
-
-  return (
-    <>
-      <div>
-        <p>Description:</p>
-        <Button onClick={() => setEdit((e) => !e)}>
-          {edit ? 'done' : '🖊️'}
-        </Button>
-      </div>
-      <div>
-        {edit ? (
-          <>
-            <textarea
-              name="user-description"
-              id="user-description"
-              ref={inputRef}
-              rows={4}
-              wrap="soft"
-              value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-                onChange(e.target.value);
-              }}
-            />
-            <p>{value.length} / 200</p>
-          </>
-        ) : (
-          <p>{user.description}</p>
-        )}
-      </div>
-    </>
-  );
-}
-
-function UpdateEmail({
-  user,
-  onChange,
-}: {
-  user: NonNullable<User>;
-  onChange: (v: string) => void;
-}) {
-  const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (edit) inputRef.current?.focus();
-  }, [edit]);
-
-  return (
-    <div>
-      <div>
-        <p>
-          Email:{' '}
-          {edit ? (
-            <input
-              name="email"
-              id="email"
-              type="email"
-              value={value}
-              ref={inputRef}
-              onChange={(e) => {
-                setValue(e.target.value);
-                onChange(e.target.value);
-              }}
-              autoComplete="off"
-            />
-          ) : (
-            user.email
-          )}
-        </p>
-        <Button onClick={() => setEdit((e) => !e)}>
-          {edit ? 'done' : '🖊️'}
-        </Button>
-      </div>
     </div>
   );
 }

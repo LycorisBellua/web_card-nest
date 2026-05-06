@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ScrollablePage } from 'components/general/Scrollable';
-import Button from 'components/Button';
+import BtnDefault from 'components/btn/BtnDefault';
 import { sanitizeEmail } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 
@@ -68,7 +68,7 @@ function ResetPassword() {
           />
         </div>
         <div>{errors && errors.map((err, i) => <p key={i}>{err}</p>)}</div>
-        <Button type="submit">Send code</Button>
+        <BtnDefault type="submit">Send code</BtnDefault>
       </form>
       {message && <p>{message}</p>}
       <Link to="/auth">Go back to login page 👈</Link>

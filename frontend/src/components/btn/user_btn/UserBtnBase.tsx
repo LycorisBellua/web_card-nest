@@ -1,9 +1,11 @@
 import type { UserLimitedOrGuest } from 'context/Types';
-import { Avatar } from 'components/user_btn/Avatar';
-import Username from 'components/user_btn/Username';
+import { Avatar } from 'components/btn/user_btn/Avatar';
+import { Username } from 'components/btn/user_btn/Username';
+import { RankBadge } from 'components/btn/user_btn/RankBadge';
+import BtnGhost from 'components/btn/BtnGhost';
 import styled from 'styled-components';
 
-const Btn = styled.div`
+const Btn = styled(BtnGhost)`
   display: flex;
   align-items: center;
   gap: 8px;
@@ -35,6 +37,7 @@ function UserBtnBase({
     <Btn onClick={onClick}>
       <Avatar src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
       <Username rank={user.rank} value={user.username} />
+      <RankBadge rank={user.rank}>{user.rank}</RankBadge>
     </Btn>
   );
 }

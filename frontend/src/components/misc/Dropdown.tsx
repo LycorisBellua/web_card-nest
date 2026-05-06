@@ -1,6 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 
+/*
+  <Dropdown
+    initialValue="Choose a table theme..."
+    options={[
+      '🌧 Rainy Night',
+      '☕ Corner Booth',
+      '🕯 Candlelight',
+      '🎶 Late Night Lo-fi',
+      '🌙 After Hours',
+    ]}
+  />
+*/
+
 const Wrapper = styled.div`
   position: relative;
 `;

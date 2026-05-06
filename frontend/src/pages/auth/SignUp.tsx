@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Button from 'components/Button';
+import BtnDefault from 'components/btn/BtnDefault';
 import {
   sanitizeUsername,
   sanitizeEmail,
@@ -123,7 +123,7 @@ function SignUp() {
         <div>
           {errors.length > 0 && errors.map((err, i) => <p key={i}>{err}</p>)}
         </div>
-        <Button type="submit">Sign Up</Button>
+        <BtnDefault type="submit">Sign Up</BtnDefault>
         {message && <p>{message}</p>}
       </form>
     </>

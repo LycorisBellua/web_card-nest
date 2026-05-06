@@ -1,6 +1,17 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
+/*
+  <Breadcrumb
+    items={[
+      { title: 'Card Nest', path: '/' },
+      { title: 'Users', path: '/users' },
+      { title: 'espresso', path: '/user/espresso' },
+      { title: 'Profile' },
+    ]}
+  />
+*/
+
 const Nav = styled.div`
   display: flex;
   align-items: center;

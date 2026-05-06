@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Button from 'components/Button';
+import BtnDefault from 'components/btn/BtnDefault';
 import { sanitizeEmail, sanitizePassword } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 
@@ -92,11 +92,11 @@ function LogIn() {
           ></input>
         </div>
         <div>{errors && errors.map((err, i) => <p key={i}>{err}</p>)}</div>
-        <Button type="submit">Log In</Button>
+        <BtnDefault type="submit">Log In</BtnDefault>
       </form>
       {message && <p>{message}</p>}
       <Link to="/reset-pwd">
-        <Button>Forgot your password?</Button>
+        <BtnDefault>Forgot your password?</BtnDefault>
       </Link>
     </>
   );

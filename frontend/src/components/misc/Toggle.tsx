@@ -1,5 +1,16 @@
 import styled from 'styled-components';
 
+/*
+  const [notifications, setNotifications] = useState(true);
+
+  <Toggle
+    label="Lobby notifications"
+    description="Ping when friends join"
+    checked={notifications}
+    onChange={setNotifications}
+  />
+*/
+
 const Row = styled.div`
   display: flex;
   align-items: center;

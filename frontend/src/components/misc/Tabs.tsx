@@ -1,6 +1,28 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
+/*
+  <Tabs
+    items={[
+      {
+        label: 'Overview',
+        content:
+          'Overview: your stats, recent games, and earned badges all in one place.',
+      },
+      {
+        label: 'History',
+        content:
+          'History: a full log of every game played, opponents, results, and XP earned.',
+      },
+      {
+        label: 'Settings',
+        content:
+          'Settings: notification preferences, display name, privacy, and account actions.',
+      },
+    ]}
+  />
+*/
+
 const TabsNav = styled.div`
   display: flex;
   gap: 2px;

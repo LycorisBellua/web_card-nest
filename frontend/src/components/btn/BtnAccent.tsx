@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import BtnDefault from 'components/tmp/btn/BtnDefault';
+import BtnDefault from 'components/btn/BtnDefault';
 
 const BtnAccent = styled(BtnDefault)`
   background: rgba(212, 160, 96, 0.14);

@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
+/*
+  <Slider textHeader="Volume" nbrMin={0} nbrMax={100} nbrStep={5} />
+*/
+
 const Row = styled.div`
   display: flex;
   flex-direction: column;

@@ -3,8 +3,9 @@ import type { Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
 import styled, { css } from 'styled-components';
-import { Avatar } from 'components/user_btn/Avatar';
-import Username from 'components/user_btn/Username';
+import { Avatar } from 'components/btn/user_btn/Avatar';
+import { Username } from 'components/btn/user_btn/Username';
+import { RankBadge } from 'components/btn/user_btn/RankBadge';
 
 const Row = styled.div<{ $rank: string }>`
   display: flex;
@@ -84,43 +85,6 @@ const NameWrap = styled.div<{ $rank: string }>`
   }
 `;
 
-const RankBadge = styled.span<{ $rank: string }>`
-  ${({ $rank }) => {
-    switch ($rank) {
-      case 'admin':
-        return css`
-          font-family: inherit;
-          font-size: 0.55rem;
-          font-weight: 700;
-          letter-spacing: 0.04em;
-          padding: 1px 6px;
-          border-radius: 4px;
-          text-transform: uppercase;
-          color: #f5c842;
-          background: rgba(240, 192, 64, 0.1);
-          border: 1px solid rgba(240, 192, 64, 0.3);
-          content: 'Admin';
-        `;
-      case 'mod':
-        return css`
-          font-family: inherit;
-          font-size: 0.55rem;
-          font-weight: 700;
-          letter-spacing: 0.04em;
-          padding: 1px 6px;
-          border-radius: 4px;
-          text-transform: uppercase;
-          color: #c89050;
-          background: rgba(212, 160, 112, 0.14);
-          border: 1px solid rgba(212, 160, 112, 0.28);
-          content: 'Mod';
-        `;
-      default:
-        return '';
-    }
-  }}
-`;
-
 const Text = styled.div`
   font-family: inherit;
   font-size: 0.78rem;
@@ -167,9 +131,7 @@ function ChatMsg({ msg }: { msg: Msg }) {
                 <Username rank={rank} value={username} />
               </Link>
             )}
-            {(rank == 'admin' || rank == 'mod') && (
-              <RankBadge $rank={rank}>{rank}</RankBadge>
-            )}
+            <RankBadge rank={rank}>{rank}</RankBadge>
           </NameWrap>
           <Time>{GetTime(msg.created)}</Time>
         </Meta>

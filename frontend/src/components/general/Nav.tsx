@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import Button from 'components/Button';
+import BtnDefault from 'components/btn/BtnDefault';
 import UserMenu from 'pages/profile/UserMenu';
 
 const TopBar = styled.div`
@@ -106,13 +106,13 @@ function Nav({ onDMsClick }: { onDMsClick: () => void }) {
         </Logo>
         <TopNav>
           <Link to="/">
-            <Button>💬 Lobby</Button>
+            <BtnDefault>💬 Lobby</BtnDefault>
           </Link>
           <Link to="/play">
-            <Button>🃏 Play</Button>
+            <BtnDefault>🃏 Play</BtnDefault>
           </Link>
           <Link to="/users">
-            <Button>👤 Users</Button>
+            <BtnDefault>👤 Users</BtnDefault>
           </Link>
         </TopNav>
         <TopBarRight>
@@ -121,16 +121,16 @@ function Nav({ onDMsClick }: { onDMsClick: () => void }) {
       </TopBar>
       <SubNav>
         <div>
-          <Button onClick={onDMsClick}>DMs</Button>
+          <BtnDefault onClick={onDMsClick}>DMs</BtnDefault>
         </div>
         <Link to="/">
-          <Button>💬 Lobby</Button>
+          <BtnDefault>💬 Lobby</BtnDefault>
         </Link>
         <Link to="/play">
-          <Button>🃏 Play</Button>
+          <BtnDefault>🃏 Play</BtnDefault>
         </Link>
         <Link to="/users">
-          <Button>👤 Users</Button>
+          <BtnDefault>👤 Users</BtnDefault>
         </Link>
       </SubNav>
     </>

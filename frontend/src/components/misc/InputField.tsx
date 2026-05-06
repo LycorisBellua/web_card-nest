@@ -1,5 +1,14 @@
 import styled from 'styled-components';
 
+/*
+  <InputField
+    textLabel="Email"
+    textPlaceholder="john.doe@domain.com"
+    textHelpers={['Please enter a valid email address']}
+    isError={true}
+  />
+*/
+
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;

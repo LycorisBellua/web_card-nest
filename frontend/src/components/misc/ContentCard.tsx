@@ -1,5 +1,12 @@
 import styled from 'styled-components';
-import BtnAccent from 'components/tmp/btn/BtnAccent';
+import BtnAccent from 'components/btn/BtnAccent';
+
+/*
+  <ContentCard
+    title="Black Crown basics"
+    content="A quick guide to how Black Crown works: hands, rules, and how to play with friends."
+  />
+*/
 
 const Card = styled.div`
   background: #221a14;

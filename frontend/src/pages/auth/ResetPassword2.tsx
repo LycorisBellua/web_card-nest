@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ScrollablePage } from 'components/general/Scrollable';
-import Button from 'components/Button';
+import BtnDefault from 'components/btn/BtnDefault';
 import { sanitizePassword } from 'functions/UserSanitation';
 import { validatePassword } from 'functions/UserValidation';
 
@@ -124,7 +124,7 @@ function ResetPasswordSecond() {
         <div>
           {errors.length > 0 && errors.map((err, i) => <p key={i}>{err}</p>)}
         </div>
-        <Button>Confirm</Button>
+        <BtnDefault>Confirm</BtnDefault>
       </form>
       {message && <p>{message}</p>}
       <Link to="/auth">Go back to login page 👈</Link>

@@ -1,5 +1,10 @@
 import styled from 'styled-components';
 
+/*
+  <Spinner />
+  <Spinner label="Connecting to table..." />
+*/
+
 const Row = styled.div`
   display: flex;
   align-items: center;

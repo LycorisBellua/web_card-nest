@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { sanitizeMessage } from 'functions/UserSanitation';
+import BtnIcon from 'components/btn/BtnIcon';
 import styled from 'styled-components';
 
 const Wrap = styled.div`
@@ -43,30 +44,6 @@ const Field = styled.input`
   }
 `;
 
-const Send = styled.button`
-  background: linear-gradient(135deg, #d9a85a, #8b4820);
-  border: none;
-  border-radius: 0.5rem;
-  width: 1.875rem;
-  height: 1.875rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 0.75rem;
-  cursor: pointer;
-  flex-shrink: 0;
-  box-shadow: 0 3px 10px rgba(180, 100, 50, 0.4);
-  transition:
-    transform 0.15s,
-    box-shadow 0.15s;
-
-  &:hover {
-    transform: scale(1.08);
-    box-shadow: 0 5px 16px rgba(180, 100, 50, 0.5);
-  }
-`;
-
 function ChatInput({ onSend }: { onSend: (content: string) => void }) {
   const [value, setValue] = useState('');
 
@@ -87,7 +64,9 @@ function ChatInput({ onSend }: { onSend: (content: string) => void }) {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
         />
-        <Send onClick={handleSubmit}>➤</Send>
+        <BtnIcon title="Send" onClick={handleSubmit}>
+          ➤
+        </BtnIcon>
       </Box>
     </Wrap>
   );

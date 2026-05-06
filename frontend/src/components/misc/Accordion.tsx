@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 
+/*
+  <Accordion title="Accordion Title?" content="Accordion content..." />
+*/
+
 const Item = styled.div`
   border: 1px solid #3a2a1e;
   border-radius: 12px;

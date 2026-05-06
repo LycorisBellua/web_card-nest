@@ -1,18 +1,38 @@
 import { useState } from 'react';
 import type { User } from 'context/Types';
 import { GetDate } from 'functions/Time';
-import { AvatarBig } from 'components/user_btn/Avatar';
-import Button from 'components/Button';
+import { AvatarBig } from 'components/btn/user_btn/Avatar';
+import BtnDefault from 'components/btn/BtnDefault';
+import { UsernameBig } from 'components/btn/user_btn/Username';
+import { RankBadgeBig } from 'components/btn/user_btn/RankBadge';
+import styled from 'styled-components';
+
+const PublicWrapper = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background-color: rgba(0, 0, 0, 0.4);
+  padding: 12px;
+  border-radius: 8px;
+`;
+
+const PublicRightCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+`;
 
 export function DisplayPublicUserInfo({ user }: { user: NonNullable<User> }) {
   return (
-    <div>
+    <PublicWrapper>
       <AvatarBig src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
-      <p>Username: {user.username}</p>
-      <p>Rank: {user.rank}</p>
-      <p>Registered: {GetDate(user.registered)}</p>
-      <p>Description: {user.description}</p>
-    </div>
+      <PublicRightCol>
+        <UsernameBig rank={user.rank} value={user.username} />
+        <RankBadgeBig rank={user.rank} />
+        <p>Registered: {GetDate(user.registered)}</p>
+        <p>Description: {user.description}</p>
+      </PublicRightCol>
+    </PublicWrapper>
   );
 }
 
@@ -51,7 +71,7 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
     <div>
       <div>
         <p>Unverified email: {user.unverifiedEmail}</p>
-        <Button onClick={() => void handleVerifyEmail()}>Verify</Button>
+        <BtnDefault onClick={() => void handleVerifyEmail()}>Verify</BtnDefault>
       </div>
       {errors.map((err, i) => (
         <div key={i}>{err}</div>

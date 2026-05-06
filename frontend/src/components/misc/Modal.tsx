@@ -1,6 +1,20 @@
 import styled from 'styled-components';
-import BtnDefault from 'components/tmp/btn/BtnDefault';
-import BtnDanger from 'components/tmp/btn/BtnDanger';
+import BtnDefault from 'components/btn/BtnDefault';
+import BtnDanger from 'components/btn/BtnDanger';
+
+/*
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  <Modal
+    isOpen={isModalOpen}
+    onCancel={() => setIsModalOpen(false)}
+    onConfirm={() => setIsModalOpen(false)}
+    title="Leave table?"
+    textMain="If you leave mid-game, the result will be recorded as a loss and your opponent will be awarded the win. This action cannot be undone."
+    textCancel="Stay"
+    textConfirm="Leave anyway"
+  />
+*/
 
 const ModalBackdrop = styled.div<{ $isOpen: boolean }>`
   position: fixed;
