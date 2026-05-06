@@ -50,7 +50,7 @@ export class PasswordResetService {
         }
 
         const token = await this.generateToken(email)
-        const link = `${process.env.FRONTEND_URL}/reset-password?token=${token}`
+        const link = `${process.env.DEV_URL}/reset-password?token=${token}`
 
         await this.mailer.sendMail(
             email,
