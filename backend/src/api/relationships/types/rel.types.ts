@@ -12,7 +12,6 @@ export const friendshipInclude = {
 } satisfies Prisma.FriendInclude;
 
 export const blockInclude = {
-  blocker: { select: friendUserSelect },
   blocked: { select: friendUserSelect },
 } satisfies Prisma.BlockInclude;
 

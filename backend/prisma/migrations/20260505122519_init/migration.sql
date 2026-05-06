@@ -50,8 +50,6 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_unverified_key" ON "User"("email_unverified");
-<<<<<<<< HEAD:backend/prisma/migrations/20260424113338_init/migration.sql
-========
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_verifyToken_key" ON "User"("verifyToken");
@@ -76,4 +74,3 @@ ALTER TABLE "Block" ADD CONSTRAINT "Block_blockerId_fkey" FOREIGN KEY ("blockerI
 
 -- AddForeignKey
 ALTER TABLE "Block" ADD CONSTRAINT "Block_blockedId_fkey" FOREIGN KEY ("blockedId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
->>>>>>>> dev:backend/prisma/migrations/20260505093026_init/migration.sql

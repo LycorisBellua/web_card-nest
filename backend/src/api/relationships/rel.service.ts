@@ -3,9 +3,10 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { ErrorMessages } from './error_messages/ErrorMessages';
 import { Friend } from 'src/generated/prisma/browser';
-import { Block, Ranks } from 'src/generated/prisma/client';
-import { FriendStatus } from 'src/generated/prisma/client';
+import { Block, FriendStatus, Ranks } from 'src/generated/prisma/client';
 import {
+  blockInclude,
+  BlockWithUsers,
   friendshipInclude,
   FriendshipWithUsers,
   FriendUser,
@@ -17,6 +18,7 @@ export class RelService {
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
   ) {}
+
   // FRIEND MANAGEMENT
   async addFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
@@ -25,10 +27,10 @@ export class RelService {
     }
     const existing = await this.findFriendship(originId, targetId);
     if (existing) {
-      if (existing.status === 'ACCEPTED') {
+      if (existing.status === FriendStatus.ACCEPTED) {
         throw new BadRequestException(ErrorMessages.ADD_ALREADY);
       } else if (
-        existing.status === 'PENDING' &&
+        existing.status === FriendStatus.PENDING &&
         existing.requesterId === originId
       ) {
         throw new BadRequestException(ErrorMessages.ADD_PENDING);
@@ -42,7 +44,7 @@ export class RelService {
   async removeFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const existing = await this.findFriendship(originId, targetId);
-    if (!existing || existing.status === 'PENDING') {
+    if (!existing || existing.status === FriendStatus.PENDING) {
       throw new BadRequestException(ErrorMessages.NOT_FRIENDS);
     }
     return await this.deleteFriendship(existing);
@@ -50,8 +52,9 @@ export class RelService {
 
   async acceptRequest(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
+    const blocked = await this.findBlock(originId, targetId);
     const found = await this.findFriendshipAsAddressee(originId, targetId);
-    if (!found || found.status === 'ACCEPTED') {
+    if (blocked || !found || found.status === FriendStatus.ACCEPTED) {
       throw new BadRequestException(ErrorMessages.REQ_NOT_FOUND);
     }
     return await this.statusAccept(found);
@@ -59,8 +62,9 @@ export class RelService {
 
   async rejectRequest(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
+    const blocked = await this.findBlock(originId, targetId);
     const found = await this.findFriendshipAsAddressee(originId, targetId);
-    if (!found || found.status === 'ACCEPTED') {
+    if (blocked || !found || found.status === FriendStatus.ACCEPTED) {
       throw new BadRequestException(ErrorMessages.REQ_NOT_FOUND);
     }
     return await this.deleteFriendship(found);
@@ -69,7 +73,7 @@ export class RelService {
   async cancelRequest(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const found = await this.findFriendshipAsRequester(originId, targetId);
-    if (!found || found.status === 'ACCEPTED') {
+    if (!found || found.status === FriendStatus.ACCEPTED) {
       throw new BadRequestException(ErrorMessages.REQ_NOT_FOUND);
     }
     return await this.deleteFriendship(found);
@@ -80,25 +84,17 @@ export class RelService {
     const accepted: FriendshipWithUsers = await this.findAccepted(originId);
     return this.buildFriendList(originId, accepted);
   }
-  async fetchFriendsList(originId: string) {
-    
-    const RawData = await this.fetchFriends(originId);
-    const FriendIdList = RawData.map(item => item.requesterId !== originId ? item.requesterId : item.addresseeId);
-    const FriendsList = await Promise.all(FriendIdList.map(item => this.userService.getUsernameById(item)));
-    return {FriendsList};
-  }
-  
-  
-  
-  
+
   async fetchSentRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
-    return await this.findSentPending(originId);
+    const sent = await this.findSentPending(originId);
+    return this.buildFriendList(originId, sent);
   }
 
   async fetchReceivedRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
-    return await this.findReceivedPending(originId);
+    const received = await this.findReceivedPending(originId);
+    return this.buildFriendList(originId, received);
   }
 
   // FRIEND DB ACTIONS
@@ -141,6 +137,7 @@ export class RelService {
         requesterId: originId,
         addresseeId: targetId,
       },
+      include: friendshipInclude,
     });
   }
 
@@ -163,26 +160,29 @@ export class RelService {
           addresseeId: friend.addresseeId,
         },
       },
-      data: { status: 'ACCEPTED' },
+      data: { status: FriendStatus.ACCEPTED },
     });
   }
 
   private async findAccepted(originId: string): Promise<FriendshipWithUsers> {
     return await this.prisma.friend.findMany({
       where: {
-        status: 'ACCEPTED',
+        status: FriendStatus.ACCEPTED,
         OR: [{ requesterId: originId }, { addresseeId: originId }],
       },
       include: friendshipInclude,
     });
   }
 
-  private async findSentPending(originId: string) {
+  private async findSentPending(
+    originId: string,
+  ): Promise<FriendshipWithUsers> {
     return await this.prisma.friend.findMany({
       where: {
         requesterId: originId,
-        status: 'PENDING',
+        status: FriendStatus.PENDING,
       },
+      include: friendshipInclude,
     });
   }
 
@@ -192,9 +192,10 @@ export class RelService {
     return await this.prisma.friend.findMany({
       where: {
         addresseeId: originId,
-        status: 'PENDING',
+        status: FriendStatus.PENDING,
         requesterId: { notIn: blockedIds },
       },
+      include: friendshipInclude,
     });
   }
 
@@ -226,16 +227,10 @@ export class RelService {
 
   async fetchBlocked(originId: string) {
     await this.userService.userExistsOrThrow(originId);
-    return await this.findBlockedUsers(originId);
+    const blocked = await this.findBlockedUsers(originId);
+    return this.buildBlockList(blocked);
   }
 
-  async fetchBlockedList(originId:string)
-  {
-    const blockedRawData = await this.fetchBlocked(originId);
-    const blockedIdList = blockedRawData.map(item => item.blockedId);
-    const blockedList =  await Promise.all(blockedIdList.map(item => this.userService.getUsernameById(item)));
-    return {blockedList};
-  }
   // BLOCK DB ACTIONS
   private async findBlock(blockerId: string, blockedId: string) {
     return await this.prisma.block.findUnique({
@@ -271,15 +266,19 @@ export class RelService {
   private async findBlockedUsers(originId: string) {
     return await this.prisma.block.findMany({
       where: { blockerId: originId },
+      include: blockInclude,
     });
   }
 
   // USER LOOKUP
   private async userChecks(originId: string, targetId: string) {
     await this.userService.userExistsOrThrow(originId);
-    await this.userService.userExistsOrThrow(targetId);
+    const target = await this.userService.userExistsOrThrow(targetId);
     if (originId === targetId) {
       throw new BadRequestException(ErrorMessages.SELF);
+    }
+    if (target.rank === Ranks.PENDING) {
+      throw new BadRequestException(ErrorMessages.TARGET_NOT_FOUND);
     }
   }
 
@@ -290,6 +289,12 @@ export class RelService {
   ): FriendUser[] {
     return list.map((l) => {
       return l.requesterId === originId ? l.addressee : l.requester;
+    });
+  }
+
+  private buildBlockList(list: BlockWithUsers): FriendUser[] {
+    return list.map((l) => {
+      return l.blocked;
     });
   }
 }
