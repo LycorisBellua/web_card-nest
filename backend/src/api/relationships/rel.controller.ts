@@ -85,6 +85,7 @@ export class RelController {
     const user = req['user'] as JwtPayload;
     return await this.relService.fetchReceivedRequests(user.id);
   }
+  
 
   @Get('friend/:targetId')
   async fetchOtherUserFriends(

@@ -85,7 +85,17 @@ export class RelService {
     const friends = this.buildFriendList(originId, accepted);
     return friends.sort((a, b) => a.username.localeCompare(b.username));
   }
-
+  async fetchFriendsList(originId: string) {
+    
+    const RawData = await this.fetchFriends(originId);
+    const FriendIdList = RawData.map(item => item.requesterId !== originId ? item.requesterId : item.addresseeId);
+    const FriendsList = await Promise.all(FriendIdList.map(item => this.userService.getUsernameById(item)));
+    return {FriendsList};
+  }
+  
+  
+  
+  
   async fetchSentRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
     const sent = await this.findSentPending(originId);
@@ -233,6 +243,13 @@ export class RelService {
     return this.buildBlockList(blocked);
   }
 
+  async fetchBlockedList(originId:string)
+  {
+    const blockedRawData = await this.fetchBlocked(originId);
+    const blockedIdList = blockedRawData.map(item => item.blockedId);
+    const blockedList =  await Promise.all(blockedIdList.map(item => this.userService.getUsernameById(item)));
+    return {blockedList};
+  }
   // BLOCK DB ACTIONS
   private async findBlock(blockerId: string, blockedId: string) {
     return await this.prisma.block.findUnique({
