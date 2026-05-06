@@ -19,10 +19,20 @@ type RoundRecord = {
   round: number;
   winnerId: number | null;
   scores: number[];
+  blackCrowns: boolean[];
 };
 
+type CurrentUser = { username: string };
+
 function PlayGame() {
-  const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const parsed: unknown = JSON.parse(localStorage.getItem('user') || 'null');
+  const currentUser: CurrentUser | undefined =
+    parsed &&
+    typeof parsed === 'object' &&
+    'username' in parsed &&
+    typeof parsed.username === 'string'
+      ? { username: parsed.username }
+      : undefined;
   const [started, setStarted] = useState(false);
   const [local, setLocal] = useState(false);
   const [online, setOnline] = useState(false);
@@ -102,6 +112,7 @@ function PlayGame() {
         round: game.turn,
         winnerId: game.winnerId,
         scores: game.players.map((p) => p.score),
+        blackCrowns: game.players.map((p) => p.hasBlackCrown),
       },
     ]);
     const playerCount = game.players.length;
@@ -118,6 +129,7 @@ function PlayGame() {
         round: game.turn,
         winnerId: game.winnerId,
         scores: game.players.map((p) => p.score),
+        blackCrowns: game.players.map((p) => p.hasBlackCrown),
       },
     ]);
     setStarted(false);
@@ -134,7 +146,10 @@ function PlayGame() {
       }, 1500);
       return () => clearTimeout(timer);
     }
-    setShowTransition(false);
+    const timer = setTimeout(() => {
+      setShowTransition(false);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [game]);
 
   return (
@@ -287,9 +302,7 @@ function DisplayRecord({ game, history }: DisplayRecordProps) {
             <tr key={idx}>
               <td>{h.round}</td>
               {h.scores.map((score, sIdx) => (
-                <td key={sIdx}>
-                  {game.players[sIdx].hasBlackCrown ? 'Black Crown' : score}
-                </td>
+                <td key={sIdx}>{h.blackCrowns[sIdx] ? '21 👑​' : score}</td>
               ))}
               <td>{h.winnerId! + 1}</td>
             </tr>

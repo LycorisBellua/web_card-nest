@@ -1,4 +1,4 @@
-import { calculateScore, checkBlackCrown } from './rules';
+import { calculateScore } from './rules';
 import type { Suit, Rank, Player, Card, GameState } from '../logic/types';
 
 // create two decks

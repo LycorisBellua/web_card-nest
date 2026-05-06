@@ -51,11 +51,28 @@ function LogIn() {
           upassword: loginPwd,
         }),
       });
-      const data: LoginResponse = await res.json();
       if (!res.ok) {
         setErrors([`${res.status}: ${res.statusText}`]);
         return;
       }
+      const rawData: unknown = await res.json();
+      if (
+        !rawData ||
+        typeof rawData !== 'object' ||
+        !('access_token' in rawData) ||
+        typeof rawData.access_token !== 'string' ||
+        !('user' in rawData) ||
+        !rawData.user ||
+        typeof rawData.user !== 'object' ||
+        !('id' in rawData.user) ||
+        typeof rawData.user.id !== 'string' ||
+        !('username' in rawData.user) ||
+        typeof rawData.user.username !== 'string'
+      ) {
+        setErrors(['Invalid response']);
+        return;
+      }
+      const data = rawData as LoginResponse;
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
       setMessage('Login success! Redirecting to your profile...');

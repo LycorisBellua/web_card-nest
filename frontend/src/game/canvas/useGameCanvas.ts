@@ -94,12 +94,9 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
     });
   }, [started, game]);
 
-  function getVisiblePoints(
-    playerIdx: number,
-    currentPlayerIdx: number,
-  ): string {
+  function getVisiblePoints(playerIdx: number): string {
     const player = gameRef.current!.players[playerIdx];
-    if (playerIdx == currentPlayerIdx) return `${player.score}`;
+    // if (playerIdx == currentPlayerIdx) return `${player.score}`;
 
     const visibleCards = player.cards.filter((_, i) => i != 1);
     let points = 0;
@@ -118,8 +115,7 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
         points += 10;
       else points += Number(card.rank);
     });
-    if (hasAces && points + 10 <= 21) 
-      return `${points}+ or ${points + 10}+`
+    if (hasAces && points + 10 <= 21) return `${points}+ or ${points + 10}+`;
     return `${points}+`;
   }
 
@@ -160,16 +156,15 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
           ? `#${playerIdx + 1} ${player.username}`
           : `#${playerIdx + 1} Guest`;
         // accroding to gamestatus to get only visible points or total score
-        let label = ""
-        const crown = player.hasBlackCrown ? "👑​" : ""
-        const isfinished = gameRef.current!.gameStatus === "finished"
+        let label = '';
+        const crown = player.hasBlackCrown ? '👑​' : '';
+        const isfinished = gameRef.current!.gameStatus === 'finished';
         if (isfinished) {
-          label = `${playerName} : ${player.score} ${crown}`
-        } else if (isCurrent) {
           label = `${playerName} : ${player.score} ${crown}`;
-        } else
-          label = `${playerName} : ${getVisiblePoints(playerIdx, gameRef.current!.currentPlayerIdx)}`;
-          
+        } else if (isCurrent) {
+          label = `${playerName} : ${getVisiblePoints(playerIdx)} ( ${player.score} ${crown})`;
+        } else label = `${playerName} : ${getVisiblePoints(playerIdx)}`;
+
         ctx.save();
         ctx.font = 'bold 16px Arial';
         ctx.fillStyle = isCurrent ? '#FFD700' : 'rgba(255,255,255,0.8)';
@@ -203,7 +198,10 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = '#c0110f';
           ctx.fillText('BUST', labelX, labelY + 20);
-        } else if (gameRef.current!.players[playerIdx].hasStood) {
+        } else if (
+          gameRef.current!.gameStatus !== 'finished' &&
+          gameRef.current!.players[playerIdx].hasStood
+        ) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = 'rgba(255,255,255,0.8)';
           ctx.fillText('STAND', labelX, labelY + 20);
@@ -225,7 +223,7 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
     }
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [started]);
+  }, [game, started]);
 
   useEffect(() => {
     if (!game) return;
