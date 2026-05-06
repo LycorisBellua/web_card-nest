@@ -86,6 +86,14 @@ export class RelController {
     return await this.relService.fetchReceivedRequests(user.id);
   }
 
+  @Get('friend/:targetId')
+  async fetchOtherUserFriends(
+    @Req() req: ExpressRequest,
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ) {
+    return await this.relService.fetchFriends(targetId);
+  }
+
   // BLOCK MANAGEMENT
   @Post('block')
   async blockUser(@Req() req: ExpressRequest, @Body() relUuidDto: RelUuidDto) {

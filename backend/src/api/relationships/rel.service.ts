@@ -82,7 +82,8 @@ export class RelService {
   async fetchFriends(originId: string) {
     await this.userService.userExistsOrThrow(originId);
     const accepted: FriendshipWithUsers = await this.findAccepted(originId);
-    return this.buildFriendList(originId, accepted);
+    const friends = this.buildFriendList(originId, accepted);
+    return friends.sort((a, b) => a.username.localeCompare(b.username));
   }
 
   async fetchSentRequests(originId: string) {
@@ -137,7 +138,6 @@ export class RelService {
         requesterId: originId,
         addresseeId: targetId,
       },
-      include: friendshipInclude,
     });
   }
 
@@ -183,6 +183,7 @@ export class RelService {
         status: FriendStatus.PENDING,
       },
       include: friendshipInclude,
+      orderBy: { addressee: { username: 'asc' } },
     });
   }
 
@@ -196,6 +197,7 @@ export class RelService {
         requesterId: { notIn: blockedIds },
       },
       include: friendshipInclude,
+      orderBy: { requester: { username: 'asc' } },
     });
   }
 
@@ -267,6 +269,7 @@ export class RelService {
     return await this.prisma.block.findMany({
       where: { blockerId: originId },
       include: blockInclude,
+      orderBy: { blocked: { username: 'asc' } },
     });
   }
 
