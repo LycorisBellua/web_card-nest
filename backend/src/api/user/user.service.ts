@@ -208,6 +208,7 @@ export class UserService {
     if (await this.emailAddressIsTaken(createUserDto.email_unverified)) {
       throw new ConflictException(ErrorMessages.EMAIL_USED);
     }
+    const unhashedPassword = createUserDto.password;
     createUserDto.password = await createHash(createUserDto.password);
     const token = getToken();
     const timeout = getVerificationTimeout();
@@ -216,6 +217,7 @@ export class UserService {
       await createHash(token),
       timeout,
     );
+    createUserDto.password = unhashedPassword;
     const found = await this.userExistsOrThrow(created.id);
     if (found.email_unverified && found.verifyToken) {
       await this.userEmailsService.sendVerificationEmail(
