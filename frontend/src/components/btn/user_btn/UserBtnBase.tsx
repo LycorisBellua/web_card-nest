@@ -37,7 +37,7 @@ function UserBtnBase({
     <Btn onClick={onClick}>
       <Avatar src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
       <Username rank={user.rank} value={user.username} />
-      <RankBadge rank={user.rank}>{user.rank}</RankBadge>
+      <RankBadge rank={user.rank} />
     </Btn>
   );
 }

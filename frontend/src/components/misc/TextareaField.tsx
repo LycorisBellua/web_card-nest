@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 /*
-  <InputField
+  <TextareaField
     id="email"
     type="text"
     name="email"
@@ -15,6 +15,8 @@ import styled from 'styled-components';
     helpers={['Please enter a valid email address']}
     isError={true}
     autoComplete="off"
+    rows={4}
+    wrap="soft"
   />
 */
 
@@ -34,7 +36,7 @@ const Label = styled.label`
   text-transform: uppercase;
 `;
 
-const Field = styled.input<{ $isError: boolean }>`
+const Field = styled.textarea<{ $isError: boolean }>`
   width: 100%;
   padding: 10px 13px;
   border: 1px solid #50382a;
@@ -73,26 +75,28 @@ const Helper = styled.span<{ $isError: boolean }>`
   color: ${({ $isError }) => ($isError ? '#d07070' : '#7a5c42')};
 `;
 
-function InputField({
+function TextareaField({
   id,
   value,
   onChange,
-  type,
   name,
   placeholder,
   autoComplete,
   label,
+  rows,
+  wrap,
   helpers,
   isError = false,
 }: {
   id: string;
   value: string;
-  onChange: (val: React.ChangeEvent<HTMLInputElement>) => void;
-  type: string;
+  onChange: (val: React.ChangeEvent<HTMLTextAreaElement>) => void;
   name: string;
   placeholder: string;
   autoComplete?: string;
   label: string;
+  rows: number;
+  wrap: string;
   helpers?: string[];
   isError?: boolean;
 }) {
@@ -102,12 +106,13 @@ function InputField({
       <Field
         $isError={isError}
         id={id}
-        type={type}
         name={name}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e)}
         autoComplete={autoComplete ?? 'off'}
+        rows={rows}
+        wrap={wrap}
       />
       {helpers?.map((e) => (
         <Helper key={e} $isError={isError}>
@@ -118,4 +123,4 @@ function InputField({
   );
 }
 
-export default InputField;
+export default TextareaField;

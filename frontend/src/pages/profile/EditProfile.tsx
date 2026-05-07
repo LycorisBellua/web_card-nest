@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useUser } from 'context/useUser';
 import type { User } from 'context/Types';
 import {
@@ -15,57 +15,61 @@ import {
   validateAvatar,
 } from 'functions/UserValidation';
 import BtnDefault from 'components/btn/BtnDefault';
+import BtnDisabled from 'components/btn/BtnDisabled';
 import { AvatarBig } from 'components/btn/user_btn/Avatar';
-
-type PendingChanges = {
-  avatar?: File | '';
-  username?: string;
-  description?: string;
-  email?: string;
-  password?: string;
-};
+import InputField from 'components/misc/InputField';
+import TextareaField from 'components/misc/TextareaField';
+import styled from 'styled-components';
 
 function EditProfile({ user }: { user: NonNullable<User> }) {
   const { setUser } = useUser();
-  const [changes, setChanges] = useState<PendingChanges>({});
   const [globalErrors, setGlobalErrors] = useState<string[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
 
-  function setChange<K extends keyof PendingChanges>(
-    key: K,
-    value: PendingChanges[K],
-  ) {
-    setChanges((prev) => ({ ...prev, [key]: value }));
-  }
+  const [avatar, setAvatar] = useState<File | '' | undefined>(undefined);
+  const [username, setUsername] = useState('');
+  const [description, setDescription] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const hasPendingChanges =
+    avatar !== undefined ||
+    username !== '' ||
+    description !== '' ||
+    email !== '' ||
+    password !== '';
 
   async function handleSave() {
+    if (!hasPendingChanges || isSaving) return;
+
     setGlobalErrors([]);
     setSuccessMessage('');
+    setIsSaving(true);
+
     const errors: string[] = [];
 
-    const avatar = changes.avatar;
-    const username =
-      changes.username !== undefined
-        ? sanitizeUsername(changes.username)
-        : undefined;
-    const description =
-      changes.description !== undefined
-        ? sanitizeDescription(changes.description)
-        : undefined;
-    const email =
-      changes.email !== undefined ? sanitizeEmail(changes.email) : undefined;
-    const password = changes.password;
+    const sanitizedUsername = username !== '' ? sanitizeUsername(username) : '';
+    const sanitizedDescription =
+      description !== '' ? sanitizeDescription(description) : '';
+    const sanitizedEmail = email !== '' ? sanitizeEmail(email) : '';
+    const sanitizedPassword = password !== '' ? sanitizePassword(password) : '';
 
     if (avatar instanceof File) errors.push(...(await validateAvatar(avatar)));
-    if (username !== undefined) errors.push(...validateUsername(username));
-    if (description !== undefined)
-      errors.push(...validateDescription(description));
-    if (email !== undefined) errors.push(...validateEmail(email));
-    if (password !== undefined)
-      errors.push(...validatePassword(password, user.username, user.email));
+    if (sanitizedUsername !== '')
+      errors.push(...validateUsername(sanitizedUsername));
+    if (sanitizedDescription !== '')
+      errors.push(...validateDescription(sanitizedDescription));
+    if (sanitizedEmail !== '') errors.push(...validateEmail(sanitizedEmail));
+    if (sanitizedPassword !== '')
+      errors.push(
+        ...validatePassword(sanitizedPassword, user.username, user.email),
+      );
 
     if (errors.length > 0) {
       setGlobalErrors(errors);
+      setIsSaving(false);
       return;
     }
 
@@ -86,9 +90,9 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         });
       }
     }
-    if (username !== undefined) body.username = username;
-    if (description !== undefined) body.description = description;
-    if (email !== undefined) body.unverifiedEmail = email;
+    if (sanitizedUsername !== '') body.username = sanitizedUsername;
+    if (sanitizedDescription !== '') body.description = sanitizedDescription;
+    if (sanitizedEmail !== '') body.unverifiedEmail = sanitizedEmail;
 
     if (Object.keys(body).length > 0) {
       requests.push(
@@ -100,12 +104,12 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
       );
     }
 
-    if (password !== undefined) {
+    if (sanitizedPassword !== '') {
       requests.push(
         fetch(`/api/users/${user.id}/password`, {
           method: 'PATCH',
           headers: { 'Content-type': 'application/json' },
-          body: JSON.stringify({ password }),
+          body: JSON.stringify({ password: sanitizedPassword }),
         }),
       );
     }
@@ -114,6 +118,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     const failed = responses.filter((r) => !r.ok);
     if (failed.length > 0) {
       setGlobalErrors(failed.map((r) => `Error ${r.status}: ${r.statusText}`));
+      setIsSaving(false);
       return;
     }
 
@@ -122,88 +127,57 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
       setUser((old) => (old ? { ...old, ...updated } : null));
     }
 
-    setChanges({});
+    setAvatar(undefined);
+    setUsername('');
+    setDescription('');
+    setEmail('');
+    setPassword('');
+    setResetKey((k) => k + 1);
     setSuccessMessage('Changes saved successfully.');
+    setIsSaving(false);
   }
 
-  const hasPendingChanges = Object.keys(changes).length > 0;
+  const SaveButton = hasPendingChanges && !isSaving ? BtnDefault : BtnDisabled;
 
   return (
     <div>
       <h2>Edit Profile</h2>
       <UpdateAvatar
+        key={`avatar-${resetKey}`}
         user={user}
-        pendingAvatar={changes.avatar}
-        onChange={(file) => setChange('avatar', file)}
+        pendingAvatar={avatar}
+        onChange={setAvatar}
       />
       <div className="main">
         <UpdateUsername
+          key={`username-${resetKey}`}
           user={user}
-          pendingValue={changes.username}
-          onChange={(val) => setChange('username', val)}
+          onChange={setUsername}
         />
         <UpdateDescription
+          key={`description-${resetKey}`}
           user={user}
-          pendingValue={changes.description}
-          onChange={(val) => setChange('description', val)}
+          onChange={setDescription}
         />
         <UpdateEmail
+          key={`email-${resetKey}`}
           user={user}
-          pendingValue={changes.email}
-          onChange={(val) => setChange('email', val)}
+          onChange={setEmail}
         />
-        <UpdatePassword
-          user={user}
-          onChange={(val) => setChange('password', val)}
-        />
-        <PendingChangesSummary changes={changes} />
+        <UpdatePassword key={`password-${resetKey}`} onChange={setPassword} />
         {globalErrors.map((err, i) => (
           <div key={i}>{err}</div>
         ))}
         {successMessage && <p>{successMessage}</p>}
-        {hasPendingChanges && (
-          <BtnDefault onClick={() => void handleSave()}>Save</BtnDefault>
-        )}
+        <SaveButton onClick={() => void handleSave()}>Save</SaveButton>
       </div>
     </div>
   );
 }
 
-function PendingChangesSummary({ changes }: { changes: PendingChanges }) {
-  const entries: { label: string; value: string }[] = [];
-
-  if (changes.avatar !== undefined)
-    entries.push({
-      label: 'Avatar',
-      value: changes.avatar === '' ? 'Removed' : changes.avatar.name,
-    });
-  if (changes.username !== undefined)
-    entries.push({ label: 'Username', value: changes.username });
-  if (changes.description !== undefined)
-    entries.push({
-      label: 'Description',
-      value: changes.description || '(empty)',
-    });
-  if (changes.email !== undefined)
-    entries.push({ label: 'Email', value: changes.email });
-  if (changes.password !== undefined)
-    entries.push({ label: 'Password', value: '••••••••' });
-
-  if (entries.length === 0) return null;
-
-  return (
-    <div>
-      <p>Pending changes:</p>
-      <ul>
-        {entries.map(({ label, value }) => (
-          <li key={label}>
-            <strong>{label}:</strong> {value}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+const HiddenAvatarInput = styled.input`
+  display: none;
+`;
 
 function UpdateAvatar({
   user,
@@ -216,15 +190,14 @@ function UpdateAvatar({
 }) {
   const imgInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  useEffect(() => {
-    if (pendingAvatar instanceof File) {
-      const url = URL.createObjectURL(pendingAvatar);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-    setPreviewUrl(null);
+  const previewUrl = useMemo(() => {
+    if (!(pendingAvatar instanceof File)) return null;
+    return URL.createObjectURL(pendingAvatar);
   }, [pendingAvatar]);
+
+  useEffect(() => {
+    if (previewUrl) return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
   const avatarSrc =
     pendingAvatar === ''
@@ -235,17 +208,21 @@ function UpdateAvatar({
 
   return (
     <div>
-      <AvatarBig src={avatarSrc} rank={user.rank} isOnline={user.isOnline} />
+      <AvatarBig
+        src={avatarSrc ?? ''}
+        rank={user.rank}
+        isOnline={user.isOnline}
+      />
       <div className="btn">
         <BtnDefault onClick={() => imgInputRef.current?.click()}>
           Edit
         </BtnDefault>
         <BtnDefault onClick={() => onChange('')}>Remove</BtnDefault>
       </div>
-      <input
-        name="avatar"
-        id="avatar"
+      <HiddenAvatarInput
         type="file"
+        id="avatar"
+        name="avatar"
         accept=".png"
         ref={imgInputRef}
         onChange={(e) => {
@@ -262,228 +239,143 @@ function UpdateAvatar({
 
 function UpdateUsername({
   user,
-  pendingValue,
   onChange,
 }: {
   user: NonNullable<User>;
-  pendingValue: string | undefined;
   onChange: (v: string) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState(pendingValue ?? '');
+  const [value, setValue] = useState('');
 
-  useEffect(() => {
-    if (edit) inputRef.current?.focus();
-  }, [edit]);
-
-  const displayed = edit ? value : (pendingValue ?? user.username);
+  function updateValue(e: React.ChangeEvent<HTMLInputElement>) {
+    setValue(e.target.value);
+    onChange(e.target.value);
+  }
 
   return (
-    <div>
-      <div>
-        <p>
-          Username:{' '}
-          {edit ? (
-            <input
-              name="username"
-              id="username"
-              type="text"
-              ref={inputRef}
-              value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-                onChange(e.target.value);
-              }}
-              autoComplete="off"
-            />
-          ) : (
-            displayed
-          )}
-        </p>
-        <BtnDefault onClick={() => setEdit((e) => !e)}>
-          {edit ? 'Done' : 'Edit'}
-        </BtnDefault>
-      </div>
-    </div>
+    <InputField
+      type="text"
+      id="username"
+      name="username"
+      label="New username"
+      placeholder={user.username}
+      value={value}
+      onChange={(e) => updateValue(e)}
+      autoComplete="off"
+    />
   );
 }
 
 function UpdateDescription({
   user,
-  pendingValue,
   onChange,
 }: {
   user: NonNullable<User>;
-  pendingValue: string | undefined;
   onChange: (v: string) => void;
 }) {
-  const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState(pendingValue ?? '');
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [value, setValue] = useState('');
 
-  useEffect(() => {
-    if (edit) inputRef.current?.focus();
-  }, [edit]);
-
-  const displayed = edit ? value : (pendingValue ?? user.description);
+  function updateValue(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setValue(e.target.value);
+    onChange(e.target.value);
+  }
 
   return (
-    <>
-      <div>
-        <p>Description:</p>
-        <BtnDefault onClick={() => setEdit((e) => !e)}>
-          {edit ? 'Done' : 'Edit'}
-        </BtnDefault>
-      </div>
-      <div>
-        {edit ? (
-          <>
-            <textarea
-              name="user-description"
-              id="user-description"
-              ref={inputRef}
-              rows={4}
-              wrap="soft"
-              value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-                onChange(e.target.value);
-              }}
-            />
-            <p>{value.length} / 200</p>
-          </>
-        ) : (
-          <p>{displayed}</p>
-        )}
-      </div>
-    </>
+    <div>
+      <TextareaField
+        id="user-description"
+        name="user-description"
+        label="New description"
+        placeholder={user.description}
+        rows={4}
+        wrap="soft"
+        value={value ?? ''}
+        onChange={(e) => updateValue(e)}
+      />
+      <p>{value.length} / 200</p>
+    </div>
   );
 }
 
 function UpdateEmail({
   user,
-  pendingValue,
-  onChange,
-}: {
-  user: NonNullable<User>;
-  pendingValue: string | undefined;
-  onChange: (v: string) => void;
-}) {
-  const [edit, setEdit] = useState(false);
-  const [value, setValue] = useState(pendingValue ?? '');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (edit) inputRef.current?.focus();
-  }, [edit]);
-
-  const displayed = edit ? value : (pendingValue ?? user.email);
-
-  return (
-    <div>
-      <div>
-        <p>
-          Email:{' '}
-          {edit ? (
-            <input
-              name="email"
-              id="email"
-              type="email"
-              value={value}
-              ref={inputRef}
-              onChange={(e) => {
-                setValue(e.target.value);
-                onChange(e.target.value);
-              }}
-              autoComplete="off"
-            />
-          ) : (
-            displayed
-          )}
-        </p>
-        <BtnDefault onClick={() => setEdit((e) => !e)}>
-          {edit ? 'Done' : 'Edit'}
-        </BtnDefault>
-      </div>
-    </div>
-  );
-}
-
-function UpdatePassword({
-  user,
   onChange,
 }: {
   user: NonNullable<User>;
   onChange: (v: string) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [edit, setEdit] = useState(false);
   const [value, setValue] = useState('');
-  const [confirmValue, setConfirmValue] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (edit) inputRef.current?.focus();
-  }, [edit]);
-
-  function handleDone() {
-    if (!edit) {
-      setEdit(true);
-      return;
-    }
-
-    setErrors([]);
-    const localErrors: string[] = [];
-    const sanitized = sanitizePassword(value);
-    localErrors.push(...validatePassword(sanitized, user.username, user.email));
-    if (value !== confirmValue) localErrors.push("Passwords don't match.");
-    if (localErrors.length > 0) {
-      setErrors(localErrors);
-      return;
-    }
-
-    onChange(sanitized);
-    setEdit(false);
+  function updateValue(e: React.ChangeEvent<HTMLInputElement>) {
+    setValue(e.target.value);
+    onChange(e.target.value);
   }
 
   return (
-    <div>
-      <div>
-        <p>Password: ••••••••</p>
-        <BtnDefault onClick={handleDone}>{edit ? 'Done' : 'Edit'}</BtnDefault>
-      </div>
-      {edit && (
-        <div>
-          <div>
-            <label htmlFor="new-password">New password: </label>
-            <input
-              name="new-password"
-              id="new-password"
-              type="password"
-              ref={inputRef}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              autoComplete="new-password"
-            />
-          </div>
-          <div>
-            <label htmlFor="new-password-conf">Confirm: </label>
-            <input
-              name="new-password-conf"
-              id="new-password-conf"
-              type="password"
-              value={confirmValue}
-              onChange={(e) => setConfirmValue(e.target.value)}
-              autoComplete="new-password"
-            />
-          </div>
-          {errors.map((err, i) => (
-            <div key={i}>{err}</div>
-          ))}
-        </div>
-      )}
-    </div>
+    <InputField
+      type="email"
+      id="email"
+      name="email"
+      label="New email"
+      placeholder={user.email}
+      value={value ?? ''}
+      onChange={(e) => updateValue(e)}
+      autoComplete="off"
+    />
+  );
+}
+
+function UpdatePassword({ onChange }: { onChange: (v: string) => void }) {
+  const [value, setValue] = useState('');
+  const [confirmValue, setConfirmValue] = useState('');
+  const [confirmError, setConfirmError] = useState('');
+
+  function onChange1(e: React.ChangeEvent<HTMLInputElement>) {
+    const newValue: string = e.target.value;
+    setValue(newValue);
+    if (confirmValue !== '' && newValue !== confirmValue) {
+      setConfirmError("Passwords don't match.");
+    } else {
+      setConfirmError('');
+    }
+    onChange(newValue !== '' && newValue === confirmValue ? newValue : '');
+  }
+
+  function onChange2(e: React.ChangeEvent<HTMLInputElement>) {
+    const newConfirm: string = e.target.value;
+    setConfirmValue(newConfirm);
+    if (newConfirm !== '' && value !== newConfirm) {
+      setConfirmError("Passwords don't match.");
+      onChange('');
+    } else {
+      setConfirmError('');
+      onChange(value !== '' && value === newConfirm ? value : '');
+    }
+  }
+
+  return (
+    <>
+      <InputField
+        type="password"
+        id="new-password"
+        name="new-password"
+        label="New password"
+        placeholder="••••••••"
+        value={value ?? ''}
+        onChange={(e) => onChange1(e)}
+        autoComplete="new-password"
+      />
+      <InputField
+        type="password"
+        id="new-password-conf"
+        name="new-password-conf"
+        label="Confirm new password"
+        placeholder="••••••••"
+        value={confirmValue ?? ''}
+        onChange={(e) => onChange2(e)}
+        autoComplete="new-password"
+        helpers={[confirmError]}
+      />
+    </>
   );
 }
 

@@ -131,7 +131,7 @@ function ChatMsg({ msg }: { msg: Msg }) {
                 <Username rank={rank} value={username} />
               </Link>
             )}
-            <RankBadge rank={rank}>{rank}</RankBadge>
+            <RankBadge rank={rank} />
           </NameWrap>
           <Time>{GetTime(msg.created)}</Time>
         </Meta>

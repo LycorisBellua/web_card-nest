@@ -54,6 +54,15 @@ const GlobalStyle = createGlobalStyle`
     width: fit-content;
     color: #faf3f2;
   }
+
+  ul {
+    list-style-type: none;
+  }
+
+  ul > li:before {
+    content: '-';
+	padding-right: 4px;
+  }
 `;
 
 export default GlobalStyle;
