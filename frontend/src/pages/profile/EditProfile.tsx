@@ -21,9 +21,28 @@ import InputField from 'components/misc/InputField';
 import TextareaField from 'components/misc/TextareaField';
 import styled from 'styled-components';
 
+type FieldErrors = {
+  avatar: string[];
+  username: string[];
+  description: string[];
+  email: string[];
+  password: string[];
+  server: string[];
+};
+
+const emptyFieldErrors = (): FieldErrors => ({
+  avatar: [],
+  username: [],
+  description: [],
+  email: [],
+  password: [],
+  server: [],
+});
+
 function EditProfile({ user }: { user: NonNullable<User> }) {
   const { setUser } = useUser();
-  const [globalErrors, setGlobalErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] =
+    useState<FieldErrors>(emptyFieldErrors());
   const [successMessage, setSuccessMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [resetKey, setResetKey] = useState(0);
@@ -44,11 +63,9 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
   async function handleSave() {
     if (!hasPendingChanges || isSaving) return;
 
-    setGlobalErrors([]);
+    setFieldErrors(emptyFieldErrors());
     setSuccessMessage('');
     setIsSaving(true);
-
-    const errors: string[] = [];
 
     const sanitizedUsername = username !== '' ? sanitizeUsername(username) : '';
     const sanitizedDescription =
@@ -56,19 +73,23 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     const sanitizedEmail = email !== '' ? sanitizeEmail(email) : '';
     const sanitizedPassword = password !== '' ? sanitizePassword(password) : '';
 
-    if (avatar instanceof File) errors.push(...(await validateAvatar(avatar)));
+    const nextErrors: FieldErrors = emptyFieldErrors();
+    if (avatar instanceof File)
+      nextErrors.avatar.push(...(await validateAvatar(avatar)));
     if (sanitizedUsername !== '')
-      errors.push(...validateUsername(sanitizedUsername));
+      nextErrors.username.push(...validateUsername(sanitizedUsername));
     if (sanitizedDescription !== '')
-      errors.push(...validateDescription(sanitizedDescription));
-    if (sanitizedEmail !== '') errors.push(...validateEmail(sanitizedEmail));
+      nextErrors.description.push(...validateDescription(sanitizedDescription));
+    if (sanitizedEmail !== '')
+      nextErrors.email.push(...validateEmail(sanitizedEmail));
     if (sanitizedPassword !== '')
-      errors.push(
+      nextErrors.password.push(
         ...validatePassword(sanitizedPassword, user.username, user.email),
       );
 
-    if (errors.length > 0) {
-      setGlobalErrors(errors);
+    const hasFieldErrors = Object.values(nextErrors).some((e) => e.length > 0);
+    if (hasFieldErrors) {
+      setFieldErrors(nextErrors);
       setIsSaving(false);
       return;
     }
@@ -117,7 +138,10 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     const responses = await Promise.all(requests);
     const failed = responses.filter((r) => !r.ok);
     if (failed.length > 0) {
-      setGlobalErrors(failed.map((r) => `Error ${r.status}: ${r.statusText}`));
+      setFieldErrors((prev) => ({
+        ...prev,
+        server: failed.map((r) => `Error ${r.status}: ${r.statusText}`),
+      }));
       setIsSaving(false);
       return;
     }
@@ -147,25 +171,33 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         user={user}
         pendingAvatar={avatar}
         onChange={setAvatar}
+        errors={fieldErrors.avatar}
       />
       <div className="main">
         <UpdateUsername
           key={`username-${resetKey}`}
           user={user}
           onChange={setUsername}
+          errors={fieldErrors.username}
         />
         <UpdateDescription
           key={`description-${resetKey}`}
           user={user}
           onChange={setDescription}
+          errors={fieldErrors.description}
         />
         <UpdateEmail
           key={`email-${resetKey}`}
           user={user}
           onChange={setEmail}
+          errors={fieldErrors.email}
         />
-        <UpdatePassword key={`password-${resetKey}`} onChange={setPassword} />
-        {globalErrors.map((err, i) => (
+        <UpdatePassword
+          key={`password-${resetKey}`}
+          onChange={setPassword}
+          errors={fieldErrors.password}
+        />
+        {fieldErrors.server.map((err, i) => (
           <div key={i}>{err}</div>
         ))}
         {successMessage && <p>{successMessage}</p>}
@@ -183,10 +215,12 @@ function UpdateAvatar({
   user,
   pendingAvatar,
   onChange,
+  errors,
 }: {
   user: NonNullable<User>;
   pendingAvatar: File | '' | undefined;
   onChange: (f: File | '') => void;
+  errors: string[];
 }) {
   const imgInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -219,6 +253,9 @@ function UpdateAvatar({
         </BtnDefault>
         <BtnDefault onClick={() => onChange('')}>Remove</BtnDefault>
       </div>
+      {errors.map((err) => (
+        <p key={err}>{err}</p>
+      ))}
       <HiddenAvatarInput
         type="file"
         id="avatar"
@@ -240,9 +277,11 @@ function UpdateAvatar({
 function UpdateUsername({
   user,
   onChange,
+  errors,
 }: {
   user: NonNullable<User>;
   onChange: (v: string) => void;
+  errors: string[];
 }) {
   const [value, setValue] = useState('');
 
@@ -261,6 +300,8 @@ function UpdateUsername({
       value={value}
       onChange={(e) => updateValue(e)}
       autoComplete="off"
+      helpers={errors}
+      isError={errors.length > 0}
     />
   );
 }
@@ -268,9 +309,11 @@ function UpdateUsername({
 function UpdateDescription({
   user,
   onChange,
+  errors,
 }: {
   user: NonNullable<User>;
   onChange: (v: string) => void;
+  errors: string[];
 }) {
   const [value, setValue] = useState('');
 
@@ -290,6 +333,8 @@ function UpdateDescription({
         wrap="soft"
         value={value ?? ''}
         onChange={(e) => updateValue(e)}
+        helpers={errors}
+        isError={errors.length > 0}
       />
       <p>{value.length} / 200</p>
     </div>
@@ -299,9 +344,11 @@ function UpdateDescription({
 function UpdateEmail({
   user,
   onChange,
+  errors,
 }: {
   user: NonNullable<User>;
   onChange: (v: string) => void;
+  errors: string[];
 }) {
   const [value, setValue] = useState('');
 
@@ -320,11 +367,19 @@ function UpdateEmail({
       value={value ?? ''}
       onChange={(e) => updateValue(e)}
       autoComplete="off"
+      helpers={errors}
+      isError={errors.length > 0}
     />
   );
 }
 
-function UpdatePassword({ onChange }: { onChange: (v: string) => void }) {
+function UpdatePassword({
+  onChange,
+  errors,
+}: {
+  onChange: (v: string) => void;
+  errors: string[];
+}) {
   const [value, setValue] = useState('');
   const [confirmValue, setConfirmValue] = useState('');
   const [confirmError, setConfirmError] = useState('');
@@ -363,6 +418,8 @@ function UpdatePassword({ onChange }: { onChange: (v: string) => void }) {
         value={value ?? ''}
         onChange={(e) => onChange1(e)}
         autoComplete="new-password"
+        helpers={errors}
+        isError={errors.length > 0}
       />
       <InputField
         type="password"
@@ -373,6 +430,7 @@ function UpdatePassword({ onChange }: { onChange: (v: string) => void }) {
         value={confirmValue ?? ''}
         onChange={(e) => onChange2(e)}
         autoComplete="new-password"
+        isError={!!confirmError.length}
         helpers={[confirmError]}
       />
     </>

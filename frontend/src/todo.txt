@@ -1,6 +1,4 @@
-- In EditProfile, pass the errors as arguments to InputField.
-- Use InputField in Auth.
-- Check the CSS of all pages to see if it's readable.
+- Use InputField in Auth, ResetPassword and ResetPasswordSecond.
 
 - Tackle the remaining of the backlog notes to see what can be removed, and 
 what needs to be done on both the frontend and backend. Tackle the TODO in 
