@@ -90,7 +90,7 @@ function InputField({
   onChange: (val: React.ChangeEvent<HTMLInputElement>) => void;
   type: string;
   name: string;
-  placeholder: string;
+  placeholder?: string;
   autoComplete?: string;
   label: string;
   helpers?: string[];

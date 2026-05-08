@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ScrollablePage } from 'components/general/Scrollable';
-import BtnDefault from 'components/btn/BtnDefault';
 import { sanitizePassword } from 'functions/UserSanitation';
 import { validatePassword } from 'functions/UserValidation';
+import { ScrollablePage } from 'components/general/Scrollable';
+import BtnDefault from 'components/btn/BtnDefault';
+import InputField from 'components/misc/InputField';
 
 function ResetPasswordSecond() {
   const [searchParams] = useSearchParams();
@@ -90,44 +91,38 @@ function ResetPasswordSecond() {
   return (
     <ScrollablePage>
       <h1>Reset a new password</h1>
-      <p>Email: {email}</p>
+      <p>Email: {email.length ? email : '[Error]'}</p>
       <form
         onSubmit={(e) => {
           void handleSubmit(e);
         }}
       >
-        <div>
-          <label htmlFor="new-password">Please enter a new password</label>
-          <input
-            id="new-password"
-            name="new-password"
-            type="password"
-            autoComplete="new-password"
-            value={uPwd}
-            onChange={(e) => setUPwd(e.target.value)}
-          />
-          <p>
-            You need a minimum of 8 characters, including one uppercase, one
-            lowercase, one digit and one special character
-          </p>
-        </div>
-        <div>
-          <label htmlFor="confirm-password">Confirm password</label>
-          <input
-            id="confirm-password"
-            name="confirm-password"
-            type="password"
-            value={uPwdConfirm}
-            onChange={(e) => setUPwdConfirm(e.target.value)}
-          />
-        </div>
-        <div>
-          {errors.length > 0 && errors.map((err, i) => <p key={i}>{err}</p>)}
-        </div>
+        <InputField
+          id="new-password"
+          type="password"
+          name="new-password"
+          label="New password"
+          autoComplete="new-password"
+          value={uPwd}
+          onChange={(e) => setUPwd(e.target.value)}
+          helpers={[
+            'You need a minimum of 8 characters, including one uppercase, one lowercase, one digit and one special character.',
+          ]}
+          isError={!!errors.length}
+        />
+        <InputField
+          id="confirm-password"
+          type="password"
+          name="confirm-password"
+          label="Confirm new password"
+          value={uPwdConfirm}
+          onChange={(e) => setUPwdConfirm(e.target.value)}
+          helpers={errors.length > 0 ? errors : [message]}
+          isError={!!errors.length}
+        />
         <BtnDefault>Confirm</BtnDefault>
       </form>
-      {message && <p>{message}</p>}
-      <Link to="/auth">Go back to login page 👈</Link>
+      <Link to="/auth">Go back to login page</Link>
     </ScrollablePage>
   );
 }

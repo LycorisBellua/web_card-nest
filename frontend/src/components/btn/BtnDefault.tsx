@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 const BtnDefault = styled.button`
+  margin: 2px;
   padding: 9px 18px;
   cursor: pointer;
   border-radius: 10px;

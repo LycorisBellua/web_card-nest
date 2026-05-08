@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BtnDefault from 'components/btn/BtnDefault';
 import {
   sanitizeUsername,
   sanitizeEmail,
@@ -11,6 +10,8 @@ import {
   validateEmail,
   validatePassword,
 } from 'functions/UserValidation';
+import BtnDefault from 'components/btn/BtnDefault';
+import InputField from 'components/misc/InputField';
 
 function SignUp() {
   const [uname, setUname] = useState('');
@@ -77,54 +78,47 @@ function SignUp() {
           void handlerSubmit(e);
         }}
       >
-        <div>
-          <label htmlFor="u-name">Username</label>
-          <input
-            id="u-name"
-            name="u-name"
-            type="text"
-            value={uname}
-            onChange={(e) => setUname(e.target.value)}
-          />
-        </div>
-        <div>
-          <label htmlFor="u-email">Email</label>
-          <input
-            id="u-email"
-            name="u-email"
-            type="email"
-            value={uemail}
-            onChange={(e) => setUEmail(e.target.value)}
-          />
-        </div>
-        <div>
-          <label htmlFor="u-pwd">Password</label>
-          <input
-            id="u-pwd"
-            name="u-pwd"
-            type="password"
-            value={upassword}
-            onChange={(e) => setUPassword(e.target.value)}
-          />
-          <p>
-            The password needs a minimum of 8 characters, including one
-            uppercase, one lowercase, one digit and one special character.
-          </p>
-        </div>
-        <div>
-          <label htmlFor="u-pwd-cfm">Confirm your password</label>
-          <input
-            id="u-pwd-cfm"
-            type="password"
-            value={upwdConfirm}
-            onChange={(e) => setUPwdConfirm(e.target.value)}
-          />
-        </div>
-        <div>
-          {errors.length > 0 && errors.map((err, i) => <p key={i}>{err}</p>)}
-        </div>
+        <InputField
+          id="u-name"
+          type="text"
+          name="u-name"
+          label="Username"
+          value={uname}
+          onChange={(e) => setUname(e.target.value)}
+          isError={!!errors.length}
+        />
+        <InputField
+          id="u-email"
+          type="email"
+          name="u-email"
+          label="Email"
+          value={uemail}
+          onChange={(e) => setUEmail(e.target.value)}
+          isError={!!errors.length}
+        />
+        <InputField
+          id="u-pwd"
+          type="password"
+          name="u-pwd"
+          label="Password"
+          value={upassword}
+          onChange={(e) => setUPassword(e.target.value)}
+          helpers={[
+            'The password needs a minimum of 8 characters, including one uppercase, one lowercase, one digit and one special character.',
+          ]}
+          isError={!!errors.length}
+        />
+        <InputField
+          id="u-pwd-cfm"
+          type="password"
+          name="u-pwd-cfm"
+          label="Confirm password"
+          value={upwdConfirm}
+          onChange={(e) => setUPwdConfirm(e.target.value)}
+          helpers={errors.length > 0 ? errors : [message]}
+          isError={!!errors.length}
+        />
         <BtnDefault type="submit">Sign Up</BtnDefault>
-        {message && <p>{message}</p>}
       </form>
     </>
   );

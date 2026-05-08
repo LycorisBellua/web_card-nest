@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import BtnDefault from 'components/btn/BtnDefault';
 import { sanitizeEmail, sanitizePassword } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
+import BtnDefault from 'components/btn/BtnDefault';
+import InputField from 'components/misc/InputField';
 
 type LoginResponse = {
   accessToken: string;
@@ -71,30 +72,29 @@ function LogIn() {
           void handlerLogin(e);
         }}
       >
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="text"
-            autoComplete="on"
-            value={logMail}
-            onChange={(e) => setLogMail(e.target.value)}
-          ></input>
-        </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="on"
-            value={logPwd}
-            onChange={(e) => setLogPwd(e.target.value)}
-          ></input>
-        </div>
-        <div>{errors && errors.map((err, i) => <p key={i}>{err}</p>)}</div>
+        <InputField
+          id="email"
+          type="email"
+          name="email"
+          label="Email"
+          autoComplete="on"
+          value={logMail}
+          onChange={(e) => setLogMail(e.target.value)}
+          isError={!!errors.length}
+        />
+        <InputField
+          id="password"
+          type="password"
+          name="password"
+          label="Password"
+          autoComplete="on"
+          value={logPwd}
+          onChange={(e) => setLogPwd(e.target.value)}
+          helpers={errors.length > 0 ? errors : [message]}
+          isError={!!errors.length}
+        />
         <BtnDefault type="submit">Log In</BtnDefault>
       </form>
-      {message && <p>{message}</p>}
       <Link to="/reset-pwd">
         <BtnDefault>Forgot your password?</BtnDefault>
       </Link>

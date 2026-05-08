@@ -1,10 +1,4 @@
-- Use InputField in Auth, ResetPassword and ResetPasswordSecond.
-
-- Tackle the remaining of the backlog notes to see what can be removed, and 
-what needs to be done on both the frontend and backend. Tackle the TODO in 
-components/chat/ChatMsg.tsx too.
-- Do the frontend part.
-- Create issues for the backend (but wait until the demo meeting is done).
-
-- Create a new issue to connect the frontend and the backend.
-- Tackle all the remaining TODOs.
+- Do the game's CSS.
+- Tackle the TODO in components/chat/ChatMsg.tsx too.
+- Finish the backlog stuff, besides the connection with the backend and the 
+tables.

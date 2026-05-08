@@ -92,7 +92,7 @@ function TextareaField({
   value: string;
   onChange: (val: React.ChangeEvent<HTMLTextAreaElement>) => void;
   name: string;
-  placeholder: string;
+  placeholder?: string;
   autoComplete?: string;
   label: string;
   rows: number;
