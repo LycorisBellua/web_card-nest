@@ -43,11 +43,14 @@ export function checkWinner(game: GameState): number {
     }
   }
   validPlayer.sort((a, b) => {
-    if (a.score != b.score) return b.score - a.score;
+    console.log()
+    if (a.score != b.score)
+      return b.score - a.score;
     else {
       if (a.reachedAt != b.reachedAt) {
         return a.reachedAt - b.reachedAt;
-      } else return -1;
+      }
+      return a.id - b.id;
     }
   });
   return validPlayer[0].id;
