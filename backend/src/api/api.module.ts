@@ -11,14 +11,30 @@ import { RelController } from './relationships/rel.controller';
 import { RelService } from './relationships/rel.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
+import { WebsocketServer } from './websocketHandling/server/WebsocketServer.gateway';
+import { JwtModule } from '@nestjs/jwt';
+import { jwtConstants } from './auth/jwt/auth.jwt-secret';
+import { GdprController } from './gdpr/gdpr.controller';
+import { GdprService } from './gdpr/gdpr.service';
+import { AdminController } from './admin/admin.controller';
+import { AdminService } from './admin/admin.service';
 
 @Module({
+  imports: [
+    JwtModule.register({
+      global: true,
+      secret: jwtConstants.secret,
+      signOptions: { expiresIn: '5m' },
+    }),
+  ],
   controllers: [
     HelloController,
     SendMailController,
     UserController,
     RelController,
     AuthController,
+    GdprController,
+    AdminController,
   ],
   providers: [
     HelloService,
@@ -28,6 +44,8 @@ import { AuthService } from './auth/auth.service';
     UserEmailsService,
     RelService,
     AuthService,
+    GdprService,
+    AdminService,
   ],
 })
 export class ApiModule {}

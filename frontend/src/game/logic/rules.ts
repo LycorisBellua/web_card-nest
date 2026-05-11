@@ -29,7 +29,11 @@ export function checkBlackCrown(cards: Card[]): boolean {
 export function checkWinner(game: GameState): number {
   const validPlayer = game.players.filter((player) => !player.isBusted);
   if (validPlayer.length == 0) return -1;
+  validPlayer.forEach((player) => {
+    if (checkBlackCrown(player.cards)) return (player.hasBlackCrown = true);
+  });
   const blackCrown = validPlayer.filter((player) => player.hasBlackCrown);
+
   if (blackCrown.length > 0) {
     if (blackCrown.length == 1) {
       return blackCrown[0].id;
@@ -43,7 +47,8 @@ export function checkWinner(game: GameState): number {
     else {
       if (a.reachedAt != b.reachedAt) {
         return a.reachedAt - b.reachedAt;
-      } else return -1;
+      }
+      return a.id - b.id;
     }
   });
   return validPlayer[0].id;

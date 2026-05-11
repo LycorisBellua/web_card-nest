@@ -1,6 +1,8 @@
 import { randomBytes } from 'crypto';
+import * as bcrypt from 'bcrypt';
+import { Ranks } from 'src/generated/prisma/enums';
 
-export function getVerificationToken(): string {
+export function getToken(): string {
   return randomBytes(32).toString('hex');
 }
 
@@ -8,8 +10,48 @@ export function getVerificationTimeout(): Date {
   return new Date(Date.now() + 24 * 60 * 60 * 1000);
 }
 
+export function getRefreshTimeout(): Date {
+  return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+}
+
 export function getCurrentTime(): Date {
   return new Date();
+}
+
+export async function createHash(plain: string): Promise<string> {
+  return await bcrypt.hash(plain, 12);
+}
+
+export async function compareHash(
+  plain: string,
+  hashed: string,
+): Promise<boolean> {
+  return await bcrypt.compare(plain, hashed);
+}
+
+export function encodeSingleAvatar(found: {
+  id: string;
+  username: string;
+  rank: Ranks;
+  avatar: Uint8Array<ArrayBuffer> | null;
+  email?: string | null;
+  email_unverified?: string | null;
+}) {
+  return {
+    ...found,
+    avatar: found.avatar ? Buffer.from(found.avatar).toString('base64') : null,
+  };
+}
+
+export function encodeMultipleAvatars(
+  users: {
+    id: string;
+    username: string;
+    rank: Ranks;
+    avatar: Uint8Array<ArrayBuffer> | null;
+  }[],
+) {
+  return users.map(encodeSingleAvatar);
 }
 
 // PASSWORD VALIDATION

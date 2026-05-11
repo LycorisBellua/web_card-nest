@@ -1,4 +1,4 @@
-import { calculateScore, checkBlackCrown } from './rules';
+import { calculateScore } from './rules';
 import type { Suit, Rank, Player, Card, GameState } from '../logic/types';
 
 // create two decks
@@ -40,7 +40,7 @@ export function shuffle(deck: Card[]): Card[] {
   const newDeck: Card[] = [...deck];
   for (let i = newDeck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    let tmp = newDeck[j];
+    const tmp = newDeck[j];
     newDeck[j] = newDeck[i];
     newDeck[i] = tmp;
   }
@@ -75,5 +75,5 @@ export function giveCard(player: Player, gameState: GameState) {
     player.isBusted = true;
     return;
   }
-  player.hasBlackCrown = checkBlackCrown(player.cards);
+  // player.hasBlackCrown = checkBlackCrown(player.cards);
 }

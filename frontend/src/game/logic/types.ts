@@ -23,6 +23,7 @@ export interface Card {
 
 export interface Player {
   id: number;
+  username: string | null;
   cards: Card[];
   score: number;
 

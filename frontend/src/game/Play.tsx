@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { ScrollablePage } from 'components/general/Scrollable';
 import {
   PlayTableStyle,
   TableWrapper,
@@ -20,9 +19,20 @@ type RoundRecord = {
   round: number;
   winnerId: number | null;
   scores: number[];
+  blackCrowns: boolean[];
 };
 
-function Play() {
+type CurrentUser = { username: string };
+
+function PlayGame() {
+  const parsed: unknown = JSON.parse(localStorage.getItem('user') || 'null');
+  const currentUser: CurrentUser | undefined =
+    parsed &&
+    typeof parsed === 'object' &&
+    'username' in parsed &&
+    typeof parsed.username === 'string'
+      ? { username: parsed.username }
+      : undefined;
   const [started, setStarted] = useState(false);
   const [local, setLocal] = useState(false);
   const [online, setOnline] = useState(false);
@@ -43,7 +53,7 @@ function Play() {
   function handleStartLocalGame(playerCount: number) {
     setStarted(true);
     setGame(() => {
-      const g = initialGame(playerCount);
+      const g = initialGame(playerCount, currentUser);
       return dealInitialCards(g);
     });
   }
@@ -51,7 +61,7 @@ function Play() {
   function handleStartOnlineGame(playerCount: number) {
     setStarted(true);
     setGame(() => {
-      const g = initialGame(playerCount);
+      const g = initialGame(playerCount, currentUser);
       return dealInitialCards(g);
     });
   }
@@ -102,11 +112,12 @@ function Play() {
         round: game.turn,
         winnerId: game.winnerId,
         scores: game.players.map((p) => p.score),
+        blackCrowns: game.players.map((p) => p.hasBlackCrown),
       },
     ]);
     const playerCount = game.players.length;
     reset();
-    const newGame = newRoundGame(playerCount, game);
+    const newGame = newRoundGame(playerCount, game, currentUser);
     setGame(dealInitialCards(newGame));
   }
 
@@ -118,6 +129,7 @@ function Play() {
         round: game.turn,
         winnerId: game.winnerId,
         scores: game.players.map((p) => p.score),
+        blackCrowns: game.players.map((p) => p.hasBlackCrown),
       },
     ]);
     setStarted(false);
@@ -128,18 +140,20 @@ function Play() {
 
   useEffect(() => {
     if (!game) return;
-    if (game.gameStatus == 'transition') {
+    if (game.gameStatus === 'transition') {
       const timer = setTimeout(() => {
         setShowTransition(true);
       }, 1500);
       return () => clearTimeout(timer);
-    } else {
-      setShowTransition(false);
     }
-  }, [game?.gameStatus]);
+    const timer = setTimeout(() => {
+      setShowTransition(false);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [game]);
 
   return (
-    <ScrollablePage>
+    <div>
       {started && game && (
         <>
           <TableWrapper>
@@ -192,7 +206,6 @@ function Play() {
       )}
       {!local && !online && !displayRecord && (
         <div>
-          <h1>Play</h1>
           <button onClick={handleLocalGame}>Local game</button>
           <button onClick={handleOnlineGame}>Online game</button>
         </div>
@@ -207,7 +220,7 @@ function Play() {
       {!started && displayRecord && !local && !online && (
         <DisplayRecord game={game} history={history} />
       )}
-    </ScrollablePage>
+    </div>
   );
 }
 
@@ -226,21 +239,24 @@ function PlayerCount({
     <PlayerCountStyle>
       <button
         onClick={() => {
-          local ? onStartLocalGame(2) : onStartOnlineGame(2);
+          if (local) onStartLocalGame(2);
+          else onStartOnlineGame(2);
         }}
       >
         1 v 1
       </button>
       <button
         onClick={() => {
-          local ? onStartLocalGame(3) : onStartOnlineGame(3);
+          if (local) onStartLocalGame(3);
+          else onStartOnlineGame(3);
         }}
       >
         1 v 1 v 1
       </button>
       <button
         onClick={() => {
-          local ? onStartLocalGame(4) : onStartOnlineGame(4);
+          if (local) onStartLocalGame(4);
+          else onStartOnlineGame(4);
         }}
       >
         1 v 1 v 1 v 1
@@ -271,9 +287,13 @@ function DisplayRecord({ game, history }: DisplayRecordProps) {
         <thead>
           <tr>
             <th>Round</th>
-            {game.players.map((p, i) => (
-              <th key={i}>Player {p.id + 1}</th>
-            ))}
+            {game.players.map((p, i) =>
+              p.username ? (
+                <th key={i}>{p.username}</th>
+              ) : (
+                <th key={i}>Guest {p.id + 1}</th>
+              ),
+            )}
             <th>Winner</th>
           </tr>
         </thead>
@@ -282,9 +302,7 @@ function DisplayRecord({ game, history }: DisplayRecordProps) {
             <tr key={idx}>
               <td>{h.round}</td>
               {h.scores.map((score, sIdx) => (
-                <td key={sIdx}>
-                  {game.players[sIdx].hasBlackCrown ? 'Black Crown' : score}
-                </td>
+                <td key={sIdx}>{h.blackCrowns[sIdx] ? '21 👑​' : score}</td>
               ))}
               <td>{h.winnerId! + 1}</td>
             </tr>
@@ -296,4 +314,4 @@ function DisplayRecord({ game, history }: DisplayRecordProps) {
   );
 }
 
-export default Play;
+export default PlayGame;

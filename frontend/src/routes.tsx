@@ -3,8 +3,9 @@ import Lobby from 'pages/chat/Lobby';
 import Auth from 'pages/auth/Auth';
 import ResetPassword from 'pages/auth/ResetPassword';
 import ResetPasswordSecond from 'pages/auth/ResetPassword2';
-import VerifyError from 'pages/auth/VerifyError';
 import VerifySuccess from 'pages/auth/VerifySuccess';
+import VerifyError from 'pages/auth/VerifyError';
+import VerifyCancel from 'pages/auth/VerifyCancel';
 import Users from 'pages/profile/Users';
 import PublicProfile from 'pages/profile/PublicProfile';
 import PrivateProfile from 'pages/profile/PrivateProfile';
@@ -26,6 +27,7 @@ const routes = [
       { path: 'reset-pwd2', element: <ResetPasswordSecond /> },
       { path: 'verify-success', element: <VerifySuccess /> },
       { path: 'verify-error', element: <VerifyError /> },
+      { path: 'verify-cancel', element: <VerifyCancel /> },
       { path: 'users', element: <Users /> },
       { path: 'user/:username', element: <PublicProfile /> },
       { path: 'profile', element: <PrivateProfile /> },

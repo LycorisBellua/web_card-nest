@@ -2,6 +2,8 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -11,13 +13,20 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { decodeAvatarBase64 } from './utils/user.validator';
 import {
+  compareHash,
+  createHash,
   getCurrentTime,
   getVerificationTimeout,
-  getVerificationToken,
+  getToken,
   newPasswordContainsUsername,
   newPasswordContainsEmail,
+  getRefreshTimeout,
+  encodeSingleAvatar,
+  encodeMultipleAvatars,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
+import { AdminUpdateUserDto } from '../admin/dto/admin-update-user.dto';
+import { UpdateRankDto } from '../admin/dto/update-rank.dto';
 
 @Injectable()
 export class UserService {
@@ -37,31 +46,32 @@ export class UserService {
     return result;
   }
 
-  async updateUser(userId: string, updateUserDto: UpdateUserDto) {
+  async updateUser(userId: string, dto: UpdateUserDto) {
     await this.userExistsOrThrow(userId);
     const data: Record<string, unknown> = {};
+    const token = getToken();
 
-    if (updateUserDto.username !== undefined) {
-      if (await this.usernameIsTaken(updateUserDto.username)) {
+    if (dto.username !== undefined) {
+      if (await this.usernameIsTaken(dto.username)) {
         throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
       }
-      data.username = updateUserDto.username;
+      data.username = dto.username;
     }
 
-    if (updateUserDto.email_unverified !== undefined) {
-      if (await this.emailAddressIsTaken(updateUserDto.email_unverified)) {
+    if (dto.email_unverified !== undefined) {
+      if (await this.emailAddressIsTaken(dto.email_unverified)) {
         throw new ConflictException(ErrorMessages.EMAIL_USED);
       }
-      data.email_unverified = updateUserDto.email_unverified;
-      data.verifyToken = getVerificationToken();
+      data.email_unverified = dto.email_unverified;
+      data.verifyToken = await createHash(token);
       data.verifyTimeout = getVerificationTimeout();
     }
 
-    if (updateUserDto.avatar !== undefined) {
-      if (updateUserDto.avatar === '') {
+    if (dto.avatar !== undefined) {
+      if (dto.avatar === '') {
         data.avatar = null;
       } else {
-        const decoded = decodeAvatarBase64(updateUserDto.avatar);
+        const decoded = decodeAvatarBase64(dto.avatar);
         if (decoded === null) {
           throw new BadRequestException(ErrorMessages.INVALID_AVATAR);
         }
@@ -69,11 +79,11 @@ export class UserService {
       }
     }
 
-    if (updateUserDto.desc !== undefined) {
-      if (updateUserDto.desc === '') {
+    if (dto.desc !== undefined) {
+      if (dto.desc === '') {
         data.desc = null;
       } else {
-        data.desc = updateUserDto.desc;
+        data.desc = dto.desc;
       }
     }
 
@@ -88,14 +98,13 @@ export class UserService {
         await this.userEmailsService.sendVerificationEmail(
           userId,
           found.email_unverified,
-          found.verifyToken,
+          token,
         );
       }
     }
     return updated;
   }
 
-  // TODO: Hash Password
   async updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto) {
     const user = await this.userExistsOrThrow(userId);
     const newPassword = updatePasswordDto.newPassword;
@@ -107,69 +116,64 @@ export class UserService {
     if (newPasswordContainsEmail(newPassword, email)) {
       throw new BadRequestException(ErrorMessages.EMAIL_IN_PASSWORD);
     }
-    if (user.password !== currentPassword) {
+    if (!(await compareHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
-    return await this.modifyPassword(userId, newPassword);
+    return await this.modifyPassword(userId, await createHash(newPassword));
   }
 
-  async updateRank(userId: string, newRank: Ranks) {
-    await this.userExistsOrThrow(userId);
-    return await this.modifyRank(userId, newRank);
+  async getOwnProfile(userId: string) {
+    const found = await this.findOwnProfile(userId);
+    if (!found) {
+      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
+    }
+    return encodeSingleAvatar(found);
   }
 
-  async getUserById(toFind: string) {
+  async getUserById(rank: Ranks, userId: string, toFind: string) {
+    const found = await this.findProfileById(toFind);
+    if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
+      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
+    }
+    return encodeSingleAvatar(found);
+  }
+
+  async getUsernameById(toFind: string) {
     const found = await this.prisma.user.findUnique({
       where: { id: toFind },
-      omit: { password: true },
+      select: {
+        username: true,
+        id: true,
+      },
     });
     if (!found) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
-    return {
-      ...found,
-      avatar: found.avatar
-        ? Buffer.from(found.avatar).toString('base64')
-        : null,
-    };
+    return { ...found };
   }
 
-  async getUserByUsername(toFind: string) {
-    const found = await this.prisma.user.findFirst({
-      where: { username: { equals: toFind, mode: 'insensitive' } },
-      omit: { password: true },
-    });
-    if (!found) {
+  async getUserByUsername(rank: Ranks, userId: string, toFind: string) {
+    const found = await this.findProfileByUsername(toFind);
+    if (!found || (rank === Ranks.USER && found.rank === Ranks.PENDING)) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
-    return {
-      ...found,
-      avatar: found.avatar
-        ? Buffer.from(found.avatar).toString('base64')
-        : null,
-    };
+    return encodeSingleAvatar(found);
   }
 
-  async getAllSortByUsername() {
-    const users = await this.prisma.user.findMany({
-      omit: { password: true },
-      orderBy: { username: 'asc' },
-    });
-    return users.map((user) => ({
-      ...user,
-      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
-    }));
+  async getAllSortByUsername(rank: Ranks) {
+    const includePending = rank === Ranks.USER ? false : true;
+    const users = await this.listAllByUsername(includePending);
+    return encodeMultipleAvatars(users);
   }
 
-  async getAllSortByDate() {
-    const users = await this.prisma.user.findMany({
-      omit: { password: true },
-      orderBy: { date: 'asc' },
-    });
-    return users.map((user) => ({
-      ...user,
-      avatar: user.avatar ? Buffer.from(user.avatar).toString('base64') : null,
-    }));
+  async getAllSortByDate(rank: Ranks) {
+    const includePending = rank === Ranks.USER ? false : true;
+    const users = await this.listAllByDate(includePending);
+    return encodeMultipleAvatars(users);
+  }
+
+  getGuestProfile() {
+    return { id: '', username: 'guest', avatar: null, rank: '' };
   }
 
   // CALLED FROM USER-TASKS SERVICE
@@ -197,7 +201,6 @@ export class UserService {
   }
 
   // CALLED FROM AUTH SERVICE
-  // TODO: Hash password
   async addUser(createUserDto: CreateUserDto) {
     if (await this.usernameIsTaken(createUserDto.username)) {
       throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
@@ -205,13 +208,20 @@ export class UserService {
     if (await this.emailAddressIsTaken(createUserDto.email_unverified)) {
       throw new ConflictException(ErrorMessages.EMAIL_USED);
     }
-    const created = await this.createUser(createUserDto);
+    createUserDto.password = await createHash(createUserDto.password);
+    const token = getToken();
+    const timeout = getVerificationTimeout();
+    const created = await this.createUser(
+      createUserDto,
+      await createHash(token),
+      timeout,
+    );
     const found = await this.userExistsOrThrow(created.id);
     if (found.email_unverified && found.verifyToken) {
       await this.userEmailsService.sendVerificationEmail(
         created.id,
         found.email_unverified,
-        found.verifyToken,
+        token,
       );
     }
     return created;
@@ -222,24 +232,48 @@ export class UserService {
     if (
       !found ||
       !found.verifyToken ||
-      found.verifyToken !== token ||
+      !(await compareHash(token, found.verifyToken)) ||
       !found.email_unverified ||
       !found.verifyTimeout ||
       found.verifyTimeout < new Date()
     ) {
       return null;
     }
+    let newRank: Ranks;
+    if (found.rank === Ranks.PENDING) {
+      newRank = Ranks.USER;
+    } else {
+      newRank = found.rank;
+    }
     const verified = await this.modifyVerifyEmail(
       userId,
       found.email_unverified,
+      newRank,
     );
     if (!verified || !verified.email) {
       return null;
     }
-    await this.deleteUnverifiedWithTakenEmail(verified.email);
-    await this.modifyVerifiedWithTakenEmail(verified.email);
     await this.userEmailsService.sendVerificationSuccess(verified.email);
     return verified;
+  }
+
+  async cancelVerification(userId: string, token: string) {
+    const found = await this.userExists(userId);
+    if (
+      !found ||
+      !found.verifyToken ||
+      !(await compareHash(token, found.verifyToken))
+    ) {
+      return null;
+    }
+    const data: Record<string, unknown> = {};
+    data.email_unverified = null;
+    data.verifyToken = null;
+    data.verifyTimeout = null;
+    if (found.email) {
+      return await this.modifyVerificationData(userId, data);
+    }
+    return await this.deleteUser(userId);
   }
 
   async resendVerificationEmail(userId: string) {
@@ -248,7 +282,8 @@ export class UserService {
       return { id: userId };
     }
     const data: Record<string, unknown> = {};
-    data.verifyToken = getVerificationToken();
+    const token = getToken();
+    data.verifyToken = await createHash(token);
     data.verifyTimeout = getVerificationTimeout();
     const result = await this.modifyVerificationData(userId, data);
     const updated = await this.userExistsOrThrow(userId);
@@ -256,22 +291,104 @@ export class UserService {
       await this.userEmailsService.sendVerificationEmail(
         userId,
         updated.email_unverified,
-        updated.verifyToken,
+        token,
       );
     }
     return result;
   }
 
+  async generateRefreshToken(
+    userId: string,
+  ): Promise<{ token: string; timeout: Date }> {
+    await this.userExistsOrThrow(userId);
+    const token = getToken();
+    const timeout = getRefreshTimeout();
+    const result = await this.modifyRefreshToken(
+      userId,
+      await createHash(token),
+      timeout,
+    );
+    if (
+      !result.refreshToken ||
+      !(await compareHash(token, result.refreshToken))
+    ) {
+      throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
+    }
+    return { token: token, timeout: timeout };
+  }
+
+  async removeRefreshToken(userId: string) {
+    await this.userExistsOrThrow(userId);
+    const result = await this.deleteRefreshToken(userId);
+    if (result.refreshToken !== null) {
+      throw new InternalServerErrorException(ErrorMessages.REF_TOK_DEL_ERR);
+    }
+  }
+
+  //CALLED FROM ADMIN SERVICE
+  async adminUpdateUser(dto: AdminUpdateUserDto) {
+    const data: Record<string, unknown> = {};
+
+    if (dto.username !== undefined) {
+      if (await this.usernameIsTaken(dto.username)) {
+        throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
+      }
+      data.username = dto.username;
+    }
+
+    if (dto.avatar !== undefined) {
+      if (dto.avatar === '') {
+        data.avatar = null;
+      } else {
+        const decoded = decodeAvatarBase64(dto.avatar);
+        if (decoded === null) {
+          throw new BadRequestException(ErrorMessages.INVALID_AVATAR);
+        }
+        data.avatar = decoded;
+      }
+    }
+
+    if (dto.desc !== undefined) {
+      if (dto.desc === '') {
+        data.desc = null;
+      } else {
+        data.desc = dto.desc;
+      }
+    }
+
+    return await this.modifyUserInfo(dto.targetId, data);
+  }
+
+  async updateRank(dto: UpdateRankDto) {
+    const found = await this.userExistsOrThrow(dto.targetId);
+    if (found.rank === Ranks.PENDING) {
+      throw new BadRequestException(ErrorMessages.PENDING_USER);
+    }
+    return await this.modifyRank(dto);
+  }
+
+  async updateSwapAdmins(currentAdmin: string, newAdmin: string) {
+    await this.userExistsOrThrow(currentAdmin);
+    const found = await this.userExistsOrThrow(newAdmin);
+    if (found.rank === Ranks.PENDING) {
+      throw new BadRequestException(ErrorMessages.PENDING_USER);
+    }
+    return await this.modifyRankAdminSwap(currentAdmin, newAdmin);
+  }
+
   // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
-  // TODO: Hash token
-  private async createUser(createUserDto: CreateUserDto) {
+  private async createUser(
+    createUserDto: CreateUserDto,
+    token: string,
+    timeout: Date,
+  ) {
     return await this.prisma.user.create({
       data: {
         username: createUserDto.username,
         email_unverified: createUserDto.email_unverified,
         password: createUserDto.password,
-        verifyToken: getVerificationToken(),
-        verifyTimeout: getVerificationTimeout(),
+        verifyToken: token,
+        verifyTimeout: timeout,
       },
       select: { id: true, username: true, date: true },
     });
@@ -284,11 +401,16 @@ export class UserService {
     });
   }
 
-  private async modifyVerifyEmail(userId: string, address: string) {
+  private async modifyVerifyEmail(
+    userId: string,
+    address: string,
+    rank: Ranks,
+  ) {
     return await this.prisma.user.update({
       where: { id: userId },
       data: {
         email: address,
+        rank: rank,
         email_unverified: null,
         verifyTimeout: null,
         verifyToken: null,
@@ -305,19 +427,6 @@ export class UserService {
       where: { id: userId },
       data: newData,
       select: { id: true },
-    });
-  }
-
-  private async deleteUnverifiedWithTakenEmail(address: string | null) {
-    return await this.prisma.user.deleteMany({
-      where: { email: null, email_unverified: address },
-    });
-  }
-
-  private async modifyVerifiedWithTakenEmail(address: string | null) {
-    return await this.prisma.user.updateMany({
-      where: { email_unverified: address },
-      data: { email_unverified: null, verifyTimeout: null, verifyToken: null },
     });
   }
 
@@ -353,11 +462,89 @@ export class UserService {
     });
   }
 
-  private async modifyRank(userId: string, newRank: Ranks) {
+  private async modifyRank(newData: UpdateRankDto) {
+    return await this.prisma.user.update({
+      where: { id: newData.targetId },
+      data: { rank: newData.rank },
+      select: { id: true, rank: true },
+    });
+  }
+
+  private async modifyRankAdminSwap(currentAdmin: string, newAdmin: string) {
+    return await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: newAdmin },
+        data: { rank: Ranks.ADMIN },
+      });
+      await tx.user.update({
+        where: { id: currentAdmin },
+        data: { rank: Ranks.MODERATOR },
+      });
+      return { id: newAdmin, rank: Ranks.ADMIN };
+    });
+  }
+
+  private async modifyRefreshToken(
+    userId: string,
+    newToken: string | null,
+    timeout: Date,
+  ) {
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { rank: newRank },
-      select: { rank: true },
+      data: { refreshToken: newToken, refreshTimeout: timeout },
+      select: { refreshToken: true },
+    });
+  }
+
+  private async deleteRefreshToken(userId: string) {
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null, refreshTimeout: null },
+      select: { refreshToken: true },
+    });
+  }
+
+  private async findOwnProfile(userId: string) {
+    return await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        email: true,
+        email_unverified: true,
+      },
+    });
+  }
+
+  private async findProfileById(toFind: string) {
+    return await this.prisma.user.findUnique({
+      where: { id: toFind },
+      select: { id: true, username: true, avatar: true, rank: true },
+    });
+  }
+
+  private async findProfileByUsername(toFind: string) {
+    return await this.prisma.user.findFirst({
+      where: { username: { equals: toFind, mode: 'insensitive' } },
+      select: { id: true, username: true, avatar: true, rank: true },
+    });
+  }
+
+  private async listAllByUsername(incPending: boolean) {
+    return await this.prisma.user.findMany({
+      where: incPending ? {} : { rank: { not: Ranks.PENDING } },
+      select: { id: true, username: true, avatar: true, rank: true },
+      orderBy: { username: 'asc' },
+    });
+  }
+
+  private async listAllByDate(incPending: boolean) {
+    return await this.prisma.user.findMany({
+      where: incPending ? {} : { rank: { not: Ranks.PENDING } },
+      select: { id: true, username: true, avatar: true, rank: true },
+      orderBy: { date: 'asc' },
     });
   }
 
@@ -368,10 +555,13 @@ export class UserService {
       select: {
         email: true,
         email_unverified: true,
+        rank: true,
         password: true,
         username: true,
         verifyToken: true,
         verifyTimeout: true,
+        refreshToken: true,
+        refreshTimeout: true,
       },
     });
     if (!found) {
@@ -380,16 +570,39 @@ export class UserService {
     return found;
   }
 
+  async userExistsByEmail(toFind: string) {
+    return await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: toFind }, { email_unverified: toFind }],
+      },
+      select: {
+        id: true,
+        email: true,
+        email_unverified: true,
+        rank: true,
+        password: true,
+        username: true,
+        verifyToken: true,
+        verifyTimeout: true,
+        refreshToken: true,
+        refreshTimeout: true,
+      },
+    });
+  }
+
   private async userExists(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },
       select: {
         email: true,
         email_unverified: true,
+        rank: true,
         password: true,
         username: true,
         verifyToken: true,
         verifyTimeout: true,
+        refreshToken: true,
+        refreshTimeout: true,
       },
     });
   }
@@ -403,9 +616,11 @@ export class UserService {
   }
 
   private async emailAddressIsTaken(toFind: string) {
-    const found = await this.prisma.user.findUnique({
-      where: { email: toFind },
-      select: { email: true },
+    const found = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: toFind }, { email_unverified: toFind }],
+      },
+      select: { id: true, email: true, email_unverified: true },
     });
     return found !== null;
   }

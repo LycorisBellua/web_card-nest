@@ -27,10 +27,15 @@ export function nextPlayer(game: GameState) {
   return next;
 }
 
-export function newRoundGame(playerCount: number, game: GameState) {
+export function newRoundGame(
+  playerCount: number,
+  game: GameState,
+  currentUser?: { username: string },
+) {
   const next = structuredClone(game);
   next.players = Array.from({ length: playerCount }, (_, i) => ({
     id: i,
+    username: i === 0 ? (currentUser?.username ?? null) : null,
     cards: [],
     score: 0,
     hasStood: false,

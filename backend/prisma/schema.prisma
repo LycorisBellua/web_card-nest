@@ -12,14 +12,16 @@ model User {
   id               String     @id @default(uuid(7))
   username         String     @unique
   email            String?    @unique
-  email_unverified String?
+  email_unverified String?    @unique
   password         String
   desc             String?    @db.VarChar(200)
   avatar           Bytes?
-  rank             Ranks      @default(USER)
+  rank             Ranks      @default(PENDING)
   date             DateTime   @default(now())
   verifyToken      String?    @unique
   verifyTimeout    DateTime?
+  refreshToken     String?    @unique
+  refreshTimeout   DateTime?
   sentRequests     Friend[]   @relation("requester")
   receivedRequests Friend[]   @relation("addressee")
   blocked          Block[]    @relation("blocker")
@@ -27,6 +29,7 @@ model User {
 }
 
 enum Ranks {
+  PENDING
   USER
   MODERATOR
   ADMIN
