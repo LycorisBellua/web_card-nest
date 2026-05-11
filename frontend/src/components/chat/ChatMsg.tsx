@@ -101,9 +101,6 @@ const Text = styled.div`
 `;
 
 function ChatMsg({ msg }: { msg: Msg }) {
-  // TODO: Should a guest user be created (on the frontend only) instead of
-  // doing this? We'll have the definitive answer once the guest profile page
-  // is a thing.
   const { users } = useUser();
   const author = users.find((u) => u.id === msg.authorId) ?? null;
 
