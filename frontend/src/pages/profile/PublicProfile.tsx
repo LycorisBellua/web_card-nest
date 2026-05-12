@@ -1,14 +1,15 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import type { User } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { IsLoggedIn } from 'functions/Ranks';
 import NotFound from 'pages/NotFound';
 import { DisplayPublicUserInfo } from 'pages/profile/DisplayUserInfo';
 import { ScrollablePage } from 'components/general/Scrollable';
+import { BtnDefault } from 'components/btn/Btn';
 
 function PublicProfile() {
   const { username } = useParams<{ username: string }>();
-  const { users } = useUser();
+  const { friends, users } = useUser();
 
   if (!IsLoggedIn()) return <NotFound />;
 
@@ -18,10 +19,16 @@ function PublicProfile() {
   );
   //
   if (!user) return <NotFound />;
+  const is_friend = friends.find(
+    (u) => u.username.toLowerCase() === username?.toLowerCase(),
+  );
 
   return (
     <ScrollablePage>
       <DisplayPublicUserInfo user={user as NonNullable<User>} />
+	  <div>
+	    {is_friend && <Link to={`/chat/${username}`}><BtnDefault>DM</BtnDefault></Link>}
+	  </div>
     </ScrollablePage>
   );
 }
