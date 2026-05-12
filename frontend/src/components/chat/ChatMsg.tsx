@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import type { Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
+import { IsLoggedIn } from 'functions/Ranks';
 import styled, { css } from 'styled-components';
 import { Avatar } from 'components/btn/Avatar';
 import { Username } from 'components/btn/Username';
@@ -108,26 +109,25 @@ function ChatMsg({ msg }: { msg: Msg }) {
   const isOnline = author?.isOnline ?? false;
   const rank = author?.rank ?? 'guest';
   const username = author?.username ?? 'Guest';
+  const is_logged_in = IsLoggedIn();
 
   return (
     <Row $rank={rank}>
-      {rank == 'guest' ? (
-        <Avatar src={avatar} rank={rank} isOnline={isOnline} />
-      ) : (
-        <Link to={`/user/${username}`}>
+        {is_logged_in ?
+		<Link to={`/user/${username}`}>
           <Avatar src={avatar} rank={rank} isOnline={isOnline} />
         </Link>
-      )}
+		:
+          <Avatar src={avatar} rank={rank} isOnline={isOnline} />}
       <Body>
         <Meta>
           <NameWrap $rank={rank}>
-            {rank == 'guest' ? (
-              <Username rank={rank} value={username} />
-            ) : (
+        {is_logged_in ?
               <Link to={`/user/${username}`}>
                 <Username rank={rank} value={username} />
               </Link>
-            )}
+		:
+        <Username rank={rank} value={username} />}
             <RankBadge rank={rank} />
           </NameWrap>
           <Time>{GetTime(msg.created)}</Time>

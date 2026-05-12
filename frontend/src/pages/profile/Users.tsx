@@ -1,13 +1,18 @@
 import { useUser } from 'context/useUser';
+import { IsLoggedIn } from 'functions/Ranks';
+import NotFound from 'pages/NotFound';
 import { ScrollablePage } from 'components/general/Scrollable';
 import UserBtn from 'components/btn/UserBtn';
 
 function Users() {
   const { users } = useUser();
 
+  if (!IsLoggedIn()) return <NotFound />;
+
   return (
     <ScrollablePage>
       <h1>Users</h1>
+      <UserBtn key="guest" user={null} path="/user/guest" />
       {!users.length ? (
         <p>Empty user list</p>
       ) : (

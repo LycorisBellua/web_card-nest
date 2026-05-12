@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { User } from 'context/Types';
+import type { User, UserLimitedOrGuest } from 'context/Types';
 import { GetDate } from 'functions/Time';
 import { AvatarBig } from 'components/btn/Avatar';
 import { BtnDefault } from 'components/btn/Btn';
@@ -22,7 +22,18 @@ const PublicRightCol = styled.div`
   align-items: flex-start;
 `;
 
-export function DisplayPublicUserInfo({ user }: { user: NonNullable<User> }) {
+export function DisplayPublicUserInfo({ user }: { user: UserLimitedOrGuest }) {
+  if (!user) {
+  return (
+    <PublicWrapper>
+      <AvatarBig src="" rank="guest" isOnline={false} />
+      <PublicRightCol>
+        <UsernameBig rank="guest" value="Guest" />
+        <RankBadgeBig rank="guest" />
+      </PublicRightCol>
+    </PublicWrapper>
+  );
+  }
   return (
     <PublicWrapper>
       <AvatarBig src={user.avatar} rank={user.rank} isOnline={user.isOnline} />

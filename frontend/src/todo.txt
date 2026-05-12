@@ -1,2 +1,14 @@
-- Finish the backlog stuff, besides the connection with the backend and the 
-Black Crown tables.
+BASIC FRONTEND
+- Finish the backlog stuff.
+
+CONNECTION TO THE BACKEND
+- When you log in and receive the access token, store it in memory and then 
+send it with all requests. If you receive 401, it means it expired. Call the 
+API to refresh (= get a new access token). If it says 401 here, it means the 
+refresh token is expired and you need to be logged out. Call the API to log 
+out, it's not just about logging out on the frontend.
+- ...
+
+GAME
+- Black Crown tables.
+- ...
