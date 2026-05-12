@@ -29,9 +29,9 @@ function UserBtnBase({
   if (!user) {
     return (
       <Btn onClick={onClick}>
-      <Avatar src="" rank="guest" isOnline={false} />
-      <Username rank="guest" value="Guest" />
-      <RankBadge rank="guest" />
+        <Avatar src="" rank="guest" isOnline={false} />
+        <Username rank="guest" value="Guest" />
+        <RankBadge rank="guest" />
       </Btn>
     );
   }

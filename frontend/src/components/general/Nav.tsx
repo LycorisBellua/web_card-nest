@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { IsLoggedIn } from 'functions/Ranks';
+import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
 import styled from 'styled-components';
 import { BtnDefault } from 'components/btn/Btn';
 import UserMenu from 'pages/profile/UserMenu';
@@ -96,7 +96,7 @@ const SubNav = styled.nav`
 `;
 
 function Nav({ onDMsClick }: { onDMsClick: () => void }) {
-  const is_logged_in = IsLoggedIn();
+  const is_logged_in = IsLoggedIn() && !IsPendingUser();
 
   return (
     <>
@@ -114,27 +114,33 @@ function Nav({ onDMsClick }: { onDMsClick: () => void }) {
           <Link to="/play">
             <BtnDefault>🃏 Play</BtnDefault>
           </Link>
-          {is_logged_in && <Link to="/users">
-            <BtnDefault>👤 Users</BtnDefault>
-          </Link>}
+          {is_logged_in && (
+            <Link to="/users">
+              <BtnDefault>👤 Users</BtnDefault>
+            </Link>
+          )}
         </TopNav>
         <TopBarRight>
           <UserMenu />
         </TopBarRight>
       </TopBar>
       <SubNav>
-        {is_logged_in &&<div>
-          <BtnDefault onClick={onDMsClick}>DMs</BtnDefault>
-        </div>}
+        {is_logged_in && (
+          <div>
+            <BtnDefault onClick={onDMsClick}>DMs</BtnDefault>
+          </div>
+        )}
         <Link to="/">
           <BtnDefault>💬 Lobby</BtnDefault>
         </Link>
         <Link to="/play">
           <BtnDefault>🃏 Play</BtnDefault>
         </Link>
-        {is_logged_in && <Link to="/users">
-          <BtnDefault>👤 Users</BtnDefault>
-        </Link>}
+        {is_logged_in && (
+          <Link to="/users">
+            <BtnDefault>👤 Users</BtnDefault>
+          </Link>
+        )}
       </SubNav>
     </>
   );

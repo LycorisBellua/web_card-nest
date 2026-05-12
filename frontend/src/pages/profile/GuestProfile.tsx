@@ -6,9 +6,9 @@ function GuestProfile() {
   return (
     <ScrollablePage>
       <DisplayPublicUserInfo user={null} />
-	  <div>
-	    <BtnDefault>Click Me</BtnDefault>
-	  </div>
+      <div>
+        <BtnDefault>Click Me</BtnDefault>
+      </div>
     </ScrollablePage>
   );
 }

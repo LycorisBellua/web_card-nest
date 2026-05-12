@@ -1,5 +1,5 @@
 import { useUser } from 'context/useUser';
-import { IsLoggedIn } from 'functions/Ranks';
+import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
 import styled from 'styled-components';
 import { ScrollableArea } from 'components/general/Scrollable';
 import UserBtn from 'components/btn/UserBtn';
@@ -154,7 +154,7 @@ function Sidebar({
 }) {
   const { friends } = useUser();
 
-  if (!IsLoggedIn()) return <></>;
+  if (!IsLoggedIn() || IsPendingUser()) return <></>;
   return (
     <>
       <Backdrop $isOpen={isOpen} onClick={onClose} />

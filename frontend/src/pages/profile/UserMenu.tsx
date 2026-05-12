@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from 'context/useUser';
 import { BtnAccent } from 'components/btn/Btn';
-import UserBtn from 'components/btn/UserBtn';
 import UserBtnBase from 'components/btn/UserBtnBase';
 import { Wrapper, Menu, Option } from 'components/btn/UserMenuStyle';
 
@@ -23,7 +22,11 @@ function UserMenu() {
   }, []);
 
   if (!user) {
-    return <Link to="/auth"><BtnAccent>Log In</BtnAccent></Link>;
+    return (
+      <Link to="/auth">
+        <BtnAccent>Log In</BtnAccent>
+      </Link>
+    );
   }
 
   const handleSettings = async () => {

@@ -24,15 +24,15 @@ const PublicRightCol = styled.div`
 
 export function DisplayPublicUserInfo({ user }: { user: UserLimitedOrGuest }) {
   if (!user) {
-  return (
-    <PublicWrapper>
-      <AvatarBig src="" rank="guest" isOnline={false} />
-      <PublicRightCol>
-        <UsernameBig rank="guest" value="Guest" />
-        <RankBadgeBig rank="guest" />
-      </PublicRightCol>
-    </PublicWrapper>
-  );
+    return (
+      <PublicWrapper>
+        <AvatarBig src="" rank="guest" isOnline={false} />
+        <PublicRightCol>
+          <UsernameBig rank="guest" value="Guest" />
+          <RankBadgeBig rank="guest" />
+        </PublicRightCol>
+      </PublicWrapper>
+    );
   }
   return (
     <PublicWrapper>
