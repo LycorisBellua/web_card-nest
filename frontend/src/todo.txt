@@ -1,3 +1,2 @@
-- Do the game's CSS.
 - Finish the backlog stuff, besides the connection with the backend and the 
-tables.
+Black Crown tables.
