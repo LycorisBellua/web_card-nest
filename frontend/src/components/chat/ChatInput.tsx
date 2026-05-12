@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { sanitizeMessage } from 'functions/UserSanitation';
-import BtnIcon from 'components/btn/BtnIcon';
+import { BtnIcon } from 'components/btn/Btn';
 import styled from 'styled-components';
 
 const Wrap = styled.div`

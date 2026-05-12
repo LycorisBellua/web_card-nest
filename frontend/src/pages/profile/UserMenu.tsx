@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from 'context/useUser';
-import UserBtn from 'components/btn/user_btn/UserBtn';
-import UserBtnBase from 'components/btn/user_btn/UserBtnBase';
-import { Wrapper, Menu, Option } from 'components/btn/user_btn/UserMenuStyle';
+import UserBtn from 'components/btn/UserBtn';
+import UserBtnBase from 'components/btn/UserBtnBase';
+import { Wrapper, Menu, Option } from 'components/btn/UserMenuStyle';
 
 function UserMenu() {
   const { user, setUser } = useUser();

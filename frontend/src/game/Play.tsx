@@ -10,7 +10,7 @@ import {
   ShowFinishedStyle,
 } from 'game/GameTableStyle';
 import { ScrollablePage } from 'components/general/Scrollable';
-import BtnDefault from 'components/btn/BtnDefault';
+import { BtnDefault } from 'components/btn/Btn';
 import { initialGame } from 'game/state/initialState';
 import { dealInitialCards } from 'game/logic/deck';
 import { hit, stand } from 'game/logic/game';

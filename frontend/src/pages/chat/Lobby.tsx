@@ -36,7 +36,7 @@ function Lobby() {
 
   return (
     <ChatPage>
-      <ChatHead title="the lobby" nbr_online={nbr_online} />
+      <ChatHead is_dm={false} title="the lobby" nbr_online={nbr_online} />
       <ChatMsgArea>
         {Object.entries(grouped).map(([day, msgs]) => (
           <React.Fragment key={day}>

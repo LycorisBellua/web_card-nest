@@ -3,9 +3,9 @@ import type { Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
 import styled, { css } from 'styled-components';
-import { Avatar } from 'components/btn/user_btn/Avatar';
-import { Username } from 'components/btn/user_btn/Username';
-import { RankBadge } from 'components/btn/user_btn/RankBadge';
+import { Avatar } from 'components/btn/Avatar';
+import { Username } from 'components/btn/Username';
+import { RankBadge } from 'components/btn/RankBadge';
 
 const Row = styled.div<{ $rank: string }>`
   display: flex;

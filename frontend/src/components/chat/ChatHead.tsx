@@ -1,16 +1,36 @@
+import { Link } from 'react-router-dom';
+import { BtnDefault } from 'components/btn/Btn';
 import styled from 'styled-components';
 
 const Head = styled.div`
   padding: 10px 16px;
   border-bottom: 1px solid #38281a;
   display: flex;
-  flex-direction: column;
-  align-items: left;
+  flex-direction: row;
+  align-items: center;
   flex-shrink: 0;
+  gap: 12px;
 
   @media (max-height: 620px) {
     padding: 7px 14px;
   }
+`;
+
+const LeftPanel = styled(BtnDefault)`
+  width: 36px;
+  height: 36px;
+  border: 1px solid #38281a;
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const TextGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 `;
 
 const Title = styled.div`
@@ -51,19 +71,28 @@ const LiveDot = styled.span`
 `;
 
 function ChatHead({
+  is_dm,
   title,
   nbr_online,
 }: {
+  is_dm: boolean;
   title: string;
   nbr_online: number;
 }) {
   return (
     <Head>
-      <Title># {title}</Title>
-      <Sub>
-        <LiveDot></LiveDot>
-        {nbr_online} online
-      </Sub>
+      {is_dm && (
+        <Link to={`/user/${title}`}>
+          <LeftPanel>👤</LeftPanel>
+        </Link>
+      )}
+      <TextGroup>
+        <Title># {title}</Title>
+        <Sub>
+          <LiveDot />
+          {nbr_online} online
+        </Sub>
+      </TextGroup>
     </Head>
   );
 }

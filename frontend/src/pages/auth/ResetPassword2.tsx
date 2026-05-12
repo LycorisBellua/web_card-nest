@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { sanitizePassword } from 'functions/UserSanitation';
 import { validatePassword } from 'functions/UserValidation';
 import { ScrollablePage } from 'components/general/Scrollable';
-import BtnDefault from 'components/btn/BtnDefault';
+import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
 
 function ResetPasswordSecond() {

@@ -1,6 +1,5 @@
 import styled from 'styled-components';
-import BtnDefault from 'components/btn/BtnDefault';
-import BtnDanger from 'components/btn/BtnDanger';
+import { BtnDefault, BtnDanger } from 'components/btn/Btn';
 
 /*
   const [isModalOpen, setIsModalOpen] = useState(false);

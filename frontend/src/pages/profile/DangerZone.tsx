@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useUser } from 'context/useUser';
 import type { User } from 'context/Types';
-import BtnDanger from 'components/btn/BtnDanger';
+import { BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
 function DangerZone({ user }: { user: NonNullable<User> }) {

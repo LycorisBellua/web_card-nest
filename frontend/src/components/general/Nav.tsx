@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import BtnDefault from 'components/btn/BtnDefault';
+import { BtnDefault } from 'components/btn/Btn';
 import UserMenu from 'pages/profile/UserMenu';
 
 const TopBar = styled.div`

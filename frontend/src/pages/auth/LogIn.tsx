@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { sanitizeEmail, sanitizePassword } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
-import BtnDefault from 'components/btn/BtnDefault';
+import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
 
 type LoginResponse = {

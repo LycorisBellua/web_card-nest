@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import BtnAccent from 'components/btn/BtnAccent';
+import { BtnAccent } from 'components/btn/Btn';
 
 /*
   <ContentCard

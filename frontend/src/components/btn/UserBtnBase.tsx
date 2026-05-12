@@ -1,8 +1,8 @@
 import type { UserLimitedOrGuest } from 'context/Types';
-import { Avatar } from 'components/btn/user_btn/Avatar';
-import { Username } from 'components/btn/user_btn/Username';
-import { RankBadge } from 'components/btn/user_btn/RankBadge';
-import BtnGhost from 'components/btn/BtnGhost';
+import { Avatar } from 'components/btn/Avatar';
+import { Username } from 'components/btn/Username';
+import { RankBadge } from 'components/btn/RankBadge';
+import { BtnGhost } from 'components/btn/Btn';
 import styled from 'styled-components';
 
 const Btn = styled(BtnGhost)`

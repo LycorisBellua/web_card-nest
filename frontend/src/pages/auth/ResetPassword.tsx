@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { sanitizeEmail } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 import { ScrollablePage } from 'components/general/Scrollable';
-import BtnDefault from 'components/btn/BtnDefault';
+import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
 
 function ResetPassword() {

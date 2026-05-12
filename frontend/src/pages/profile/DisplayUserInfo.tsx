@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import type { User } from 'context/Types';
 import { GetDate } from 'functions/Time';
-import { AvatarBig } from 'components/btn/user_btn/Avatar';
-import BtnDefault from 'components/btn/BtnDefault';
-import { UsernameBig } from 'components/btn/user_btn/Username';
-import { RankBadgeBig } from 'components/btn/user_btn/RankBadge';
+import { AvatarBig } from 'components/btn/Avatar';
+import { BtnDefault } from 'components/btn/Btn';
+import { UsernameBig } from 'components/btn/Username';
+import { RankBadgeBig } from 'components/btn/RankBadge';
 import styled from 'styled-components';
 
 const PublicWrapper = styled.div`

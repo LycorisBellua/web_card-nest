@@ -2,7 +2,7 @@ import { useUser } from 'context/useUser';
 import { IsLoggedIn } from 'functions/Ranks';
 import styled from 'styled-components';
 import { ScrollableArea } from 'components/general/Scrollable';
-import UserBtn from 'components/btn/user_btn/UserBtn';
+import UserBtn from 'components/btn/UserBtn';
 
 const Backdrop = styled.div<{ $isOpen: boolean }>`
   display: none;

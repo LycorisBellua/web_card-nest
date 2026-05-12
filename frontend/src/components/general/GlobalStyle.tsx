@@ -55,6 +55,10 @@ const GlobalStyle = createGlobalStyle`
     color: #faf3f2;
   }
 
+  a:has(button) {
+	text-decoration: none;
+  }
+
   ul {
     list-style-type: none;
   }

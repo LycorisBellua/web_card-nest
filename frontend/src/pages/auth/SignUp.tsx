@@ -10,7 +10,7 @@ import {
   validateEmail,
   validatePassword,
 } from 'functions/UserValidation';
-import BtnDefault from 'components/btn/BtnDefault';
+import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
 
 function SignUp() {

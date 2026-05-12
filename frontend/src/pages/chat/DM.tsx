@@ -48,7 +48,7 @@ function DM() {
 
   return (
     <ChatPage>
-      <ChatHead title={friend.username} nbr_online={nbr_online} />
+      <ChatHead is_dm={true} title={friend.username} nbr_online={nbr_online} />
       <ChatMsgArea>
         {Object.entries(grouped).map(([day, msgs]) => (
           <React.Fragment key={day}>

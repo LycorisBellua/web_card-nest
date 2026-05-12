@@ -14,9 +14,8 @@ import {
   validateDescription,
   validateAvatar,
 } from 'functions/UserValidation';
-import BtnDefault from 'components/btn/BtnDefault';
-import BtnDisabled from 'components/btn/BtnDisabled';
-import { AvatarBig } from 'components/btn/user_btn/Avatar';
+import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
+import { AvatarBig } from 'components/btn/Avatar';
 import InputField from 'components/misc/InputField';
 import TextareaField from 'components/misc/TextareaField';
 import styled from 'styled-components';
