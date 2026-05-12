@@ -22,7 +22,7 @@ import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(AuthGuard, RankGuard)
+  @UseGuards(AuthGuard)
   @Delete()
   async removeUser(@Req() req: ExpressRequest) {
     const user = req['user'] as JwtPayload;
@@ -42,7 +42,7 @@ export class UserController {
   }
 
   // FETCH USERS
-  @UseGuards(AuthGuard, RankGuard)
+  @UseGuards(AuthGuard)
   @Get('me')
   async getOwnProfile(@Req() req: ExpressRequest) {
     const user = req['user'] as JwtPayload;
