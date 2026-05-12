@@ -2,9 +2,9 @@ import {
   Body,
   Controller,
   Get,
-  InternalServerErrorException,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Redirect,
   Req,
@@ -18,6 +18,7 @@ import { AuthGuard } from './guards/auth.guard';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import type { Request as ExpressRequest } from 'express';
 import type { Response as ExpressResponse } from 'express';
+import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { LoginDto } from '../user/dto/login.dto';
 
 @Controller('/api/auth')
@@ -89,6 +90,16 @@ export class AuthController {
     }
     const accessToken = await this.authService.refresh(jwtToken, refreshToken);
     return { accessToken };
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('password')
+  async updatePassword(
+    @Req() req: ExpressRequest,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    const user = req['user'] as JwtPayload;
+    return await this.authService.updatePassword(user.id, updatePasswordDto);
   }
 
   @Get('/:userId/:token/verify')
