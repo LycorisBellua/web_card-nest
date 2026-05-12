@@ -7,6 +7,10 @@ const Wrapper = styled.div`
   a {
     text-decoration: none;
   }
+
+  button {
+    width: 100%;
+  }
 `;
 
 function UserBtn({
