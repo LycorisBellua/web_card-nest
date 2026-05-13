@@ -4,12 +4,13 @@ import { UserService } from '../user/user.service';
 import { ErrorMessages } from './error_messages/ErrorMessages';
 import { Friend } from 'src/generated/prisma/browser';
 import { Block } from 'src/generated/prisma/client';
-
+import { WebsocketServer } from '../websocketGateway/websocket.gateway';
 @Injectable()
 export class RelService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
+    private  websocketServer: WebsocketServer,
   ) {}
   // FRIEND MANAGEMENT
   async addFriend(originId: string, targetId: string) {
@@ -36,9 +37,14 @@ export class RelService {
   async removeFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const existing = await this.findFriendship(originId, targetId);
+    const friendListOid = await this.fetchFriendsList(originId);
+    const friendListTargid = await this.fetchFriendsList(targetId);
     if (!existing || existing.status === 'PENDING') {
       throw new BadRequestException(ErrorMessages.NOT_FRIENDS);
     }
+    this.userService.UpdateFriendFriendlist
+    this.websocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
+     this.websocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
     return await this.deleteFriendship(existing);
   }
 
@@ -147,7 +153,16 @@ export class RelService {
       },
     });
   }
-
+  // async deleteFriendship(friend: Friend) {
+  //   return await this.prisma.friend.delete({
+  //     where: {
+  //       requesterId_addresseeId: {
+  //         requesterId: friend.requesterId,
+  //         addresseeId: friend.addresseeId,
+  //       },
+  //     },
+  //   });
+  // }
   async statusAccept(friend: Friend) {
     return await this.prisma.friend.update({
       where: {

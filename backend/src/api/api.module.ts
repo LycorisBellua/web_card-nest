@@ -19,6 +19,7 @@ import { GdprService } from './gdpr/gdpr.service';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
 
+
 @Module({
   imports: [
     JwtModule.register({
@@ -46,6 +47,7 @@ import { AdminService } from './admin/admin.service';
     AuthService,
     GdprService,
     AdminService,
+    WebsocketServer
   ],
 })
 export class ApiModule {}
