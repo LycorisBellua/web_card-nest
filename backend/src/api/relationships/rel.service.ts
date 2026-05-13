@@ -11,12 +11,13 @@ import {
   FriendshipWithUsers,
   FriendUser,
 } from './types/rel.types';
-
+import { WebsocketServer } from '../websocketGateway/websocket.gateway';
 @Injectable()
 export class RelService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
+    private  websocketServer: WebsocketServer,
   ) {}
 
   // FRIEND MANAGEMENT
@@ -44,20 +45,35 @@ export class RelService {
   async removeFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const existing = await this.findFriendship(originId, targetId);
-    if (!existing || existing.status === FriendStatus.PENDING) {
+    const friendListOid = await this.fetchFriends(originId);
+    const friendListTargid = await this.fetchFriends(targetId);
+    if (!existing || existing.status === 'PENDING') {
       throw new BadRequestException(ErrorMessages.NOT_FRIENDS);
     }
-    return await this.deleteFriendship(existing);
+    // this.userService.UpdateFriendFriendlist
+    await this.deleteFriendship(existing)
+    this.websocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid});
+    this.websocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid});
+    return ;
   }
 
   async acceptRequest(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const blocked = await this.findBlock(originId, targetId);
     const found = await this.findFriendshipAsAddressee(originId, targetId);
+    let friendListOid; 
+    let friendListTargid;
+
     if (blocked || !found || found.status === FriendStatus.ACCEPTED) {
       throw new BadRequestException(ErrorMessages.REQ_NOT_FOUND);
     }
-    return await this.statusAccept(found);
+    await this.statusAccept(found);
+    friendListOid = await this.fetchFriends(originId);
+    friendListTargid = await this.fetchFriends(targetId);
+    this.websocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid});
+    this.websocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid});
+    
+    return ;
   }
 
   async rejectRequest(originId: string, targetId: string) {
@@ -205,6 +221,8 @@ export class RelService {
   async blockUser(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const blocked = await this.findBlock(originId, targetId);
+    let friendListOid; 
+    let friendListTargid;
     if (blocked) {
       throw new BadRequestException(ErrorMessages.BLOCK_ALREADY);
     }
@@ -215,6 +233,10 @@ export class RelService {
     ) {
       await this.deleteFriendship(friendship);
     }
+    friendListOid = await this.fetchFriends(originId);
+    friendListTargid = await this.fetchFriends(targetId);
+    this.websocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid});
+    this.websocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid});
     return await this.createBlock(originId, targetId);
   }
 
