@@ -18,6 +18,7 @@ import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
 import { AvatarBig } from 'components/btn/Avatar';
 import InputField from 'components/misc/InputField';
 import TextareaField from 'components/misc/TextareaField';
+import Spinner from 'components/misc/Spinner';
 import styled from 'styled-components';
 
 type FieldErrors = {
@@ -40,6 +41,7 @@ const emptyFieldErrors = (): FieldErrors => ({
 
 function EditProfile({ user }: { user: NonNullable<User> }) {
   const { setUser } = useUser();
+  const [displaySpinner, setDisplaySpinner] = useState(false);
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>(emptyFieldErrors());
   const [successMessage, setSuccessMessage] = useState('');
@@ -62,6 +64,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
   async function handleSave() {
     if (!hasPendingChanges || isSaving) return;
 
+    setDisplaySpinner(true);
     setFieldErrors(emptyFieldErrors());
     setSuccessMessage('');
     setIsSaving(true);
@@ -142,6 +145,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         server: failed.map((r) => `Error ${r.status}: ${r.statusText}`),
       }));
       setIsSaving(false);
+      setDisplaySpinner(false);
       return;
     }
 
@@ -158,6 +162,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     setResetKey((k) => k + 1);
     setSuccessMessage('Changes saved successfully.');
     setIsSaving(false);
+    setDisplaySpinner(false);
   }
 
   const SaveButton = hasPendingChanges && !isSaving ? BtnDefault : BtnDisabled;
@@ -201,6 +206,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         ))}
         {successMessage && <p>{successMessage}</p>}
         <SaveButton onClick={() => void handleSave()}>Save</SaveButton>
+        {displaySpinner && <Spinner label="Saving..." />}
       </div>
     </div>
   );

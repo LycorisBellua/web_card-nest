@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { User, UserLimitedOrGuest } from 'context/Types';
 import { GetDate } from 'functions/Time';
 import { AvatarBig } from 'components/btn/Avatar';
@@ -82,12 +83,17 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
     <div>
       <div>
         <p>Unverified email: {user.unverifiedEmail}</p>
-        <BtnDefault onClick={() => void handleVerifyEmail()}>Verify</BtnDefault>
+        <BtnDefault onClick={() => void handleVerifyEmail()}>
+          Verify Email
+        </BtnDefault>
       </div>
       {errors.map((err, i) => (
         <div key={i}>{err}</div>
       ))}
       {message && <p>{message}</p>}
+      <Link to="/data-extraction">
+        <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
+      </Link>
     </div>
   );
 }

@@ -1,5 +1,27 @@
-BASIC FRONTEND
-- Finish the backlog stuff.
+MODERATION
+- A non-admin mod can renounce their rank.
+- From the profile, a mod can remove the avatar, edit the username and the 
+description.
+- From the profile, the admin sees a button to give or remove the mod rank, as 
+well as a button to delete the account.
+- From chat, a mod can overwrite a user's specific chat message, while the 
+admin can also overwrite a mod's message. The request doesn't specify a 
+message, what it does is empty the message content, and add a boolean to say it 
+has been moderated. On the frontend, the overwritten message is the same 
+whether the mod is an ordinary mod or an admin: "Moderated message".
+
+DATA EXTRACTION
+- The Privacy Policy page needs to offer a link to the personal data extraction 
+page. It can also be found within the profile.
+- Spinner for data extraction.
+- To extract their data, the user has a menu with different checkboxes they can 
+choose from, or all of them: their user profile, and any chat they participated 
+in (DMs and the lobby). DMs are available even if the user hasn't posted 
+anything in there yet, as it might be relevant to show the thread is empty, or 
+to show what heinous things the so called friend has said. For the lobby 
+though, they need to have posted at least one message.
+- Let the user choose between JSON and CSV. Both are also possible.
+- The user downloads the data from the website directly.
 
 CONNECTION TO THE BACKEND
 - When you log in and receive the access token, store it in memory and then 
@@ -7,7 +29,18 @@ send it with all requests. If you receive 401, it means it expired. Call the
 API to refresh (= get a new access token). If it says 401 here, it means the 
 refresh token is expired and you need to be logged out. Call the API to log 
 out, it's not just about logging out on the frontend.
+- Tackle the TODOs sprinkled around the frontend.
 - ...
+
+FRIENDSHIP & BLOCK
+- Blocked list (private), link to users profile.
+- From the blocked list, button to unblock.
+- Friends list (public), link to users profile.
+- From the friends list, button to remove friendship.
+- Section for your pending requests. Button to cancel a request.
+- Section for requests you have received. Button to accept and button to reject.
+- The friends list is part of the public display, but without the button to 
+remove the friendship of course.
 
 GAME
 - Black Crown tables.
