@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import Layout from 'App';
 import Lobby from 'pages/chat/Lobby';
 import Auth from 'pages/auth/Auth';
@@ -16,6 +17,9 @@ import TermsOfService from 'pages/footer/TermsOfService';
 import Credits from 'pages/footer/Credits';
 import DataExtraction from 'pages/footer/DataExtraction';
 import NotFound from 'pages/NotFound';
+// import { ChatApp } from 'pages/ChatPages';
+
+const ChatApp = lazy(() => import('pages/ChatPages').then(m => ({ default: m.ChatApp })));
 
 const routes = [
   {
@@ -34,6 +38,8 @@ const routes = [
       { path: 'profile', element: <PrivateProfile /> },
       { path: 'chat/:username', element: <DM /> },
       { path: 'play', element: <Play /> },
+      { path: 'chat', element: <Suspense fallback={<div>Loading...</div>}><ChatApp /></Suspense> },
+      // { path: 'chat', element: <ChatApp /> },
       { path: 'privacy-policy', element: <PrivacyPolicy /> },
       { path: 'terms-of-service', element: <TermsOfService /> },
       { path: 'credits', element: <Credits /> },
@@ -44,3 +50,4 @@ const routes = [
 ];
 
 export default routes;
+
