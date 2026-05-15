@@ -7,36 +7,26 @@ type Message = {
 };
 
 
-
-// const Chat = ({ targetUserId }: { targetUserId: string }) => {
-export const  Chat = () => {  
+export const  Room = () => {  
 const socket = useSocket();
 console.log("after useSocket call socket is connected : ", socket.connected === true);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-   const [targetUserId, setTargetUserId] = useState('');
-  useEffect(() => {
-    // listen for incoming messages
-    socket.on('receiveMessage', (data: Message) => {
+const [messages, setMessages] = useState<Message[]>([]);
+const [input, setInput] = useState('');
+useEffect(() => {
+    socket.on('PublicMessage', (data: Message) => {
       setMessages((prev: Message[]) => [...prev, data]);
     });
 
     // cleanup listener on unmount
     return () => {
-      socket.off('receiveMessage');
-      
+      socket.off('PublicMessage');
+      socket.disconnect();
     };
   }, [socket]);
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    console.log("socket is connected : ", socket.connected === true);
-    socket.emit('PrivateMessage', {
-      targetUserId: targetUserId,
-      message: input,
-    });
-
-    // optional: add locally
+    socket.emit('PublicMessage', input);
     setMessages((prev) => [
       ...prev,
       { Sender: 'me', message: input },
@@ -50,13 +40,6 @@ console.log("after useSocket call socket is connected : ", socket.connected === 
       <h3>Chat your ID {(socket.io.opts.query as { userId: string })?.userId}</h3>
   <div/>
      <div>
-        <label>Target User ID:</label>
-        <input
-          value={targetUserId}
-          onChange={(e) => setTargetUserId(e.target.value)}
-          placeholder="Enter receiver userId"
-        />
-      </div>
 
       <div style={{ border: '1px solid #ccc', height: 200, overflowY: 'auto' }}>
         {messages.map((msg, idx) => (

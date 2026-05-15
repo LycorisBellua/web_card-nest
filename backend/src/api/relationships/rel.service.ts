@@ -8,11 +8,21 @@ import { WebsocketServer } from '../websocketGateway/websocket.gateway';
 @Injectable()
 export class RelService {
   constructor(
-    private readonly prisma: PrismaService,
+    // private readonly prisma: PrismaService,
     private readonly userService: UserService,
-    private  websocketServer: WebsocketServer,
+    // private  websocketServer: WebsocketServer,
   ) {}
   // FRIEND MANAGEMENT
+
+  async UpdateFriendListDisplay(originId: string, targetId: string)
+  {
+    const friendListOid = await this.fetchFriendsList(originId);
+    const friendListTargid = await this.fetchFriendsList(targetId);
+    
+    this.userService.WebsocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
+    this.userService.WebsocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
+  }
+
   async addFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     if (await this.findBlock(originId, targetId)) {
@@ -37,15 +47,11 @@ export class RelService {
   async removeFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const existing = await this.findFriendship(originId, targetId);
-    const friendListOid = await this.fetchFriendsList(originId);
-    const friendListTargid = await this.fetchFriendsList(targetId);
     if (!existing || existing.status === 'PENDING') {
       throw new BadRequestException(ErrorMessages.NOT_FRIENDS);
     }
-    this.userService.UpdateFriendFriendlist
-    this.websocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
-     this.websocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
-    return await this.deleteFriendship(existing);
+    await this.deleteFriendship(existing);
+    return await this.UpdateFriendListDisplay(originId, targetId);
   }
 
   async acceptRequest(originId: string, targetId: string) {
@@ -54,7 +60,8 @@ export class RelService {
     if (!found || found.status === 'ACCEPTED') {
       throw new BadRequestException(ErrorMessages.REQ_NOT_FOUND);
     }
-    return await this.statusAccept(found);
+    await this.statusAccept(found);
+    return await this.UpdateFriendListDisplay(originId, targetId);
   }
 
   async rejectRequest(originId: string, targetId: string) {
@@ -102,7 +109,7 @@ export class RelService {
 
   // FRIEND DB ACTIONS
   async findFriendshipAsRequester(originId: string, targetId: string) {
-    return await this.prisma.friend.findUnique({
+    return await this.userService.prisma.friend.findUnique({
       where: {
         requesterId_addresseeId: {
           requesterId: originId,
@@ -113,7 +120,7 @@ export class RelService {
   }
 
   async findFriendshipAsAddressee(originId: string, targetId: string) {
-    return await this.prisma.friend.findUnique({
+    return await this.userService.prisma.friend.findUnique({
       where: {
         requesterId_addresseeId: {
           requesterId: targetId,
@@ -124,7 +131,7 @@ export class RelService {
   }
 
   async findFriendship(originId: string, targetId: string) {
-    return await this.prisma.friend.findFirst({
+    return await this.userService.prisma.friend.findFirst({
       where: {
         OR: [
           { requesterId: originId, addresseeId: targetId },
@@ -135,7 +142,7 @@ export class RelService {
   }
 
   async createFriendship(originId: string, targetId: string) {
-    return await this.prisma.friend.create({
+    return await this.userService.prisma.friend.create({
       data: {
         requesterId: originId,
         addresseeId: targetId,
@@ -144,7 +151,7 @@ export class RelService {
   }
 
   async deleteFriendship(friend: Friend) {
-    return await this.prisma.friend.delete({
+    return await this.userService.prisma.friend.delete({
       where: {
         requesterId_addresseeId: {
           requesterId: friend.requesterId,
@@ -154,7 +161,7 @@ export class RelService {
     });
   }
   // async deleteFriendship(friend: Friend) {
-  //   return await this.prisma.friend.delete({
+  //   return await this.userService.prisma.friend.delete({
   //     where: {
   //       requesterId_addresseeId: {
   //         requesterId: friend.requesterId,
@@ -164,7 +171,7 @@ export class RelService {
   //   });
   // }
   async statusAccept(friend: Friend) {
-    return await this.prisma.friend.update({
+    return await this.userService.prisma.friend.update({
       where: {
         requesterId_addresseeId: {
           requesterId: friend.requesterId,
@@ -176,7 +183,7 @@ export class RelService {
   }
 
   async findAccepted(originId: string) {
-    return await this.prisma.friend.findMany({
+    return await this.userService.prisma.friend.findMany({
       where: {
         status: 'ACCEPTED',
         OR: [{ requesterId: originId }, { addresseeId: originId }],
@@ -185,7 +192,7 @@ export class RelService {
   }
 
   async findSentPending(originId: string) {
-    return await this.prisma.friend.findMany({
+    return await this.userService.prisma.friend.findMany({
       where: {
         requesterId: originId,
         status: 'PENDING',
@@ -196,7 +203,7 @@ export class RelService {
   async findReceivedPending(originId: string) {
     const blocked = await this.findBlockedUsers(originId);
     const blockedIds = blocked.map((blockedId) => blockedId.blockedId);
-    return await this.prisma.friend.findMany({
+    return await this.userService.prisma.friend.findMany({
       where: {
         addresseeId: originId,
         status: 'PENDING',
@@ -219,6 +226,7 @@ export class RelService {
     ) {
       await this.deleteFriendship(friendship);
     }
+    await this.UpdateFriendListDisplay(originId, targetId);
     return await this.createBlock(originId, targetId);
   }
 
@@ -245,7 +253,7 @@ export class RelService {
   }
   // BLOCK DB ACTIONS
   async findBlock(blockerId: string, blockedId: string) {
-    return await this.prisma.block.findUnique({
+    return await this.userService.prisma.block.findUnique({
       where: {
         blockerId_blockedId: {
           blockerId: blockerId,
@@ -256,7 +264,7 @@ export class RelService {
   }
 
   async createBlock(originId: string, targetId: string) {
-    return await this.prisma.block.create({
+    return await this.userService.prisma.block.create({
       data: {
         blockerId: originId,
         blockedId: targetId,
@@ -265,7 +273,7 @@ export class RelService {
   }
 
   async deleteBlock(block: Block) {
-    return await this.prisma.block.delete({
+    return await this.userService.prisma.block.delete({
       where: {
         blockerId_blockedId: {
           blockerId: block.blockerId,
@@ -276,7 +284,7 @@ export class RelService {
   }
 
   async findBlockedUsers(originId: string) {
-    return await this.prisma.block.findMany({
+    return await this.userService.prisma.block.findMany({
       where: { blockerId: originId },
     });
   }
