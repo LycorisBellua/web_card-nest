@@ -15,12 +15,22 @@ import { WebsocketServer } from '../websocketGateway/websocket.gateway';
 @Injectable()
 export class RelService {
   constructor(
-    private readonly prisma: PrismaService,
+    // private readonly prisma: PrismaService,
     private readonly userService: UserService,
-    private  websocketServer: WebsocketServer,
+    // private  websocketServer: WebsocketServer,
   ) {}
 
   // FRIEND MANAGEMENT
+
+  async UpdateFriendListDisplay(originId: string, targetId: string)
+  {
+    const friendListOid = await this.fetchFriendsList(originId);
+    const friendListTargid = await this.fetchFriendsList(targetId);
+    
+    this.userService.WebsocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
+    this.userService.WebsocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
+  }
+
   async addFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     if (await this.findBlock(originId, targetId)) {
@@ -45,6 +55,7 @@ export class RelService {
   async removeFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const existing = await this.findFriendship(originId, targetId);
+<<<<<<< HEAD
     const friendListOid = await this.fetchFriends(originId);
     const friendListTargid = await this.fetchFriends(targetId);
     if (!existing || existing.status === 'PENDING') {
@@ -55,6 +66,13 @@ export class RelService {
     this.websocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid});
     this.websocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid});
     return ;
+=======
+    if (!existing || existing.status === 'PENDING') {
+      throw new BadRequestException(ErrorMessages.NOT_FRIENDS);
+    }
+    await this.deleteFriendship(existing);
+    return await this.UpdateFriendListDisplay(originId, targetId);
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
   }
 
   async acceptRequest(originId: string, targetId: string) {
@@ -68,12 +86,16 @@ export class RelService {
       throw new BadRequestException(ErrorMessages.REQ_NOT_FOUND);
     }
     await this.statusAccept(found);
+<<<<<<< HEAD
     friendListOid = await this.fetchFriends(originId);
     friendListTargid = await this.fetchFriends(targetId);
     this.websocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid});
     this.websocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid});
     
     return ;
+=======
+    return await this.UpdateFriendListDisplay(originId, targetId);
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
   }
 
   async rejectRequest(originId: string, targetId: string) {
@@ -115,8 +137,13 @@ export class RelService {
   }
 
   // FRIEND DB ACTIONS
+<<<<<<< HEAD
   private async findFriendshipAsRequester(originId: string, targetId: string) {
     return await this.prisma.friend.findUnique({
+=======
+  async findFriendshipAsRequester(originId: string, targetId: string) {
+    return await this.userService.prisma.friend.findUnique({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: {
         requesterId_addresseeId: {
           requesterId: originId,
@@ -126,8 +153,13 @@ export class RelService {
     });
   }
 
+<<<<<<< HEAD
   private async findFriendshipAsAddressee(originId: string, targetId: string) {
     return await this.prisma.friend.findUnique({
+=======
+  async findFriendshipAsAddressee(originId: string, targetId: string) {
+    return await this.userService.prisma.friend.findUnique({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: {
         requesterId_addresseeId: {
           requesterId: targetId,
@@ -137,8 +169,13 @@ export class RelService {
     });
   }
 
+<<<<<<< HEAD
   private async findFriendship(originId: string, targetId: string) {
     return await this.prisma.friend.findFirst({
+=======
+  async findFriendship(originId: string, targetId: string) {
+    return await this.userService.prisma.friend.findFirst({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: {
         OR: [
           { requesterId: originId, addresseeId: targetId },
@@ -148,8 +185,13 @@ export class RelService {
     });
   }
 
+<<<<<<< HEAD
   private async createFriendship(originId: string, targetId: string) {
     return await this.prisma.friend.create({
+=======
+  async createFriendship(originId: string, targetId: string) {
+    return await this.userService.prisma.friend.create({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       data: {
         requesterId: originId,
         addresseeId: targetId,
@@ -157,8 +199,13 @@ export class RelService {
     });
   }
 
+<<<<<<< HEAD
   private async deleteFriendship(friend: Friend) {
     return await this.prisma.friend.delete({
+=======
+  async deleteFriendship(friend: Friend) {
+    return await this.userService.prisma.friend.delete({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: {
         requesterId_addresseeId: {
           requesterId: friend.requesterId,
@@ -167,9 +214,24 @@ export class RelService {
       },
     });
   }
+<<<<<<< HEAD
 
   private async statusAccept(friend: Friend) {
     return await this.prisma.friend.update({
+=======
+  // async deleteFriendship(friend: Friend) {
+  //   return await this.userService.prisma.friend.delete({
+  //     where: {
+  //       requesterId_addresseeId: {
+  //         requesterId: friend.requesterId,
+  //         addresseeId: friend.addresseeId,
+  //       },
+  //     },
+  //   });
+  // }
+  async statusAccept(friend: Friend) {
+    return await this.userService.prisma.friend.update({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: {
         requesterId_addresseeId: {
           requesterId: friend.requesterId,
@@ -180,8 +242,13 @@ export class RelService {
     });
   }
 
+<<<<<<< HEAD
   private async findAccepted(originId: string): Promise<FriendshipWithUsers> {
     return await this.prisma.friend.findMany({
+=======
+  async findAccepted(originId: string) {
+    return await this.userService.prisma.friend.findMany({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: {
         status: FriendStatus.ACCEPTED,
         OR: [{ requesterId: originId }, { addresseeId: originId }],
@@ -190,10 +257,15 @@ export class RelService {
     });
   }
 
+<<<<<<< HEAD
   private async findSentPending(
     originId: string,
   ): Promise<FriendshipWithUsers> {
     return await this.prisma.friend.findMany({
+=======
+  async findSentPending(originId: string) {
+    return await this.userService.prisma.friend.findMany({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: {
         requesterId: originId,
         status: FriendStatus.PENDING,
@@ -206,7 +278,7 @@ export class RelService {
   private async findReceivedPending(originId: string) {
     const blocked = await this.findBlockedUsers(originId);
     const blockedIds = blocked.map((blockedId) => blockedId.blockedId);
-    return await this.prisma.friend.findMany({
+    return await this.userService.prisma.friend.findMany({
       where: {
         addresseeId: originId,
         status: FriendStatus.PENDING,
@@ -233,10 +305,14 @@ export class RelService {
     ) {
       await this.deleteFriendship(friendship);
     }
+<<<<<<< HEAD
     friendListOid = await this.fetchFriends(originId);
     friendListTargid = await this.fetchFriends(targetId);
     this.websocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid});
     this.websocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid});
+=======
+    await this.UpdateFriendListDisplay(originId, targetId);
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
     return await this.createBlock(originId, targetId);
   }
 
@@ -256,8 +332,13 @@ export class RelService {
   }
 
   // BLOCK DB ACTIONS
+<<<<<<< HEAD
   private async findBlock(blockerId: string, blockedId: string) {
     return await this.prisma.block.findUnique({
+=======
+  async findBlock(blockerId: string, blockedId: string) {
+    return await this.userService.prisma.block.findUnique({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: {
         blockerId_blockedId: {
           blockerId: blockerId,
@@ -267,8 +348,13 @@ export class RelService {
     });
   }
 
+<<<<<<< HEAD
   private async createBlock(originId: string, targetId: string) {
     return await this.prisma.block.create({
+=======
+  async createBlock(originId: string, targetId: string) {
+    return await this.userService.prisma.block.create({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       data: {
         blockerId: originId,
         blockedId: targetId,
@@ -276,8 +362,13 @@ export class RelService {
     });
   }
 
+<<<<<<< HEAD
   private async deleteBlock(block: Block) {
     return await this.prisma.block.delete({
+=======
+  async deleteBlock(block: Block) {
+    return await this.userService.prisma.block.delete({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: {
         blockerId_blockedId: {
           blockerId: block.blockerId,
@@ -287,8 +378,13 @@ export class RelService {
     });
   }
 
+<<<<<<< HEAD
   private async findBlockedUsers(originId: string) {
     return await this.prisma.block.findMany({
+=======
+  async findBlockedUsers(originId: string) {
+    return await this.userService.prisma.block.findMany({
+>>>>>>> 263264f (Chatroom event create with front component, chat private message done with front component, Realtime Friendlist done with front component)
       where: { blockerId: originId },
       include: blockInclude,
       orderBy: { blocked: { username: 'asc' } },

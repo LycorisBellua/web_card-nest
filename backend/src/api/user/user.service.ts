@@ -31,10 +31,19 @@ import { WebsocketServer } from '../websocketGateway/websocket.gateway';
 @Injectable()
 export class UserService {
   constructor(
-    private  prisma: PrismaService,
+    public prisma: PrismaService,
     private readonly userEmailsService: UserEmailsService,
-    private readonly WebsocketServer : WebsocketServer,
+    readonly WebsocketServer : WebsocketServer,
   ) {}
+  
+  // async UpdateFriendListDisplay(originId: string, targetId: string)
+  // {
+  //   const friendListOid = await this.fetchFriendsListUserService(originId);
+  //   const friendListTargid = await this.fetchFriendsListUserService(targetId);
+    
+  //   this.WebsocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
+  //   this.WebsocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
+  // }
 
   async findAcceptedUserService(originId: string) 
   {
@@ -439,7 +448,7 @@ export class UserService {
   }
   private async deleteUserFromFriendTable(userId: string) {
     return await this.prisma.friend.deleteMany({
-      where: {  OR: [ {adresseeId: userId}, {requesterId: userId}, ]},
+      where: {  OR: [ {addresseeId: userId}, {requesterId: userId}, ]},
   
     });
   }

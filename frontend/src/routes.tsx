@@ -19,7 +19,7 @@ import DataExtraction from 'pages/footer/DataExtraction';
 import NotFound from 'pages/NotFound';
 // import { ChatApp } from 'pages/ChatPages';
 
-const ChatApp = lazy(() => import('pages/ChatPages').then(m => ({ default: m.ChatApp })));
+const ChatApp = lazy(() => import('pages/ChatPage').then(m => ({ default: m.ChatApp })));
 
 const routes = [
   {
