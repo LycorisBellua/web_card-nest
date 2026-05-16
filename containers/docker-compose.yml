@@ -17,7 +17,6 @@ services:
       HOME_URL: ${DEV_URL}
       JWT_SECRET: ${JWT_SECRET}
       ADMIN_USER: ${ADMIN_USER}
-      DEV_URL: ${DEV_URL}
     networks:
       - db-net
     restart: unless-stopped
