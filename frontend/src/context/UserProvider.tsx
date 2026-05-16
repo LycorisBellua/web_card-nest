@@ -128,6 +128,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           created: new Date('April 19, 2026 21:14:32'),
           content:
             "good evening everyone ☕ rain's coming down outside. perfect night to stay in and play some cards?",
+          moderated: false,
         },
         {
           id: 'msg_lgudme5mmv8b9b6igg05m',
@@ -135,6 +136,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           created: new Date('April 19, 2026 21:16:41'),
           content:
             "this place is so cozy!! I literally just stumbled in but I think I'll be staying a while 🥹",
+          moderated: false,
         },
         {
           id: 'msg_q7gggwrkfj7iqcsgkeedx',
@@ -142,6 +144,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           created: new Date('April 19, 2026 21:17:18'),
           content:
             'welcome glad you found us. make yourself at home - the lobby is always open.',
+          moderated: false,
         },
         {
           id: 'msg_hc8q7ym2dr0fmh6fb0d3d',
@@ -149,12 +152,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           created: new Date('April 19, 2026 21:19:01'),
           content:
             'Come join, no pressure at all. Jookebox put some lo-fi on too so the vibes are immaculate rn',
+          moderated: false,
         },
         {
           id: 'msg_qk8r2qzewg0ejm2f2ml7h',
           authorId: 'user_n9almh3164vtsjsdepzo9',
           created: new Date('April 19, 2026 21:21:21'),
           content: 'saving me a seat?? 🙏 be there in 5',
+          moderated: false,
         },
         {
           id: 'msg_x0gbww93f8t5inw3o4y8t',
@@ -162,6 +167,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           created: new Date('April 19, 2026 21:22:23'),
           content:
             "always 🧁 also just queued two more hours of lo-fi so we're set for the night ✨",
+          moderated: false,
         },
       ],
     },
@@ -185,7 +191,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                   id: crypto.randomUUID(),
                   authorId: user?.id ?? null,
                   created: new Date(),
-                  content,
+                  content: content,
+                  moderated: false,
                 },
               ],
             },

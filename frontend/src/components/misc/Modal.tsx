@@ -105,7 +105,7 @@ function Modal({
 }: {
   isOpen: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   title: string;
   textMain: string;
   textCancel: string;
@@ -121,7 +121,9 @@ function Modal({
         <ModalText>{textMain}</ModalText>
         <ModalActions>
           <BtnDefault onClick={onCancel}>{textCancel}</BtnDefault>
-          <BtnDanger onClick={onConfirm}>{textConfirm}</BtnDanger>
+          {onConfirm && (
+            <BtnDanger onClick={onConfirm}>{textConfirm}</BtnDanger>
+          )}
         </ModalActions>
       </ModalWindow>
     </ModalBackdrop>

@@ -5,6 +5,8 @@ import { useUser } from 'context/useUser';
 import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
 import ToggleChatTimeout from 'pages/profile/ToggleChatTimeout';
 import GuestProfile from 'pages/profile/GuestProfile';
+import EditProfileMod from 'pages/profile/EditProfileMod';
+import DangerZoneAdmin from 'pages/profile/DangerZoneAdmin';
 import NotFound from 'pages/NotFound';
 import { DisplayPublicUserInfo } from 'pages/profile/DisplayUserInfo';
 import { ScrollablePage } from 'components/general/Scrollable';
@@ -28,6 +30,7 @@ function PublicProfile() {
   );
   //
   if (!user) return <NotFound />;
+
   const is_friend = friends.find(
     (u) => u.username.toLowerCase() === username?.toLowerCase(),
   );
@@ -103,15 +106,16 @@ function PublicProfile() {
         </BtnDanger>
         <ToggleChatTimeout user={user as UserLimitedOrGuest} />
         {error && <p>{error}</p>}
+        <EditProfileMod user={user as NonNullable<User>} />
+        <DangerZoneAdmin user={user as NonNullable<User>} />
       </div>
       <Modal
         isOpen={isFriendModalOpen}
         onCancel={() => closeModals()}
-        onConfirm={() => void sendFriendRequest()}
         title="Send Friend Request"
-        textMain="Are you sure you want to send a friend request to this blocked user? They will be unblocked."
-        textCancel="Cancel"
-        textConfirm="Confirm"
+        textMain="This user is blocked. To send a friend request, you must first unblock them."
+        textCancel="OK"
+        textConfirm=""
       />
       <Modal
         isOpen={isBlockModalOpen}

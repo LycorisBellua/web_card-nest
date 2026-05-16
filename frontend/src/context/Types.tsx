@@ -23,6 +23,7 @@ export type Msg = {
   authorId: string | null;
   created: Date;
   content: string;
+  moderated: boolean;
 };
 
 export type Thread = {

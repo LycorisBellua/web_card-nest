@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { useUser } from 'context/useUser';
 import type { User } from 'context/Types';
+import { CanDisciplineThisUser, IsAdmin } from 'functions/Ranks';
 import { BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
-function DangerZone({ user }: { user: NonNullable<User> }) {
-  const { setUser } = useUser();
+function DangerZoneAdmin({ user }: { user: NonNullable<User> }) {
   const [isDownrankModalOpen, setIsDownrankModalOpen] = useState(false);
   const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
   const [error, setError] = useState('');
+
+  if (!CanDisciplineThisUser(user) || !IsAdmin()) return <></>;
 
   function closeModals() {
     setIsDownrankModalOpen(false);
@@ -26,7 +27,7 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
         setError(`Error ${res.status}: ${res.statusText}`);
         return;
       }
-      setUser((prev) => ({ ...prev, rank: 'user' }) as User);
+      // TODO: Other user is modified. Is the change immediate on the front?
     } catch {
       setError('An error occurred. Please try again.');
     }
@@ -40,8 +41,7 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
         setError(`Error ${res.status}: ${res.statusText}`);
         return;
       }
-      setUser(null);
-      window.location.href = '/';
+      // TODO: Other user is deleted. Is the change immediate on the front?
     } catch {
       setError('An error occurred. Please try again.');
     }
@@ -50,11 +50,9 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
   return (
     <div>
       <h2>Danger zone</h2>
-      {user.rank.toLowerCase() == 'mod' && (
-        <BtnDanger onClick={() => setIsDownrankModalOpen(true)}>
-          Renounce Mod Rank
-        </BtnDanger>
-      )}
+      <BtnDanger onClick={() => setIsDownrankModalOpen(true)}>
+        Remove Mod Rank
+      </BtnDanger>
       <BtnDanger onClick={() => setIsDeletionModalOpen(true)}>
         Delete Account
       </BtnDanger>
@@ -63,8 +61,8 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
         isOpen={isDownrankModalOpen}
         onCancel={() => closeModals()}
         onConfirm={() => void handleDownrank()}
-        title="Renounce Mod Rank"
-        textMain="Are you sure you don't want to be a mod anymore? If you change your mind, you'll have to ask the admin to give you the rank again."
+        title="Remove Mod Rank"
+        textMain="Are you sure you don't want this user to be a mod anymore?"
         textCancel="Cancel"
         textConfirm="Confirm"
       />
@@ -73,7 +71,7 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
         onCancel={() => closeModals()}
         onConfirm={() => void handleDelete()}
         title="Account Deletion"
-        textMain="Are you sure you want to permanently delete your account? This cannot be undone."
+        textMain="Are you sure you want to permanently delete the account of this user? This cannot be undone."
         textCancel="Cancel"
         textConfirm="Confirm"
       />
@@ -81,4 +79,4 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
   );
 }
 
-export default DangerZone;
+export default DangerZoneAdmin;
