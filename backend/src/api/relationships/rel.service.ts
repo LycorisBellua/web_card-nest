@@ -74,16 +74,16 @@ export class RelService {
     return await this.findAccepted(originId);
   }
   async fetchFriendsList(originId: string) {
-    
     const RawData = await this.fetchFriends(originId);
-    const FriendIdList = RawData.map(item => item.requesterId !== originId ? item.requesterId : item.addresseeId);
-    const FriendsList = await Promise.all(FriendIdList.map(item => this.userService.getUsernameById(item)));
-    return {FriendsList};
+    const FriendIdList = RawData.map((item) =>
+      item.requesterId !== originId ? item.requesterId : item.addresseeId,
+    );
+    const FriendsList = await Promise.all(
+      FriendIdList.map((item) => this.userService.getUsernameById(item)),
+    );
+    return { FriendsList };
   }
-  
-  
-  
-  
+
   async fetchSentRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
     return await this.findSentPending(originId);
@@ -221,12 +221,13 @@ export class RelService {
     return await this.findBlockedUsers(originId);
   }
 
-  async fetchBlockedList(originId:string)
-  {
+  async fetchBlockedList(originId: string) {
     const blockedRawData = await this.fetchBlocked(originId);
-    const blockedIdList = blockedRawData.map(item => item.blockedId);
-    const blockedList =  await Promise.all(blockedIdList.map(item => this.userService.getUsernameById(item)));
-    return {blockedList};
+    const blockedIdList = blockedRawData.map((item) => item.blockedId);
+    const blockedList = await Promise.all(
+      blockedIdList.map((item) => this.userService.getUsernameById(item)),
+    );
+    return { blockedList };
   }
   // BLOCK DB ACTIONS
   async findBlock(blockerId: string, blockedId: string) {
