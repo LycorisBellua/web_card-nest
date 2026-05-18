@@ -17,7 +17,7 @@ export class WebsocketServer {
     @MessageBody() body: string,
     @ConnectedSocket() socket: Socket,
   ) {
-    const friendlist = await this.RelService.fetchFriendsList(body);
+    const friendlist = await this.RelService.fetchFriends(body);
     socket.emit('FriendList', friendlist);
   }
 
@@ -26,7 +26,7 @@ export class WebsocketServer {
     @MessageBody() body: string,
     @ConnectedSocket() socket: Socket,
   ) {
-    const Blockedlist = await this.RelService.fetchBlockedList(body);
+    const Blockedlist = await this.RelService.fetchBlocked(body);
     socket.emit('BlockedList', Blockedlist);
   }
 }
