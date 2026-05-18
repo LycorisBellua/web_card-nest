@@ -1,0 +1,35 @@
+DATA EXTRACTION PAGE
+- To extract their data, the user has a menu with different checkboxes they can 
+choose from, or all of them: their user profile, and any chat they participated 
+in (DMs and the lobby). DMs are available even if the user hasn't posted 
+anything in there yet, as it might be relevant to show the thread is empty, or 
+to show what heinous things the so called friend has said. For the lobby 
+though, they need to have posted at least one message.
+- Let the user choose between JSON and CSV. Both are also possible.
+- The user downloads the data from the website directly.
+- Spinner for data extraction.
+
+FRIENDSHIP & BLOCK
+- Blocked list (private), link to users profile.
+- From the blocked list, button to unblock.
+- Friends list (public), link to users profile.
+- From the friends list, button to remove friendship.
+- Section for your pending requests. Button to cancel a request.
+- Section for requests you have received. Button to accept and button to reject.
+- The friends list is part of the public display, but without the button to 
+remove the friendship of course.
+
+CONNECTION TO THE BACKEND
+- When you log in and receive the access token, store it in memory and then 
+send it with all requests. If you receive 401, it means it expired. Call the 
+API to refresh (= get a new access token). If it says 401 here, it means the 
+refresh token is expired and you need to be logged out. Call the API to log 
+out, it's not just about logging out on the frontend.
+- Tackle the TODOs sprinkled around the frontend.
+- ...
+- WebSockets (without the game, I assume).
+
+GAME
+- Black Crown tables.
+- Online mode with WebSockets.
+- ...
