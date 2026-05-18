@@ -7,4 +7,5 @@ export enum ErrorMessages {
   NOT_FRIENDS = 'The two users are not friends.',
   REQ_NOT_FOUND = 'Unable to find matching relationship request.',
   SELF = 'You can not add/remove/block yourself.',
+  TARGET_NOT_FOUND = 'The requested user was not found.',
 }
