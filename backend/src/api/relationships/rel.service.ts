@@ -233,6 +233,14 @@ export class RelService {
     return this.buildBlockList(blocked);
   }
 
+  async fetchBlockedList(originId: string) {
+    const blockedRawData = await this.fetchBlocked(originId);
+    const blockedIdList = blockedRawData.map((item) => item.blockedId);
+    const blockedList = await Promise.all(
+      blockedIdList.map((item) => this.userService.getUsernameById(item)),
+    );
+    return { blockedList };
+  }
   // BLOCK DB ACTIONS
   private async findBlock(blockerId: string, blockedId: string) {
     return await this.prisma.block.findUnique({
