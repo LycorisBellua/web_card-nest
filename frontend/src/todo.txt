@@ -1,3 +1,14 @@
+CONNECTION TO THE BACKEND
+- The frontend has been created in isolation. Make use of the backend and 
+remove the placeholder content.
+- Finish whatever TODOs are present in the frontend.
+- The WebSockets and game-related features are put aside for now.
+- When you log in and receive the access token, store it in memory and then 
+send it with all requests. If you receive 401, it means it expired. Call the 
+API to refresh (= get a new access token). If it says 401 here, it means the 
+refresh token is expired and you need to be logged out. Call the API to log 
+out, it's not just about logging out on the frontend.
+
 DATA EXTRACTION PAGE
 - To extract their data, the user has a menu with different checkboxes they can 
 choose from, or all of them: their user profile, and any chat they participated 
@@ -19,15 +30,10 @@ FRIENDSHIP & BLOCK
 - The friends list is part of the public display, but without the button to 
 remove the friendship of course.
 
+--------------------------------------------------------------------------------
+
 CONNECTION TO THE BACKEND
-- When you log in and receive the access token, store it in memory and then 
-send it with all requests. If you receive 401, it means it expired. Call the 
-API to refresh (= get a new access token). If it says 401 here, it means the 
-refresh token is expired and you need to be logged out. Call the API to log 
-out, it's not just about logging out on the frontend.
-- Tackle the TODOs sprinkled around the frontend.
-- ...
-- WebSockets (without the game, I assume).
+- WebSockets (without the game).
 
 GAME
 - Black Crown tables.
