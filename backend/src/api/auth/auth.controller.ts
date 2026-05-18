@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  InternalServerErrorException,
   Param,
   ParseUUIDPipe,
   Post,
@@ -24,8 +25,23 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
-  async addUser(@Body() createUserDto: CreateUserDto) {
-    return await this.authService.signup(createUserDto);
+  async addUser(
+    @Body() dto: CreateUserDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ) {
+    await this.authService.signup(dto);
+    const login = await this.authService.login(
+      dto.email_unverified,
+      dto.password,
+    );
+    res.cookie('refresh_token', login.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: login.timeout.getTime() - Date.now(),
+    });
+    const accessToken = login.accessToken;
+    return { accessToken };
   }
 
   @Post('login')
