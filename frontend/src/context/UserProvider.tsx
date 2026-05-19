@@ -1,4 +1,4 @@
-import { /*useEffect,*/ useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserContext } from 'context/UserContext';
 import type { User, UserLimited, Thread } from 'context/Types';
 
@@ -64,14 +64,13 @@ const otherUsers: UserLimited[] = [
 ];
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  /*
   // TODO: Implement a real connection
   const [user, setUser] = useState<User>(null);
   useEffect(() => {
-    fetchUser().then(setUser);
+    //fetchUser().then(setUser);
   }, []);
-  */
 
+  /*
   const [user, setUser] = useState<User>({
     id: 'user_ubs9l7ttwz3wwoapzbw8o',
     username: 'Wolf-Hart',
@@ -85,6 +84,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     unverifiedEmail: 'cooler.wolfhart@gmail.com',
     accessToken: '',
   });
+  */
 
   const [friendUsernames, setFriendUsernames] = useState<string[]>([
     'Espresso',
