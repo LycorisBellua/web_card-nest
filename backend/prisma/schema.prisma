@@ -26,6 +26,9 @@ model User {
   receivedRequests Friend[]   @relation("addressee")
   blocked          Block[]    @relation("blocker")
   blockedBy        Block[]    @relation("blocked")
+  chatUserA        Chat[]     @relation("userA")
+  chatUserB        Chat[]     @relation("userB")
+  messageSender    Message[]  @relation("sender")
 }
 
 enum Ranks {
@@ -61,4 +64,25 @@ model Block {
 
   @@id([blockerId, blockedId])
   @@index([blockedId])
+}
+
+model Chat {
+  userA     User      @relation("userA", fields: [userAId], references: [id], onDelete: Cascade)
+  userAId   String
+  userB     User      @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
+  userBId   String
+  messages  Message[] @relation("chat")
+  id        String    @id @default(uuid(7))
+
+  @@unique([userAId, userBId])
+  @@index([userBId])
+}
+
+model Message {
+  id        String  @id @default(uuid(7))
+  chat      Chat    @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
+  chatId    String
+  message   String  @db.VarChar(500)
+  sender    User    @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId  String
 }
