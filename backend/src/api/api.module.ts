@@ -18,6 +18,8 @@ import { GdprController } from './gdpr/gdpr.controller';
 import { GdprService } from './gdpr/gdpr.service';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
+import { ChatController } from './chat/chat.controller';
+import { ChatService } from './chat/chat.service';
 
 @Module({
   imports: [
@@ -35,6 +37,7 @@ import { AdminService } from './admin/admin.service';
     AuthController,
     GdprController,
     AdminController,
+    ChatController,
   ],
   providers: [
     HelloService,
@@ -46,6 +49,7 @@ import { AdminService } from './admin/admin.service';
     AuthService,
     GdprService,
     AdminService,
+    ChatService,
   ],
 })
 export class ApiModule {}

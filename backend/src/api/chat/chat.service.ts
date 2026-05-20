@@ -1,27 +1,52 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ChatParticipants, NewMessage } from './types/chat.types';
+import {
+  ChatParticipants,
+  MessageHistory,
+  messageSelect,
+  NewMessage,
+} from './types/chat.types';
+import { Prisma } from 'src/generated/prisma/client';
+import { ChatError } from './errors/chat.errors';
 
 @Injectable()
 export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
-  //try / catch for errors
-  async getOrCreateChatId(sender: string, receiver: string) {
+  async getChatId(sender: string, receiver: string) {
     const sorted = this.sortUserIds(sender, receiver);
-    const chat = await this.createChat(sorted);
-    return chat.id;
+    try {
+      return (await this.createChat(sorted)).id;
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        this.handleErrors(err);
+      }
+      throw err;
+    }
   }
 
   async saveMessage(chatId: string, senderId: string, message: string) {
-    if (message.length > 500) {
-      throw new BadRequestException('Max message length is 500 chars');
+    try {
+      return await this.createMessage({
+        chatId: chatId,
+        senderId: senderId,
+        message: message,
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        this.handleErrors(err);
+      }
+      throw err;
     }
-    const saved = await this.createMessage({
-      chatId: chatId,
-      senderId: senderId,
-      message: message,
-    });
+  }
+
+  async getMessages(chatId: string) {
+    return await this.findMessages(chatId);
   }
 
   // HELPER FUNCTIONS
@@ -30,6 +55,19 @@ export class ChatService {
       return { userAId: sender, userBId: receiver };
     }
     return { userAId: receiver, userBId: sender };
+  }
+
+  private handleErrors(err: Prisma.PrismaClientKnownRequestError): never {
+    switch (err.code) {
+      case 'P2003':
+        throw new NotFoundException(ChatError.NOT_FOUND);
+      case 'P2025':
+        throw new NotFoundException(ChatError.NOT_FOUND);
+      case 'P2000':
+        throw new BadRequestException(ChatError.TOO_LONG);
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   // DB ACCESS
@@ -47,5 +85,20 @@ export class ChatService {
       data: data,
       select: { id: true },
     });
+  }
+
+  private async findMessages(chatId: string): Promise<MessageHistory> {
+    return await this.prisma.message.findMany({
+      where: { chatId },
+      select: messageSelect,
+    });
+  }
+
+  // CALLED BY USERSERVICE.DELETEUSER()
+  async removeOrphanedChats(): Promise<number> {
+    const deleted = await this.prisma.chat.deleteMany({
+      where: { userAId: null, userBId: null },
+    });
+    return deleted.count;
   }
 }

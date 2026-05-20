@@ -67,10 +67,10 @@ model Block {
 }
 
 model Chat {
-  userA     User      @relation("userA", fields: [userAId], references: [id], onDelete: Cascade)
-  userAId   String
-  userB     User      @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
-  userBId   String
+  userA     User?     @relation("userA", fields: [userAId], references: [id], onDelete: SetNull)
+  userAId   String?
+  userB     User?     @relation("userB", fields: [userBId], references: [id], onDelete: SetNull)
+  userBId   String?
   messages  Message[] @relation("chat")
   id        String    @id @default(uuid(7))
 
@@ -79,10 +79,13 @@ model Chat {
 }
 
 model Message {
-  id        String  @id @default(uuid(7))
-  chat      Chat    @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid(7))
+  chat      Chat      @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
   chatId    String
-  message   String  @db.VarChar(500)
-  sender    User    @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
-  senderId  String
+  message   String    @db.VarChar(500)
+  sender    User?      @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
+  senderId  String?
+  date      DateTime  @default(now())
+
+  @@index([chatId])
 }
