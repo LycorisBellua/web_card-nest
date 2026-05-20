@@ -46,6 +46,16 @@ export class UserService {
     return result;
   }
 
+  async updateLoginAttempts(userId: string, attempts: number, lockedUntil: Date | null) {
+      await this.prisma.user.update({
+          where: { id: userId },
+          data: {
+              loginAttempts: attempts,
+              loginLockedUntil: lockedUntil
+          }
+      })
+  }
+
   async updateUser(userId: string, dto: UpdateUserDto) {
     await this.userExistsOrThrow(userId);
     const data: Record<string, unknown> = {};
@@ -570,7 +580,7 @@ export class UserService {
     return found;
   }
 
-  async userExistsByEmail(toFind: string) {
+async userExistsByEmail(toFind: string) {
     return await this.prisma.user.findFirst({
       where: {
         OR: [{ email: toFind }, { email_unverified: toFind }],
@@ -586,6 +596,8 @@ export class UserService {
         verifyTimeout: true,
         refreshToken: true,
         refreshTimeout: true,
+        loginAttempts: true,
+        loginLockedUntil: true,
       },
     });
   }
