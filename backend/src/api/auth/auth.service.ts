@@ -17,27 +17,44 @@ export class AuthService {
     return await this.userService.addUser(createUserDto);
   }
 
-  async login(
+async login(
     email: string,
     password: string,
-  ): Promise<{ refreshToken: string; timeout: Date; accessToken: string }> {
+): Promise<{ refreshToken: string; timeout: Date; accessToken: string }> {
     const found = await this.userService.userExistsByEmail(email);
-    if (
-      !found ||
-      (found.email && found.email !== email) ||
-      !(await compareHash(password, found.password))
-    ) {
-      throw new UnauthorizedException('Email address or password incorrect.');
-    }
-    const refresh = await this.userService.generateRefreshToken(found.id);
-    const access = await this.generateJwtToken(found.id);
-    return {
-      refreshToken: refresh.token,
-      timeout: refresh.timeout,
-      accessToken: access,
-    };
-  }
 
+    if (found?.loginLockedUntil && found.loginLockedUntil > new Date()) {
+        const remaining = Math.ceil((found.loginLockedUntil.getTime() - Date.now()) / 60000)
+        throw new UnauthorizedException(`Too many attempts. Try again in ${remaining} minutes.`)
+    }
+
+    if (
+        !found ||
+        (found.email && found.email !== email) ||
+        !(await compareHash(password, found.password))
+    ) {
+        if (found) {
+            const attempts = found.loginAttempts + 1
+            await this.userService.updateLoginAttempts(
+                found.id,
+                attempts,
+                attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null
+            )
+        }
+        throw new UnauthorizedException('Email address or password incorrect.')
+    }
+
+    await this.userService.updateLoginAttempts(found.id, 0, null)
+
+    const refresh = await this.userService.generateRefreshToken(found.id)
+    const access = await this.generateJwtToken(found.id)
+    return {
+        refreshToken: refresh.token,
+        timeout: refresh.timeout,
+        accessToken: access,
+    }
+  }
+  
   async logout(userId: string) {
     return await this.userService.removeRefreshToken(userId);
   }
