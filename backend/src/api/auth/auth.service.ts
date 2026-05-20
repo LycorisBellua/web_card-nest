@@ -22,7 +22,6 @@ async login(
 ): Promise<{ refreshToken: string; timeout: Date; accessToken: string }> {
     const found = await this.userService.userExistsByEmail(email);
 
-    // Vérifier si le compte est bloqué
     if (found?.loginLockedUntil && found.loginLockedUntil > new Date()) {
         const remaining = Math.ceil((found.loginLockedUntil.getTime() - Date.now()) / 60000)
         throw new UnauthorizedException(`Too many attempts. Try again in ${remaining} minutes.`)
@@ -33,7 +32,6 @@ async login(
         (found.email && found.email !== email) ||
         !(await compareHash(password, found.password))
     ) {
-        // Incrémenter le compteur si l'utilisateur existe
         if (found) {
             const attempts = found.loginAttempts + 1
             await this.userService.updateLoginAttempts(
@@ -45,7 +43,6 @@ async login(
         throw new UnauthorizedException('Email address or password incorrect.')
     }
 
-    // Réinitialiser le compteur en cas de succès
     await this.userService.updateLoginAttempts(found.id, 0, null)
 
     const refresh = await this.userService.generateRefreshToken(found.id)
