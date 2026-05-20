@@ -1,15 +1,23 @@
 import { useState } from 'react';
-import type { User } from 'context/Types';
-import { CanDisciplineThisUser, IsAdmin } from 'functions/Ranks';
+import type { UserLimited } from 'context/Types';
+import { useUser } from 'context/useUser';
+import { CanDisciplineThisUser } from 'functions/Ranks';
 import { BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
-function DangerZoneAdmin({ user }: { user: NonNullable<User> }) {
+function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
+  const { user } = useUser();
   const [isDownrankModalOpen, setIsDownrankModalOpen] = useState(false);
   const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
   const [error, setError] = useState('');
 
-  if (!CanDisciplineThisUser(user) || !IsAdmin()) return <></>;
+  if (
+    !user ||
+    !otherUser ||
+    user.rank.toLowerCase() != 'admin' ||
+    !CanDisciplineThisUser(user, otherUser)
+  )
+    return <></>;
 
   function closeModals() {
     setIsDownrankModalOpen(false);
@@ -20,7 +28,7 @@ function DangerZoneAdmin({ user }: { user: NonNullable<User> }) {
   async function handleDownrank() {
     closeModals();
     try {
-      const res = await fetch(`/api/users/${user.id}/rank`, {
+      const res = await fetch(`/api/users/${otherUser.id}/rank`, {
         method: 'PATCH',
       });
       if (!res.ok) {
@@ -36,7 +44,9 @@ function DangerZoneAdmin({ user }: { user: NonNullable<User> }) {
   async function handleDelete() {
     closeModals();
     try {
-      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/users/${otherUser.id}`, {
+        method: 'DELETE',
+      });
       if (!res.ok) {
         setError(`Error ${res.status}: ${res.statusText}`);
         return;

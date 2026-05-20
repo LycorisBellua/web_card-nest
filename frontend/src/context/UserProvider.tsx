@@ -64,28 +64,13 @@ const otherUsers: UserLimited[] = [
 ];
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  // TODO: Implement a real connection
   const [user, setUser] = useState<User>(null);
+  // TODO: Automatic login
   useEffect(() => {
     //fetchUser().then(setUser);
   }, []);
 
-  /*
-  const [user, setUser] = useState<User>({
-    id: 'user_ubs9l7ttwz3wwoapzbw8o',
-    username: 'Wolf-Hart',
-    avatar:
-      'https://cdn.displate.com/artwork/270x380/2025-04-29/5d9a490e-781f-418f-ac6b-0d7cf866de6c.jpg',
-    rank: 'user',
-    registered: new Date('2026-03-12'),
-    description: 'Too school for cool 😎',
-    isOnline: true,
-    email: 'wolfhart@gmail.com',
-    unverifiedEmail: 'cooler.wolfhart@gmail.com',
-    accessToken: '',
-  });
-  */
-
+  // TODO: Use real data
   const [friendUsernames, setFriendUsernames] = useState<string[]>([
     'Espresso',
     'Jookebox',

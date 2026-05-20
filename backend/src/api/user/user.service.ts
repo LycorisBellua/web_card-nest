@@ -508,6 +508,8 @@ export class UserService {
         username: true,
         avatar: true,
         rank: true,
+		date: true,
+		desc: true,
         email: true,
         email_unverified: true,
       },

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from 'context/useUser';
+import { FetchSelfRequest } from 'functions/Requests';
 import {
   sanitizeUsername,
   sanitizeEmail,
@@ -14,6 +16,7 @@ import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
 
 function SignUp() {
+  const { setUser } = useUser();
   const [uname, setUname] = useState('');
   const [uemail, setUEmail] = useState('');
   const [upassword, setUPassword] = useState('');
@@ -43,28 +46,39 @@ function SignUp() {
       return;
     }
     try {
-      const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          uname: username,
-          uemail: email,
-          upassword: password,
+          username: username,
+          email_unverified: email,
+          password: password,
         }),
       });
-      const data = (await res.json()) as { message: string };
       if (!res.ok) {
+        const data = (await res.json()) as {
+          message: string;
+          error: string;
+          statusCode: number;
+        };
         setError([data.message]);
         return;
       }
-      setMessage(
-        "You've signed up successfully! Redirecting to your profile...",
-      );
-      setTimeout(() => {
-        void navigate('/profile');
-      }, 3000);
+      const data = (await res.json()) as { accessToken: string };
+      const user = await FetchSelfRequest(data.accessToken);
+      setUser(user);
+      if (!user) {
+        setError(['Internal error.']);
+      } else {
+        setMessage(
+          "You've signed up successfully! Redirecting to your profile...",
+        );
+        setTimeout(() => {
+          void navigate('/profile');
+        }, 2000);
+      }
     } catch {
       setError(['Internal error.']);
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import type { User } from 'context/Types';
+import type { UserLimited } from 'context/Types';
+import { useUser } from 'context/useUser';
 import {
   sanitizeUsername,
   sanitizeDescription,
@@ -31,7 +32,8 @@ const emptyFieldErrors = (): FieldErrors => ({
   server: [],
 });
 
-function EditProfileMod({ user }: { user: NonNullable<User> }) {
+function EditProfileMod({ otherUser }: { otherUser: UserLimited }) {
+  const { user } = useUser();
   const [displaySpinner, setDisplaySpinner] = useState(false);
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>(emptyFieldErrors());
@@ -43,7 +45,8 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
   const [username, setUsername] = useState('');
   const [description, setDescription] = useState('');
 
-  if (!CanDisciplineThisUser(user)) return <></>;
+  if (!user || !otherUser || !CanDisciplineThisUser(user, otherUser))
+    return <></>;
 
   const hasPendingChanges =
     avatar !== undefined || username !== '' || description !== '';
@@ -97,7 +100,7 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
 
     if (Object.keys(body).length > 0) {
       requests.push(
-        fetch(`/api/users/${user.id}`, {
+        fetch(`/api/users/${otherUser.id}`, {
           method: 'PATCH',
           headers: { 'Content-type': 'application/json' },
           body: JSON.stringify(body),
@@ -118,7 +121,7 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
     }
 
     if (Object.keys(body).length > 0) {
-      //const updated = (await responses[0].json()) as Partial<NonNullable<User>>;
+      //const updated = (await responses[0].json()) as Partial<UserLimited>;
       //setUser((old) => (old ? { ...old, ...updated } : null));
       //TODO: This other user is modified. Is the change immediate on the front?
     }
@@ -139,7 +142,7 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
       <h2>Edit Profile As A Mod</h2>
       <UpdateAvatar
         key={`avatar-${resetKey}`}
-        user={user}
+        otherUser={otherUser}
         pendingAvatar={avatar}
         onChange={setAvatar}
         errors={fieldErrors.avatar}
@@ -147,13 +150,13 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
       <div className="main">
         <UpdateUsername
           key={`username-${resetKey}`}
-          user={user}
+          otherUser={otherUser}
           onChange={setUsername}
           errors={fieldErrors.username}
         />
         <UpdateDescription
           key={`description-${resetKey}`}
-          user={user}
+          otherUser={otherUser}
           onChange={setDescription}
           errors={fieldErrors.description}
         />
@@ -173,12 +176,12 @@ const HiddenAvatarInput = styled.input`
 `;
 
 function UpdateAvatar({
-  user,
+  otherUser,
   pendingAvatar,
   onChange,
   errors,
 }: {
-  user: NonNullable<User>;
+  otherUser: UserLimited;
   pendingAvatar: File | '' | undefined;
   onChange: (f: File | '') => void;
   errors: string[];
@@ -199,14 +202,14 @@ function UpdateAvatar({
       ? undefined
       : pendingAvatar instanceof File
         ? previewUrl
-        : user.avatar;
+        : otherUser.avatar;
 
   return (
     <div>
       <AvatarBig
         src={avatarSrc ?? ''}
-        rank={user.rank}
-        isOnline={user.isOnline}
+        rank={otherUser.rank}
+        isOnline={otherUser.isOnline}
       />
       <div className="btn">
         <BtnDefault onClick={() => imgInputRef.current?.click()}>
@@ -236,11 +239,11 @@ function UpdateAvatar({
 }
 
 function UpdateUsername({
-  user,
+  otherUser,
   onChange,
   errors,
 }: {
-  user: NonNullable<User>;
+  otherUser: UserLimited;
   onChange: (v: string) => void;
   errors: string[];
 }) {
@@ -257,7 +260,7 @@ function UpdateUsername({
       id="username"
       name="username"
       label="New username"
-      placeholder={user.username}
+      placeholder={otherUser.username}
       value={value}
       onChange={(e) => updateValue(e)}
       autoComplete="off"
@@ -268,11 +271,11 @@ function UpdateUsername({
 }
 
 function UpdateDescription({
-  user,
+  otherUser,
   onChange,
   errors,
 }: {
-  user: NonNullable<User>;
+  otherUser: UserLimited;
   onChange: (v: string) => void;
   errors: string[];
 }) {
@@ -289,7 +292,7 @@ function UpdateDescription({
         id="user-description"
         name="user-description"
         label="New description"
-        placeholder={user.description}
+        placeholder={otherUser.description}
         rows={4}
         wrap="soft"
         value={value ?? ''}

@@ -1,4 +1,7 @@
 CONNECTION TO THE BACKEND
+- Automatic login: The refresh token request needs to accept only the cookie, 
+not the access token (or make it optional).
+
 - The frontend has been created in isolation. Make use of the backend and 
 remove the placeholder content.
 - Finish whatever TODOs are present in the frontend.
@@ -29,6 +32,37 @@ FRIENDSHIP & BLOCK
 - Section for requests you have received. Button to accept and button to reject.
 - The friends list is part of the public display, but without the button to 
 remove the friendship of course.
+
+--------------------------------------------------------------------------------
+
+- [X] Add a user
+- [X] Login
+- [X] Logout
+- [ ] Verify email address
+- [X] Refresh
+- [ ] Update password
+- [ ] Remove a user
+- [ ] Update username/email/avatar/desc
+- [X] Get own profile
+- [ ] Get user by id
+- [ ] Get user by username
+- [ ] Get all users sorted by username
+- [ ] Modify a user account details
+- [ ] Change a user rank
+- [ ] Remove a user
+- [ ] Add a friend
+- [ ] Remove a friend
+- [ ] Accept friend request
+- [ ] Reject friend request
+- [ ] Cancel friend request
+- [ ] Get friends list
+- [ ] Get sent requests
+- [ ] Get received requests
+- [ ] Block user
+- [ ] Unblock user
+- [ ] Get blocked user list
+- [ ] Extract user data CSV format
+- [ ] Extract user data JSON format
 
 --------------------------------------------------------------------------------
 

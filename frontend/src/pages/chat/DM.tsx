@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUser } from 'context/useUser';
 import type { Msg } from 'context/Types';
-import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
 import NotFound from 'pages/NotFound';
 import ChatPage from 'components/chat/ChatPage';
 import ChatHead from 'components/chat/ChatHead';
@@ -44,8 +43,7 @@ function DM() {
     }
   }, [user?.id, lastMsg]);
 
-  if (!IsLoggedIn() || IsPendingUser() || !friend || !thread)
-    return <NotFound />;
+  if (!user || !user.email || !friend || !thread) return <NotFound />;
 
   return (
     <ChatPage>

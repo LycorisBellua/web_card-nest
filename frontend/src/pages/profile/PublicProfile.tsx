@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import type { User, UserLimitedOrGuest } from 'context/Types';
+import type { UserLimitedOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
-import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
 import ToggleChatTimeout from 'pages/profile/ToggleChatTimeout';
 import GuestProfile from 'pages/profile/GuestProfile';
 import EditProfileMod from 'pages/profile/EditProfileMod';
@@ -15,21 +14,21 @@ import Modal from 'components/misc/Modal';
 
 function PublicProfile() {
   const { username } = useParams<{ username: string }>();
-  const { friends, users } = useUser();
+  const { user, users, friends } = useUser();
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [error, setError] = useState('');
 
-  if (!IsLoggedIn() || IsPendingUser()) return <NotFound />;
+  if (!user || !user.email) return <NotFound />;
 
   if (!username || username.toLowerCase() == 'guest') return <GuestProfile />;
 
   // TODO: Fetch user data using `username`. In the meantime, use the context.
-  const user = users.find(
+  const otherUser = users.find(
     (u) => u.username.toLowerCase() === username?.toLowerCase(),
   );
   //
-  if (!user) return <NotFound />;
+  if (!otherUser) return <NotFound />;
 
   const is_friend = friends.find(
     (u) => u.username.toLowerCase() === username?.toLowerCase(),
@@ -78,16 +77,16 @@ function PublicProfile() {
   }
 
   function unblockUser() {
-    // TODO: Request to unblock user.
+    // TODO: Request to unblock other user.
   }
 
   function blockUser() {
-    // TODO: Request to block user.
+    // TODO: Request to block other user.
   }
 
   return (
     <ScrollablePage>
-      <DisplayPublicUserInfo user={user as NonNullable<User>} />
+      <DisplayPublicUserInfo user={otherUser} />
       <div>
         {is_friend && (
           <Link to={`/chat/${username}`}>
@@ -104,10 +103,10 @@ function PublicProfile() {
         <BtnDanger onClick={() => clickBlock()}>
           {is_blocked ? 'Unblock' : 'Block'}
         </BtnDanger>
-        <ToggleChatTimeout user={user as UserLimitedOrGuest} />
+        <ToggleChatTimeout otherUser={otherUser as UserLimitedOrGuest} />
         {error && <p>{error}</p>}
-        <EditProfileMod user={user as NonNullable<User>} />
-        <DangerZoneAdmin user={user as NonNullable<User>} />
+        <EditProfileMod otherUser={otherUser} />
+        <DangerZoneAdmin otherUser={otherUser} />
       </div>
       <Modal
         isOpen={isFriendModalOpen}

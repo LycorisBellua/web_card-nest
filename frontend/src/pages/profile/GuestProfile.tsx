@@ -8,7 +8,7 @@ function GuestProfile() {
     <ScrollablePage>
       <DisplayPublicUserInfo user={null as UserLimitedOrGuest} />
       <div>
-        <ToggleChatTimeout user={null as UserLimitedOrGuest} />
+        <ToggleChatTimeout otherUser={null as UserLimitedOrGuest} />
       </div>
     </ScrollablePage>
   );

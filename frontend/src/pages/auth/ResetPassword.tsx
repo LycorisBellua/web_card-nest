@@ -134,7 +134,7 @@ function ResetPasswordConfirm({
       setErrors([]);
       setTimeout(() => {
         void navigate('/login');
-      }, 3000);
+      }, 2000);
     } catch {
       setErrors(['Error occured']);
     }

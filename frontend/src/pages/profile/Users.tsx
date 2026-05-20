@@ -1,13 +1,12 @@
 import { useUser } from 'context/useUser';
-import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
 import NotFound from 'pages/NotFound';
 import { ScrollablePage } from 'components/general/Scrollable';
 import UserBtn from 'components/btn/UserBtn';
 
 function Users() {
-  const { users } = useUser();
+  const { user, users } = useUser();
 
-  if (!IsLoggedIn() || IsPendingUser()) return <NotFound />;
+  if (!user || !user.email) return <NotFound />;
 
   return (
     <ScrollablePage>
