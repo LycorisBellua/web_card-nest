@@ -14,7 +14,8 @@ import { UserService } from 'src/api/user/user.service';
 })
 export class WebsocketServer implements OnGatewayConnection, OnGatewayDisconnect{
 constructor(
-    //  private readonly RelService: RelService,
+  
+   private readonly RelService: RelService,
    public prisma: PrismaService,
   ) {}
   private readonly logger = new Logger(WebSocketServer.name);
@@ -24,6 +25,7 @@ constructor(
   public  connectedUsersSocketId = new Map<string, string>();
   public  BlockedUsersId = new Map<string, string>();
   
+
   async handleConnection(client: Socket)
   {
     const userId = client.handshake.query.userId as string;
@@ -32,20 +34,19 @@ constructor(
       return ;
     this.connectedUsersId.set(userId, client.id);
     this.connectedUsersSocketId.set(client.id, userId);
-    friendlist = await this.fetchFriendsList(userId);
-    this.emitFriendList({TargetUserId: userId, Friends: friendlist.FriendsList })
-    this.WarnFriendOnConnection( userId, friendlist.FriendsList);
+    friendlist = await this.RelService.fetchFriends(userId);
+    this.emitFriendList(userId);
+    this.UpdateFriendsFriendList(friendlist);
   }
 
-  async WarnFriendOnConnection(NewConnectedId: string, Friends: any[])
+  async UpdateFriendsFriendList(Friends: any[])
   {
     let FriendList;
     for (const friend of Friends) 
     {
       if (this.connectedUsersId.has(friend.id)) 
-      {
-        FriendList = await this.fetchFriendsList(friend.id);  
-        this.emitFriendList({TargetUserId: friend.id, Friends: FriendList.FriendsList});
+      {  
+        await this.emitFriendList(friend.id);
       } 
     }
   }
@@ -55,82 +56,22 @@ constructor(
     const userId = this.connectedUsersSocketId.get(client.id) as string;
     this.connectedUsersId.delete(userId);
     this.connectedUsersSocketId.delete(userId);
-    const friendlist = await this.fetchFriendsList(userId);
-    this.WarnFriendOnConnection( userId, friendlist.FriendsList);
+    const friendlist = await this.RelService.fetchFriends(userId);
+    this.UpdateFriendsFriendList(friendlist);
     if (this.BlockedUsersId.has(userId))
       this.BlockedUsersId.delete(userId);
     console.log("Disconnect");
   }
 
-  async findAccepted(originId: string) {
-    return await this.prisma.friend.findMany({
-      where: {
-        status: 'ACCEPTED',
-        OR: [{ requesterId: originId }, { addresseeId: originId }],
-      },
-    });
-  }
-
-  async fetchFriends(originId: string) 
+  async emitFriendList(@MessageBody() TargetUserId: string)
   {
-    await this.userExistsOrThrow(originId);
-    return await this.findAccepted(originId);
-  }
-
-  async fetchFriendsList(originId: string) 
-  {
-    
-    const RawData = await this.fetchFriends(originId);
-    const FriendIdList = RawData.map(item => item.requesterId !== originId ? item.requesterId : item.addresseeId);
-    const FriendsList = await Promise.all(FriendIdList.map(item => this.getUsernameById(item)));
-    return {FriendsList};
-  }
-  
-  async userExistsOrThrow(toFind: string) 
-  {
-    const found = await this.prisma.user.findUnique({
-      where: { id: toFind },
-      select: {
-        email: true,
-        email_unverified: true,
-        rank: true,
-        password: true,
-        username: true,
-        verifyToken: true,
-        verifyTimeout: true,
-        refreshToken: true,
-        refreshTimeout: true,
-      },
-    });
-    if (!found) {
-      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
-    }
-    return found;
-  }
-  
-  async getUsernameById(toFind: string) 
-  {
-      const found = await this.prisma.user.findUnique({
-        where: { id: toFind },
-        select: {
-          username: true,
-          id: true,
-        },
-      });
-      if (!found) {
-        throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
-      }
-      return { ...found };
-  }
-
-  emitFriendList(@MessageBody() payload: {TargetUserId: string; Friends: any[]})
-  {
-    const socketId = this.connectedUsersId.get(payload.TargetUserId);
+    const socketId = this.connectedUsersId.get(TargetUserId);
+    const Friends = await this.RelService.fetchFriends(TargetUserId);
     const connected : any[] = [];
     const disconnected:  any[]= [];
     if (!socketId)
         return ;
-    for (const friend of payload.Friends) 
+    for (const friend of Friends) 
     {
         if (this.connectedUsersId.has(friend.id)) 
         {
@@ -147,6 +88,24 @@ constructor(
     }
   }
 
+
+  @SubscribeMessage('RefreshFriendFriendList')
+  async RefereshRefreshFriendFriendList(@MessageBody() userId: string)
+  {
+    const Friends = await this.RelService.fetchFriends(userId);
+    await this.UpdateFriendsFriendList(Friends);
+  }
+
+  @SubscribeMessage('UpdateFriendList')
+  async emitFriendListToAllId(@MessageBody() Users: string[])
+  {
+    for (const user in Users)
+    {
+     await this.emitFriendList(user);
+    }
+  }
+
+  
   @SubscribeMessage('PrivateMessage')
   SendMessageToTargetedSocket(@ConnectedSocket() Sender: Socket, @MessageBody() payload: {targetUserId:  string; message: string})
   {
@@ -168,29 +127,6 @@ constructor(
     );
     }
   }
-
-
-  // @SubscribeMessage('BlockUser')
-  // BlockMessage(@MessageBody() targetUserid: string)
-  // {
-  //   let BlockedSocketId;
-    
-  //   if (!this.connectedUsersId.has(targetUserid))
-  //   {
-  //     BlockedSocketId = this.connectedUsersId.get(targetUserid);
-  //     this.BlockedUsersId.set(targetUserid, BlockedSocketId);
-  //   }
-  // }
-
-  // @SubscribeMessage('UnblockUser')
-  // UnblockMessage(@MessageBody() targetUserid: string)
-  // {  
-  //   if (this.BlockedUsersId.has(targetUserid))
-  //     this.BlockedUsersId.delete(targetUserid);
-  // }
-
-
-
   
   @SubscribeMessage('PublicMessage')
   SendMessageToEveryBody(@ConnectedSocket() Sender: Socket, @MessageBody()  message: string)

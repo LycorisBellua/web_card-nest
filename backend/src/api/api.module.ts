@@ -18,7 +18,7 @@ import { GdprController } from './gdpr/gdpr.controller';
 import { GdprService } from './gdpr/gdpr.service';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
-
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -27,6 +27,7 @@ import { AdminService } from './admin/admin.service';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '5m' },
     }),
+     EventEmitterModule.forRoot(),
   ],
   controllers: [
     HelloController,

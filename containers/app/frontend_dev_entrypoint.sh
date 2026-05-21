@@ -7,6 +7,7 @@ npm install
 npm run build
 cd /app/backend
 npm install
+npm install i --save @nestjs/event-emitter
 npx prisma migrate deploy
 npx prisma studio --port 5555 --browser none &
 npm start &

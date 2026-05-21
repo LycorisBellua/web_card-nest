@@ -3,8 +3,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { ErrorMessages } from './error_messages/ErrorMessages';
 import { Friend } from 'src/generated/prisma/browser';
-import { WebsocketServer } from '../websocketGateway/websocket.gateway';
+// import { WebsocketServer } from '../websocketGateway/websocket.gateway';
 import { Block, FriendStatus, Ranks } from 'src/generated/prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   blockInclude,
   BlockWithUsers,
@@ -12,22 +13,24 @@ import {
   FriendshipWithUsers,
   FriendUser,
 } from './types/rel.types';
+
 @Injectable()
 export class RelService {
   constructor(
-    // private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly userService: UserService,
-    private  WebsocketServer: WebsocketServer,
+    private eventEmitter: EventEmitter2,
+    // private  WebsocketServer: WebsocketServer,
   ) {}
   
-  async UpdateFriendListDisplay(originId: string, targetId: string)
-  {
-    const friendListOid = await this.fetchFriendsListUserService(originId);
-    const friendListTargid = await this.fetchFriendsListUserService(targetId);
+  // async UpdateFriendListDisplay(originId: string, targetId: string)
+  // {
+  //   const friendListOid = await this.fetchFriendsListUserService(originId);
+  //   const friendListTargid = await this.fetchFriendsListUserService(targetId);
     
-    this.WebsocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
-    this.WebsocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
-  }
+  //   this.WebsocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
+  //   this.WebsocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
+  // }
 
   // FRIEND MANAGEMENT
   async addFriend(originId: string, targetId: string) {
@@ -54,12 +57,13 @@ export class RelService {
   async removeFriend(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const existing = await this.findFriendship(originId, targetId);
+    const related_ids = [originId, targetId];
     if (!existing || existing.status === 'PENDING') {
       throw new BadRequestException(ErrorMessages.NOT_FRIENDS);
     }
     // this.userService.UpdateFriendFriendlist
     await this.deleteFriendship(existing)
-    this.UpdateFriendListDisplay(originId, targetId);
+    await this.eventEmitter.emit('UpdateFriendList', related_ids);
     return ;
 
   }
@@ -68,12 +72,12 @@ export class RelService {
     await this.userChecks(originId, targetId);
     const blocked = await this.findBlock(originId, targetId);
     const found = await this.findFriendshipAsAddressee(originId, targetId);
-    let friendListOid; 
-    let friendListTargid;
+    const related_ids = [originId, targetId];
 
     if (blocked || !found || found.status === FriendStatus.ACCEPTED) {
       throw new BadRequestException(ErrorMessages.REQ_NOT_FOUND);
     }
+    await this.eventEmitter.emit('UpdateFriendList', related_ids)
     return await this.statusAccept(found);
   }
 
@@ -222,8 +226,7 @@ export class RelService {
   async blockUser(originId: string, targetId: string) {
     await this.userChecks(originId, targetId);
     const blocked = await this.findBlock(originId, targetId);
-    let friendListOid; 
-    let friendListTargid;
+    const related_ids = [originId, targetId];
     if (blocked) {
       throw new BadRequestException(ErrorMessages.BLOCK_ALREADY);
     }
@@ -234,6 +237,7 @@ export class RelService {
     ) {
       await this.deleteFriendship(friendship);
     }
+    this.eventEmitter.emit('UpdateFriendList',related_ids);
     return await this.createBlock(originId, targetId);
   }
 
