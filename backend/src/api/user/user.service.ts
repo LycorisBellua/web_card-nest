@@ -3,7 +3,6 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -251,29 +250,24 @@ export class UserService {
   }
 
   // CALLED FROM AUTH SERVICE
-  async addUser(createUserDto: CreateUserDto) {
-    if (await this.usernameIsTaken(createUserDto.username)) {
-      throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
-    }
-    if (await this.emailAddressIsTaken(createUserDto.email_unverified)) {
-      throw new ConflictException(ErrorMessages.EMAIL_USED);
-    }
-    createUserDto.password = await createHash(createUserDto.password);
-    const token = getToken();
-    const timeout = getVerificationTimeout();
-    const created = await this.createUser(
-      createUserDto,
-      await createHash(token),
-      timeout,
+  async addUser(newUser: CreateUserDto) {
+    await this.throwIfUsernameOrEmailIsTaken(
+      newUser.username,
+      newUser.email_unverified,
     );
-    const found = await this.userExistsOrThrow(created.id);
-    if (found.email_unverified && found.verifyToken) {
-      await this.userEmailsService.sendVerificationEmail(
-        created.id,
-        found.email_unverified,
-        token,
-      );
-    }
+    const token = getToken();
+    const created = await this.createUser(
+      newUser.username,
+      newUser.email_unverified,
+      await createHash(newUser.password),
+      await createHash(token),
+      getVerificationTimeout(),
+    );
+    await this.userEmailsService.sendVerificationEmail(
+      created.id,
+      newUser.email_unverified,
+      token,
+    );
     return created;
   }
 
@@ -428,15 +422,17 @@ export class UserService {
 
   // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
   private async createUser(
-    createUserDto: CreateUserDto,
+    username: string,
+    email_unverified: string,
+    password: string,
     token: string,
     timeout: Date,
   ) {
     return await this.prisma.user.create({
       data: {
-        username: createUserDto.username,
-        email_unverified: createUserDto.email_unverified,
-        password: createUserDto.password,
+        username: username,
+        email_unverified: email_unverified,
+        password: password,
         verifyToken: token,
         verifyTimeout: timeout,
       },
@@ -679,6 +675,27 @@ export class UserService {
       select: { id: true, email: true, email_unverified: true },
     });
     return found !== null;
+  }
+
+  private async throwIfUsernameOrEmailIsTaken(username: string, email: string) {
+    const found = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: username },
+          { email: email },
+          { email_unverified: email },
+        ],
+      },
+      select: { username: true, email: true, email_unverified: true },
+    });
+    if (found) {
+      if (found.username === username) {
+        throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
+      } else if (found.email === email || found.email_unverified === email) {
+        throw new ConflictException(ErrorMessages.EMAIL_USED);
+      }
+    }
+    return false;
   }
 
   private async expiredUsersToDelete(time: Date) {
