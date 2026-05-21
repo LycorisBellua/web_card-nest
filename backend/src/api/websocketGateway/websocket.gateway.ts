@@ -159,6 +159,31 @@ constructor(
     );
     }
   }
+<<<<<<< HEAD
+=======
+
+  // @SubscribeMessage('BlockUser')
+  // BlockMessage(@MessageBody() targetUserid: string)
+  // {
+  //   let BlockedSocketId;
+    
+  //   if (!this.connectedUsersId.has(targetUserid))
+  //   {
+  //     BlockedSocketId = this.connectedUsersId.get(targetUserid);
+  //     this.BlockedUsersId.set(targetUserid, BlockedSocketId);
+  //   }
+  // }
+
+  // @SubscribeMessage('UnblockUser')
+  // UnblockMessage(@MessageBody() targetUserid: string)
+  // {  
+  //   if (this.BlockedUsersId.has(targetUserid))
+  //     this.BlockedUsersId.delete(targetUserid);
+  // }
+
+
+  
+>>>>>>> bd5e422 (New)
   
   @SubscribeMessage('PublicMessage')
   SendMessageToEveryBody(@ConnectedSocket() Sender: Socket, @MessageBody()  message: string)
