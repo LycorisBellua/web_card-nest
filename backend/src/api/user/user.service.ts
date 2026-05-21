@@ -36,14 +36,14 @@ export class UserService {
     readonly WebsocketServer : WebsocketServer,
   ) {}
   
-  // async UpdateFriendListDisplay(originId: string, targetId: string)
-  // {
-  //   const friendListOid = await this.fetchFriendsListUserService(originId);
-  //   const friendListTargid = await this.fetchFriendsListUserService(targetId);
+  async UpdateFriendListDisplay(originId: string, targetId: string)
+  {
+    const friendListOid = await this.fetchFriendsListUserService(originId);
+    const friendListTargid = await this.fetchFriendsListUserService(targetId);
     
-  //   this.WebsocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
-  //   this.WebsocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
-  // }
+    this.WebsocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
+    this.WebsocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
+  }
 
   async findAcceptedUserService(originId: string) 
   {
