@@ -36,7 +36,6 @@ env-file:
 		echo "DEV_URL=http://$(HOST_IP):3000" >> $(ENV_FILE); \
 		echo "PROD_URL=https://$(HOST_IP):8080" >> $(ENV_FILE); \
 		echo "JWT_ACCESS_SECRET=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
-		echo "JWT_REFRESH_SECRET=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
 		echo "DB_ACCESS_USER=db_admin" >> $(ENV_FILE); \
 		echo "DB_ACCESS_PASSWORD=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
 		cat $(VARIABLE_IMPORTS) >> $(ENV_FILE); \

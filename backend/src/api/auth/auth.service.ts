@@ -3,15 +3,18 @@ import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import {
-  compareHash,
+  comparePasswordHash,
+  compareTokenHash,
+  createTokenHash,
   getCurrentTime,
   getRefreshTimeout,
+  getToken,
 } from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
-import { RefreshPayload } from './jwt/auth.refresh-payload';
 import { jwtConstants } from './jwt/auth.jwt-secret';
 import { KeyPair } from './jwt/auth.key-pair';
+import { Ranks } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class AuthService {
@@ -29,11 +32,11 @@ export class AuthService {
     if (
       !found ||
       (found.email && found.email !== email) ||
-      !(await compareHash(password, found.password))
+      !(await comparePasswordHash(password, found.password))
     ) {
       throw new UnauthorizedException('Email address or password incorrect.');
     }
-    return this.generateKeyPair(found.id);
+    return this.generateKeyPair(found.id, found.rank);
   }
 
   async logout(userId: string) {
@@ -41,29 +44,17 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string): Promise<string> {
-    try {
-      const payload: RefreshPayload = await this.jwtService.verifyAsync(
-        refreshToken,
-        {
-          secret: jwtConstants.refreshSecret,
-        },
-      );
-      const user = await this.userService.userExistsOrThrow(payload.id);
-      if (
-        !user.refreshToken ||
-        !(await compareHash(refreshToken, user.refreshToken))
-      ) {
-        throw new UnauthorizedException();
-      }
-      return await this.generateJwtToken(payload.id);
-    } catch {
+    const hash = createTokenHash(refreshToken);
+    const user = await this.userService.userExistsByRefreshTokenHash(hash);
+    if (!user || !user.refreshTimeout || user.refreshTimeout < getCurrentTime()) {
       throw new UnauthorizedException();
     }
+    return await this.generateJwtToken(user.id, user.rank);
   }
 
   async updatePassword(userId: string, dto: UpdatePasswordDto) {
-    await this.userService.updatePassword(userId, dto);
-    return await this.generateKeyPair(userId);
+    const result = await this.userService.updatePassword(userId, dto);
+    return await this.generateKeyPair(userId, result.rank);
   }
 
   async verifyEmail(userId: string, token: string) {
@@ -83,35 +74,28 @@ export class AuthService {
   }
 
   // Generate JWT / Refresh Token
-  async generateKeyPair(userId: string): Promise<KeyPair> {
-    const access = await this.generateJwtToken(userId);
+  async generateKeyPair(userId: string, rank: Ranks): Promise<KeyPair> {
+    const access = await this.generateJwtToken(userId, rank);
     const refresh = await this.generateRefreshToken(userId);
-    const timeout = getRefreshTimeout();
     return {
       accessToken: access,
-      refreshToken: refresh,
-      refreshTimeout: timeout,
+      refreshToken: refresh.token,
+      refreshTimeout: refresh.timeout,
     };
   }
 
-  async generateJwtToken(userId: string) {
-    const user = await this.userService.userExistsOrThrow(userId);
+  async generateJwtToken(userId: string, rank: Ranks) {
     const payload: JwtPayload = {
       id: userId,
-      rank: user.rank,
+      rank: rank,
     };
     return await this.jwtService.signAsync(payload);
   }
 
-  async generateRefreshToken(userId: string) {
-    const payload: RefreshPayload = {
-      id: userId,
-    };
-    const token = await this.jwtService.signAsync(payload, {
-      secret: jwtConstants.refreshSecret,
-      expiresIn: '30d',
-    });
-    await this.userService.updateRefreshToken(userId, token);
-    return token;
+  async generateRefreshToken(userId: string): Promise<{ token: string, timeout: Date }> {
+    const token = getToken();
+    const timeout = getRefreshTimeout();
+    await this.userService.updateRefreshToken(userId, token, timeout);
+    return { token, timeout };
   }
 }
