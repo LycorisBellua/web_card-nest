@@ -32,18 +32,17 @@ export class AuthController {
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
     await this.authService.signup(dto);
-    const login = await this.authService.login(
+    const keys = await this.authService.login(
       dto.email_unverified,
       dto.password,
     );
-    res.cookie('refresh_token', login.refreshToken, {
+    res.cookie('refresh_token', keys.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: login.timeout.getTime() - Date.now(),
+      maxAge: keys.refreshTimeout.getTime() - Date.now(),
     });
-    const accessToken = login.accessToken;
-    return { accessToken };
+    return { accessToken: keys.accessToken };
   }
 
   @Post('login')
@@ -51,18 +50,17 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
-    const result = await this.authService.login(
+    const keys = await this.authService.login(
       loginDto.email,
       loginDto.password,
     );
-    res.cookie('refresh_token', result.refreshToken, {
+    res.cookie('refresh_token', keys.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: result.timeout.getTime() - Date.now(),
+      maxAge: keys.refreshTimeout.getTime() - Date.now(),
     });
-    const accessToken = result.accessToken;
-    return { accessToken };
+    return { accessToken: keys.accessToken };
   }
 
   @UseGuards(AuthGuard)
@@ -84,23 +82,33 @@ export class AuthController {
 
   @Post('refresh')
   async refresh(@Req() req: ExpressRequest) {
-    const [type, jwtToken] = req.headers.authorization?.split(' ') ?? [];
     const refreshToken = req.cookies['refresh_token'] as string | undefined;
-    if (type !== 'Bearer' || !refreshToken) {
+    if (!refreshToken) {
       throw new UnauthorizedException();
     }
-    const accessToken = await this.authService.refresh(jwtToken, refreshToken);
-    return { accessToken };
+    const key = await this.authService.refresh(refreshToken);
+    return { accessToken: key };
   }
 
   @UseGuards(AuthGuard)
   @Patch('password')
   async updatePassword(
     @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: ExpressResponse,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     const user = req['user'] as JwtPayload;
-    return await this.authService.updatePassword(user.id, updatePasswordDto);
+    const keys = await this.authService.updatePassword(
+      user.id,
+      updatePasswordDto,
+    );
+    res.cookie('refresh_token', keys.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: keys.refreshTimeout.getTime() - Date.now(),
+    });
+    return { accessToken: keys.accessToken };
   }
 
   @Get('/:userId/:token/verify')

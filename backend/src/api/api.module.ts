@@ -23,7 +23,7 @@ import { AdminService } from './admin/admin.service';
   imports: [
     JwtModule.register({
       global: true,
-      secret: jwtConstants.secret,
+      secret: jwtConstants.accessSecret,
       signOptions: { expiresIn: '5m' },
     }),
   ],

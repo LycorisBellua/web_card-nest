@@ -1,8 +1,15 @@
-const jwt_secret = process.env.JWT_SECRET;
-if (!jwt_secret) {
-  throw new Error('JWT_SECRET environment variable is not set');
+const jwt_access_secret = process.env.JWT_ACCESS_SECRET;
+const jwt_refresh_secret = process.env.JWT_REFRESH_SECRET;
+
+if (!jwt_access_secret) {
+  throw new Error('JWT_ACCESS_SECRET environment variable is not set');
+}
+
+if (!jwt_refresh_secret) {
+  throw new Error('JWT_REFRESH_SECRET environment variable is not set');
 }
 
 export const jwtConstants = {
-  secret: jwt_secret,
+  accessSecret: jwt_access_secret,
+  refreshSecret: jwt_refresh_secret,
 };

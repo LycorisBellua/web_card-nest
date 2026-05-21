@@ -291,32 +291,17 @@ export class UserService {
     return result;
   }
 
-  async generateRefreshToken(
-    userId: string,
-  ): Promise<{ token: string; timeout: Date }> {
+  async updateRefreshToken(userId: string, refreshToken: string) {
     await this.userExistsOrThrow(userId);
-    const token = getToken();
-    const timeout = getRefreshTimeout();
-    const result = await this.modifyRefreshToken(
+    return await this.modifyRefreshToken(
       userId,
-      await createHash(token),
-      timeout,
+      await createHash(refreshToken),
     );
-    if (
-      !result.refreshToken ||
-      !(await compareHash(token, result.refreshToken))
-    ) {
-      throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
-    }
-    return { token: token, timeout: timeout };
   }
 
   async removeRefreshToken(userId: string) {
     await this.userExistsOrThrow(userId);
-    const result = await this.deleteRefreshToken(userId);
-    if (result.refreshToken !== null) {
-      throw new InternalServerErrorException(ErrorMessages.REF_TOK_DEL_ERR);
-    }
+    return await this.deleteRefreshToken(userId);
   }
 
   //CALLED FROM ADMIN SERVICE
@@ -480,14 +465,10 @@ export class UserService {
     });
   }
 
-  private async modifyRefreshToken(
-    userId: string,
-    newToken: string | null,
-    timeout: Date,
-  ) {
+  private async modifyRefreshToken(userId: string, newToken: string | null) {
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { refreshToken: newToken, refreshTimeout: timeout },
+      data: { refreshToken: newToken },
       select: { refreshToken: true },
     });
   }
@@ -495,7 +476,7 @@ export class UserService {
   private async deleteRefreshToken(userId: string) {
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { refreshToken: null, refreshTimeout: null },
+      data: { refreshToken: null },
       select: { refreshToken: true },
     });
   }
@@ -557,7 +538,6 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
-        refreshTimeout: true,
       },
     });
     if (!found) {
@@ -581,7 +561,6 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
-        refreshTimeout: true,
       },
     });
   }
@@ -598,7 +577,6 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
-        refreshTimeout: true,
       },
     });
   }

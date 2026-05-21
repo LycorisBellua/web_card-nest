@@ -2,9 +2,16 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { compareHash, getCurrentTime } from '../user/utils/user.utils';
+import {
+  compareHash,
+  getCurrentTime,
+  getRefreshTimeout,
+} from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
+import { RefreshPayload } from './jwt/auth.refresh-payload';
+import { jwtConstants } from './jwt/auth.jwt-secret';
+import { KeyPair } from './jwt/auth.key-pair';
 
 @Injectable()
 export class AuthService {
@@ -17,10 +24,7 @@ export class AuthService {
     return await this.userService.addUser(createUserDto);
   }
 
-  async login(
-    email: string,
-    password: string,
-  ): Promise<{ refreshToken: string; timeout: Date; accessToken: string }> {
+  async login(email: string, password: string): Promise<KeyPair> {
     const found = await this.userService.userExistsByEmail(email);
     if (
       !found ||
@@ -29,38 +33,37 @@ export class AuthService {
     ) {
       throw new UnauthorizedException('Email address or password incorrect.');
     }
-    const refresh = await this.userService.generateRefreshToken(found.id);
-    const access = await this.generateJwtToken(found.id);
-    return {
-      refreshToken: refresh.token,
-      timeout: refresh.timeout,
-      accessToken: access,
-    };
+    return this.generateKeyPair(found.id);
   }
 
   async logout(userId: string) {
     return await this.userService.removeRefreshToken(userId);
   }
 
-  async refresh(jwtToken: string, refreshToken: string) {
-    const payload: JwtPayload = this.jwtService.decode(jwtToken);
-    if (!payload) {
+  async refresh(refreshToken: string): Promise<string> {
+    try {
+      const payload: RefreshPayload = await this.jwtService.verifyAsync(
+        refreshToken,
+        {
+          secret: jwtConstants.refreshSecret,
+        },
+      );
+      const user = await this.userService.userExistsOrThrow(payload.id);
+      if (
+        !user.refreshToken ||
+        !(await compareHash(refreshToken, user.refreshToken))
+      ) {
+        throw new UnauthorizedException();
+      }
+      return await this.generateJwtToken(payload.id);
+    } catch {
       throw new UnauthorizedException();
     }
-    const found = await this.userService.userExistsOrThrow(payload.id);
-    if (
-      !found.refreshToken ||
-      !found.refreshTimeout ||
-      found.refreshTimeout < getCurrentTime() ||
-      !(await compareHash(refreshToken, found.refreshToken))
-    ) {
-      throw new UnauthorizedException();
-    }
-    return await this.generateJwtToken(payload.id);
   }
 
   async updatePassword(userId: string, dto: UpdatePasswordDto) {
-    return await this.userService.updatePassword(userId, dto);
+    await this.userService.updatePassword(userId, dto);
+    return await this.generateKeyPair(userId);
   }
 
   async verifyEmail(userId: string, token: string) {
@@ -79,13 +82,36 @@ export class AuthService {
     return await this.userService.resendVerificationEmail(userId);
   }
 
-  // Generate JWT
+  // Generate JWT / Refresh Token
+  async generateKeyPair(userId: string): Promise<KeyPair> {
+    const access = await this.generateJwtToken(userId);
+    const refresh = await this.generateRefreshToken(userId);
+    const timeout = getRefreshTimeout();
+    return {
+      accessToken: access,
+      refreshToken: refresh,
+      refreshTimeout: timeout,
+    };
+  }
+
   async generateJwtToken(userId: string) {
     const user = await this.userService.userExistsOrThrow(userId);
-    const payload = {
+    const payload: JwtPayload = {
       id: userId,
       rank: user.rank,
     };
     return await this.jwtService.signAsync(payload);
+  }
+
+  async generateRefreshToken(userId: string) {
+    const payload: RefreshPayload = {
+      id: userId,
+    };
+    const token = await this.jwtService.signAsync(payload, {
+      secret: jwtConstants.refreshSecret,
+      expiresIn: '30d',
+    });
+    await this.userService.updateRefreshToken(userId, token);
+    return token;
   }
 }

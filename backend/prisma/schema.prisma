@@ -21,7 +21,6 @@ model User {
   verifyToken      String?    @unique
   verifyTimeout    DateTime?
   refreshToken     String?    @unique
-  refreshTimeout   DateTime?
   sentRequests     Friend[]   @relation("requester")
   receivedRequests Friend[]   @relation("addressee")
   blocked          Block[]    @relation("blocker")
