@@ -22,10 +22,7 @@ constructor(
   server = new Server();
   public connectedUsersId = new Map<string, string>();
   public  connectedUsersSocketId = new Map<string, string>();
-<<<<<<< HEAD
-=======
   public  BlockedUsersId = new Map<string, string>();
->>>>>>> bd5e422e664d78b5bf6dd9a01929020978a40aa8
   
   async handleConnection(client: Socket)
   {
@@ -34,11 +31,7 @@ constructor(
     if (!userId)
       return ;
     this.connectedUsersId.set(userId, client.id);
-<<<<<<< HEAD
-    this.connectedUsersId.set(client.id, userId);
-=======
     this.connectedUsersSocketId.set(client.id, userId);
->>>>>>> bd5e422e664d78b5bf6dd9a01929020978a40aa8
     friendlist = await this.fetchFriendsList(userId);
     this.emitFriendList({TargetUserId: userId, Friends: friendlist.FriendsList })
     this.WarnFriendOnConnection( userId, friendlist.FriendsList);
@@ -62,14 +55,11 @@ constructor(
     const userId = this.connectedUsersSocketId.get(client.id) as string;
     this.connectedUsersId.delete(userId);
     this.connectedUsersSocketId.delete(userId);
-<<<<<<< HEAD
-=======
     const friendlist = await this.fetchFriendsList(userId);
     this.WarnFriendOnConnection( userId, friendlist.FriendsList);
     if (this.BlockedUsersId.has(userId))
       this.BlockedUsersId.delete(userId);
     console.log("Disconnect");
->>>>>>> bd5e422e664d78b5bf6dd9a01929020978a40aa8
   }
 
   async findAccepted(originId: string) {
@@ -161,16 +151,11 @@ constructor(
   SendMessageToTargetedSocket(@ConnectedSocket() Sender: Socket, @MessageBody() payload: {targetUserId:  string; message: string})
   {
     const ReceiverSocketId = this.connectedUsersId.get(payload.targetUserId);
-<<<<<<< HEAD
-    this.logger.log("frontside userid : ", payload.targetUserId);
-    this.logger.log("frontside socketid : ", ReceiverSocketId);
-=======
     const SenderUserId = this.connectedUsersSocketId.get(Sender.id);
     this.logger.log("frontside userid : ", payload.targetUserId);
     this.logger.log("frontside socketid : ", ReceiverSocketId);
     if (SenderUserId && this.BlockedUsersId.has(SenderUserId))
       return ;
->>>>>>> bd5e422e664d78b5bf6dd9a01929020978a40aa8
     if (ReceiverSocketId)
     {
      
@@ -183,11 +168,7 @@ constructor(
     );
     }
   }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> bd5e422e664d78b5bf6dd9a01929020978a40aa8
+
 
   // @SubscribeMessage('BlockUser')
   // BlockMessage(@MessageBody() targetUserid: string)
@@ -209,22 +190,14 @@ constructor(
   // }
 
 
-  
-<<<<<<< HEAD
->>>>>>> bd5e422 (New)
-=======
->>>>>>> bd5e422e664d78b5bf6dd9a01929020978a40aa8
+
   
   @SubscribeMessage('PublicMessage')
   SendMessageToEveryBody(@ConnectedSocket() Sender: Socket, @MessageBody()  message: string)
   {
     const SenderUserId = this.connectedUsersSocketId.get(Sender.id);
-<<<<<<< HEAD
-    
-=======
     if (SenderUserId && this.BlockedUsersId.has(SenderUserId))
       return ;
->>>>>>> bd5e422e664d78b5bf6dd9a01929020978a40aa8
     Sender.broadcast.emit('PublicMessage', {
       Sender: SenderUserId,
       message: message});
