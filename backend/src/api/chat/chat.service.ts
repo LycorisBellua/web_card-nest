@@ -6,7 +6,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
+  ChatList,
   ChatParticipants,
+  chatSelect,
   MessageHistory,
   messageSelect,
   NewMessage,
@@ -45,7 +47,7 @@ export class ChatService {
     }
   }
 
-  async getMessages(chatId: string) {
+  async getChatHistory(chatId: string) {
     return await this.findMessages(chatId);
   }
 
@@ -92,13 +94,5 @@ export class ChatService {
       where: { chatId },
       select: messageSelect,
     });
-  }
-
-  // CALLED BY USERSERVICE.DELETEUSER()
-  async removeOrphanedChats(): Promise<number> {
-    const deleted = await this.prisma.chat.deleteMany({
-      where: { userAId: null, userBId: null },
-    });
-    return deleted.count;
   }
 }

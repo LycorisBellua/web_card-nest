@@ -11,6 +11,16 @@ export type NewMessage = {
   message: string;
 };
 
+export const chatSelect = {
+  id: true,
+  userAId: true,
+  userBId: true,
+} satisfies Prisma.ChatSelect;
+
+export type ChatList = Prisma.ChatGetPayload<{
+  select: typeof chatSelect;
+}>[];
+
 export const messageSelect = {
   senderId: true,
   date: true,

@@ -24,6 +24,6 @@ export class ChatController {
 
   @Get('messages/:chatId')
   async getMessages(@Param('chatId') chatId: string) {
-    return this.chatService.getMessages(chatId);
+    return this.chatService.getChatHistory(chatId);
   }
 }
