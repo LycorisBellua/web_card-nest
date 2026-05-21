@@ -169,24 +169,24 @@ constructor(
     }
   }
 
-  @SubscribeMessage('BlockUser')
-  BlockMessage(@MessageBody() targetUserid: string)
-  {
-    let BlockedSocketId;
+  // @SubscribeMessage('BlockUser')
+  // BlockMessage(@MessageBody() targetUserid: string)
+  // {
+  //   let BlockedSocketId;
     
-    if (!this.connectedUsersId.has(targetUserid))
-    {
-      BlockedSocketId = this.connectedUsersId.get(targetUserid);
-      this.BlockedUsersId.set(targetUserid, BlockedSocketId);
-    }
-  }
+  //   if (!this.connectedUsersId.has(targetUserid))
+  //   {
+  //     BlockedSocketId = this.connectedUsersId.get(targetUserid);
+  //     this.BlockedUsersId.set(targetUserid, BlockedSocketId);
+  //   }
+  // }
 
-  @SubscribeMessage('UnblockUser')
-  UnblockMessage(@MessageBody() targetUserid: string)
-  {  
-    if (this.BlockedUsersId.has(targetUserid))
-      this.BlockedUsersId.delete(targetUserid);
-  }
+  // @SubscribeMessage('UnblockUser')
+  // UnblockMessage(@MessageBody() targetUserid: string)
+  // {  
+  //   if (this.BlockedUsersId.has(targetUserid))
+  //     this.BlockedUsersId.delete(targetUserid);
+  // }
 
 
   
