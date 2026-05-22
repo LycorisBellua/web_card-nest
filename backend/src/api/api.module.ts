@@ -19,6 +19,8 @@ import { GdprService } from './gdpr/gdpr.service';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ChatController } from './chat/chat.controller';
+import { ChatService } from './chat/chat.service';
 
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AuthController,
     GdprController,
     AdminController,
+    ChatController,
   ],
   providers: [
     HelloService,
@@ -48,7 +51,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AuthService,
     GdprService,
     AdminService,
-    WebsocketServer
+    WebsocketServer,
+    ChatService,
   ],
 })
 export class ApiModule {}
