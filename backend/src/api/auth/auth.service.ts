@@ -4,7 +4,6 @@ import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import {
   comparePasswordHash,
-  compareTokenHash,
   createTokenHash,
   getCurrentTime,
   getRefreshTimeout,
@@ -12,8 +11,7 @@ import {
 } from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
-import { jwtConstants } from './jwt/auth.jwt-secret';
-import { KeyPair } from './jwt/auth.key-pair';
+import { TokenPair } from './jwt/auth.token-pair';
 import { Ranks } from 'src/generated/prisma/enums';
 
 @Injectable()
@@ -27,7 +25,7 @@ export class AuthService {
     return await this.userService.addUser(createUserDto);
   }
 
-  async login(email: string, password: string): Promise<KeyPair> {
+  async login(email: string, password: string): Promise<TokenPair> {
     const found = await this.userService.userExistsByEmail(email);
     if (
       !found ||
@@ -36,7 +34,7 @@ export class AuthService {
     ) {
       throw new UnauthorizedException('Email address or password incorrect.');
     }
-    return this.generateKeyPair(found.id, found.rank);
+    return this.generateTokenPair(found.id, found.rank);
   }
 
   async logout(userId: string) {
@@ -46,7 +44,11 @@ export class AuthService {
   async refresh(refreshToken: string): Promise<string> {
     const hash = createTokenHash(refreshToken);
     const user = await this.userService.userExistsByRefreshTokenHash(hash);
-    if (!user || !user.refreshTimeout || user.refreshTimeout < getCurrentTime()) {
+    if (
+      !user ||
+      !user.refreshTimeout ||
+      user.refreshTimeout < getCurrentTime()
+    ) {
       throw new UnauthorizedException();
     }
     return await this.generateJwtToken(user.id, user.rank);
@@ -54,7 +56,7 @@ export class AuthService {
 
   async updatePassword(userId: string, dto: UpdatePasswordDto) {
     const result = await this.userService.updatePassword(userId, dto);
-    return await this.generateKeyPair(userId, result.rank);
+    return await this.generateTokenPair(userId, result.rank);
   }
 
   async verifyEmail(userId: string, token: string) {
@@ -74,7 +76,7 @@ export class AuthService {
   }
 
   // Generate JWT / Refresh Token
-  async generateKeyPair(userId: string, rank: Ranks): Promise<KeyPair> {
+  async generateTokenPair(userId: string, rank: Ranks): Promise<TokenPair> {
     const access = await this.generateJwtToken(userId, rank);
     const refresh = await this.generateRefreshToken(userId);
     return {
@@ -92,7 +94,9 @@ export class AuthService {
     return await this.jwtService.signAsync(payload);
   }
 
-  async generateRefreshToken(userId: string): Promise<{ token: string, timeout: Date }> {
+  async generateRefreshToken(
+    userId: string,
+  ): Promise<{ token: string; timeout: Date }> {
     const token = getToken();
     const timeout = getRefreshTimeout();
     await this.userService.updateRefreshToken(userId, token, timeout);

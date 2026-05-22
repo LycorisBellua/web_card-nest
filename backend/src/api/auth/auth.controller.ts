@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  InternalServerErrorException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -32,17 +31,17 @@ export class AuthController {
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
     await this.authService.signup(dto);
-    const keys = await this.authService.login(
+    const tokens = await this.authService.login(
       dto.email_unverified,
       dto.password,
     );
-    res.cookie('refresh_token', keys.refreshToken, {
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: keys.refreshTimeout.getTime() - Date.now(),
+      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
     });
-    return { accessToken: keys.accessToken };
+    return { accessToken: tokens.accessToken };
   }
 
   @Post('login')
@@ -50,17 +49,17 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
-    const keys = await this.authService.login(
+    const tokens = await this.authService.login(
       loginDto.email,
       loginDto.password,
     );
-    res.cookie('refresh_token', keys.refreshToken, {
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: keys.refreshTimeout.getTime() - Date.now(),
+      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
     });
-    return { accessToken: keys.accessToken };
+    return { accessToken: tokens.accessToken };
   }
 
   @UseGuards(AuthGuard)
@@ -86,8 +85,8 @@ export class AuthController {
     if (!refreshToken) {
       throw new UnauthorizedException();
     }
-    const key = await this.authService.refresh(refreshToken);
-    return { accessToken: key };
+    const token = await this.authService.refresh(refreshToken);
+    return { accessToken: token };
   }
 
   @UseGuards(AuthGuard)
@@ -98,17 +97,17 @@ export class AuthController {
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     const user = req['user'] as JwtPayload;
-    const keys = await this.authService.updatePassword(
+    const tokens = await this.authService.updatePassword(
       user.id,
       updatePasswordDto,
     );
-    res.cookie('refresh_token', keys.refreshToken, {
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: keys.refreshTimeout.getTime() - Date.now(),
+      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
     });
-    return { accessToken: keys.accessToken };
+    return { accessToken: tokens.accessToken };
   }
 
   @Get('/:userId/:token/verify')
