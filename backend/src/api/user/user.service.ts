@@ -118,7 +118,10 @@ export class UserService {
     if (!(await comparePasswordHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
-    return await this.modifyPassword(userId, await createPasswordHash(newPassword));
+    return await this.modifyPassword(
+      userId,
+      await createPasswordHash(newPassword),
+    );
   }
 
   async getOwnProfile(userId: string) {
@@ -291,12 +294,16 @@ export class UserService {
     return result;
   }
 
-  async updateRefreshToken(userId: string, refreshToken: string, timeout: Date) {
+  async updateRefreshToken(
+    userId: string,
+    refreshToken: string,
+    timeout: Date,
+  ) {
     await this.userExistsOrThrow(userId);
     return await this.modifyRefreshToken(
       userId,
       createTokenHash(refreshToken),
-      timeout
+      timeout,
     );
   }
 
@@ -466,7 +473,11 @@ export class UserService {
     });
   }
 
-  private async modifyRefreshToken(userId: string, newToken: string, timeout: Date) {
+  private async modifyRefreshToken(
+    userId: string,
+    newToken: string,
+    timeout: Date,
+  ) {
     return await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: newToken, refreshTimeout: timeout },
@@ -490,8 +501,8 @@ export class UserService {
         username: true,
         avatar: true,
         rank: true,
-		date: true,
-		desc: true,
+        date: true,
+        desc: true,
         email: true,
         email_unverified: true,
       },
@@ -571,8 +582,8 @@ export class UserService {
   async userExistsByRefreshTokenHash(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { refreshToken: toFind },
-      select: { id: true, rank: true, refreshTimeout: true }
-    })
+      select: { id: true, rank: true, refreshTimeout: true },
+    });
   }
 
   private async userExists(toFind: string) {

@@ -319,11 +319,11 @@ export function IsPasswordNotTooLong(validationOptions?: ValidationOptions) {
       name: 'isPasswordNotTooLong',
       validator: {
         validate(value: string): boolean {
-          return !value || value.length <= 128;
+          return !value || value.length <= 64;
         },
         defaultMessage: buildMessage(
           (eachPrefix) =>
-            eachPrefix + 'The password cannot be longer than 128 characters.',
+            eachPrefix + 'The password cannot be longer than 64 characters.',
           validationOptions,
         ),
       },

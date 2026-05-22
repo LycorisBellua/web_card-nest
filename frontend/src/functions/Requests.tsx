@@ -56,8 +56,8 @@ export async function FetchSelfRequest(
     username: string;
     avatar: string;
     rank: string;
-	date: Date;
-	desc: string;
+    date: Date;
+    desc: string;
     email: string;
     email_unverified: string;
   };

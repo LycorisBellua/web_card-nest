@@ -73,8 +73,8 @@ export function validatePassword(
   if (/\p{Cc}/gu.test(upassword)) {
     errors.push('The password cannot have non-printable characters.');
   }
-  if (upassword.length > 128) {
-    errors.push('The password cannot be longer than 128 characters.');
+  if (upassword.length > 64) {
+    errors.push('The password cannot be longer than 64 characters.');
   }
   return errors;
 }
