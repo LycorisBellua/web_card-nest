@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UserContext } from 'context/UserContext';
 import type { User, UserLimited, Thread } from 'context/Types';
+import { RefreshTokenRequest, FetchSelfRequest } from 'functions/Requests';
 
 const otherUsers: UserLimited[] = [
   {
@@ -65,9 +66,15 @@ const otherUsers: UserLimited[] = [
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
-  // TODO: Automatic login
+
   useEffect(() => {
-    //fetchUser().then(setUser);
+    async function automaticLogin() {
+      const accessToken = await RefreshTokenRequest('');
+      if (!accessToken.length) return;
+      const user = await FetchSelfRequest(accessToken);
+      setUser(user);
+    }
+    automaticLogin();
   }, []);
 
   // TODO: Use real data

@@ -1,16 +1,12 @@
 CONNECTION TO THE BACKEND
-- Automatic login: The refresh token request needs to accept only the cookie, 
-not the access token (or make it optional).
+- The WebSockets and game-related features are put aside for now.
+- If a request receives a 401 error, it means the access token expired. Call 
+`RefreshTokenRequest(expired_access_token)` to get issued a new one. If this 
+fails, then this functions calls `LogoutRequest`.
 
 - The frontend has been created in isolation. Make use of the backend and 
 remove the placeholder content.
 - Finish whatever TODOs are present in the frontend.
-- The WebSockets and game-related features are put aside for now.
-- When you log in and receive the access token, store it in memory and then 
-send it with all requests. If you receive 401, it means it expired. Call the 
-API to refresh (= get a new access token). If it says 401 here, it means the 
-refresh token is expired and you need to be logged out. Call the API to log 
-out, it's not just about logging out on the frontend.
 
 DATA EXTRACTION PAGE
 - To extract their data, the user has a menu with different checkboxes they can 
@@ -32,6 +28,13 @@ FRIENDSHIP & BLOCK
 - Section for requests you have received. Button to accept and button to reject.
 - The friends list is part of the public display, but without the button to 
 remove the friendship of course.
+
+--------------------------------------------------------------------------------
+
+QUESTIONS
+- pages/auth/Verify{Cancel|Error|Success}.tsx: Do these pages need to do 
+anything in particular besides printing a hardcoded message? Does the frontend 
+need to do anything regarding email verification when from the link?
 
 --------------------------------------------------------------------------------
 

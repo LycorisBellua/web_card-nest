@@ -5,9 +5,6 @@ export async function RefreshTokenRequest(
 ): Promise<string> {
   const res = await fetch('/api/auth/refresh', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
   });
   if (!res.ok) {
     const data = (await res.json()) as {
