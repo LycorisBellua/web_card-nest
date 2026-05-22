@@ -13,9 +13,12 @@ export type NewMessage = {
 
 export const messageSelect = {
   senderId: true,
-  date: true,
   message: true,
 } satisfies Prisma.MessageSelect;
+
+export type Message = Prisma.MessageGetPayload<{
+  select: typeof messageSelect;
+}>;
 
 export type MessageHistory = Prisma.MessageGetPayload<{
   select: typeof messageSelect;

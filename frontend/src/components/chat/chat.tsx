@@ -1,23 +1,38 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from '../websocket/socketContext';
-
-type Message = 
-{
-  Sender: string;
-  message: string;
-};
+// import type { Message, MessageHistory } from '../../../../backend/src/api/chat/types/chat.types'
 
 
+// type Message = 
+// {
+//   senderId : string;
+//   message : string;
+// }
 
-export const  Chat = () => 
+export const  Chat =  () => 
 {  
   const socket = useSocket();
-  const [messages, setMessages] = useState<Message[]>([]); 
   const [input, setInput] = useState('');
   const [targetUserId, setTargetUserId] = useState('');
+  console.log("HERE");
+  // const history = socket.emitWithAck('FetchConvoHistory', targetUserId);
+  console.log("HERE");
+  const [messages, setMessages] = useState<any[]>([]); 
+
+    
     useEffect(() => {
-      socket.on('receiveMessage', (data: Message) => {
-        setMessages((prev: Message[]) => [...prev, data]);
+    socket.emit('FetchConvoHistory', targetUserId, (response: any) => {
+      console.log("HERE Useeffect :", targetUserId);
+      setMessages(response); // ← your return value
+    });
+  }, [targetUserId]);
+  
+  
+  
+    useEffect(() => {
+      
+      socket.on('receiveMessage', (data: any) => {
+        setMessages((prev: any) => [...prev, data]);
       });
       return () => {
         socket.off('receiveMessage');
@@ -36,7 +51,7 @@ export const  Chat = () =>
         });
       setMessages((prev) => [
         ...prev,
-        { Sender: 'me', message: input },
+        { senderId: 'me',  message: input },
       ]);
       setInput('');
     };
