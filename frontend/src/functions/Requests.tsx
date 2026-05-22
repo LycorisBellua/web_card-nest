@@ -63,7 +63,7 @@ export async function FetchSelfRequest(
     username: data.username,
     avatar: data.avatar,
     rank: data.rank,
-    registered: data.date,
+    registered: new Date(data.date),
     description: data.desc,
     isOnline: true,
     email: data.email,
