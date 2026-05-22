@@ -118,7 +118,7 @@ function SignUp() {
           value={upassword}
           onChange={(e) => setUPassword(e.target.value)}
           helpers={[
-            'The password needs a minimum of 8 characters, including one uppercase, one lowercase, one digit and one special character.',
+            'The password needs between 8 and 64 characters, including one uppercase, one lowercase, one digit and one special character.',
           ]}
           isError={!!errors.length}
         />

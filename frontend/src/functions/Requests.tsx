@@ -7,14 +7,8 @@ export async function RefreshTokenRequest(
     method: 'POST',
   });
   if (!res.ok) {
-    const data = (await res.json()) as {
-      message: string;
-      statusCode: number;
-    };
-    if (data.statusCode == 401) {
-      await LogoutRequest(accessToken);
-      return '';
-    }
+    if (res.status != 401) await LogoutRequest(accessToken);
+    return '';
   }
   const data = (await res.json()) as { accessToken: string };
   return data.accessToken;
@@ -39,11 +33,7 @@ export async function FetchSelfRequest(
     },
   });
   if (!res.ok) {
-    const data = (await res.json()) as {
-      message: string;
-      statusCode: number;
-    };
-    if (data.statusCode != 401) return null;
+    if (res.status != 401) return null;
     const newAccessToken = await RefreshTokenRequest(accessToken);
     if (!newAccessToken.length) return null;
     accessToken = newAccessToken;
@@ -70,4 +60,20 @@ export async function FetchSelfRequest(
     unverifiedEmail: data.email_unverified,
     accessToken: accessToken,
   } as User;
+}
+
+export async function ResendVerificationEmailRequest(
+  accessToken: string,
+): Promise<string> {
+  const res = await fetch('/api/auth/resend', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+  }
+  return accessToken;
 }

@@ -68,13 +68,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
 
   useEffect(() => {
-    async function automaticLogin() {
-      const accessToken = await RefreshTokenRequest('');
-      if (!accessToken.length) return;
-      const user = await FetchSelfRequest(accessToken);
-      setUser(user);
-    }
-    automaticLogin();
+    const automaticLogin = async () => {
+      try {
+        const accessToken = await RefreshTokenRequest('');
+        if (!accessToken.length) return;
+        const user = await FetchSelfRequest(accessToken);
+        setUser(user);
+      } catch {
+        setUser(null);
+      }
+    };
+    void automaticLogin();
   }, []);
 
   // TODO: Use real data

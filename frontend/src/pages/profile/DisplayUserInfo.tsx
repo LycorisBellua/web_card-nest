@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { User, UserLimitedOrGuest } from 'context/Types';
+import { useUser } from 'context/useUser';
 import { GetDate } from 'functions/Time';
+import { ResendVerificationEmailRequest } from 'functions/Requests';
 import { AvatarBig } from 'components/btn/Avatar';
 import { BtnDefault } from 'components/btn/Btn';
 import { UsernameBig } from 'components/btn/Username';
@@ -59,20 +61,20 @@ export function DisplayPrivateUserInfo({ user }: { user: NonNullable<User> }) {
 }
 
 function VerifyEmail({ user }: { user: NonNullable<User> }) {
+  const { setUser } = useUser();
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
 
   async function handleVerifyEmail() {
     try {
-      const res = await fetch(`/api/users/${user.id}/verify_email`, {
-        method: 'POST',
-        headers: { 'Content-type': 'application/json' },
-        body: JSON.stringify({ unverifiedEmail: user.unverifiedEmail }),
-      });
-      if (!res.ok) {
-        setErrors([`Error ${res.status} : ${res.statusText}`]);
+      const newAccessToken = await ResendVerificationEmailRequest(
+        user.accessToken,
+      );
+      if (!newAccessToken.length) {
+        setErrors(['Error occurred']);
         return;
       }
+      setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
       setMessage("You'll receive a verification link shortly...");
     } catch {
       setErrors(['Error occurred']);
@@ -84,7 +86,7 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
       <div>
         <p>Unverified email: {user.unverifiedEmail}</p>
         <BtnDefault onClick={() => void handleVerifyEmail()}>
-          Verify Email
+          Resend Verification Email
         </BtnDefault>
       </div>
       {errors.map((err, i) => (

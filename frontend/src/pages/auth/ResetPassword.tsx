@@ -158,7 +158,7 @@ function ResetPasswordConfirm({
           value={uPwd}
           onChange={(e) => setUPwd(e.target.value)}
           helpers={[
-            'You need a minimum of 8 characters, including one uppercase, one lowercase, one digit and one special character.',
+            'You need between 8 and 64 characters, including one uppercase, one lowercase, one digit and one special character.',
           ]}
           isError={!!errors.length}
         />

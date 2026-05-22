@@ -31,22 +31,15 @@ remove the friendship of course.
 
 --------------------------------------------------------------------------------
 
-QUESTIONS
-- pages/auth/Verify{Cancel|Error|Success}.tsx: Do these pages need to do 
-anything in particular besides printing a hardcoded message? Does the frontend 
-need to do anything regarding email verification when from the link?
-
---------------------------------------------------------------------------------
-
-- [X] Add a user
-- [X] Login
-- [X] Logout
-- [ ] Verify email address
-- [X] Refresh
+- [x] Add a user
+- [x] Login
+- [x] Logout
+- [x] Resend Verification Email
+- [x] Refresh
 - [ ] Update password
 - [ ] Remove a user
 - [ ] Update username/email/avatar/desc
-- [X] Get own profile
+- [x] Get own profile
 - [ ] Get user by id
 - [ ] Get user by username
 - [ ] Get all users sorted by username
