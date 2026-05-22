@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -12,16 +11,17 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { decodeAvatarBase64 } from './utils/user.validator';
 import {
-  compareHash,
-  createHash,
+  comparePasswordHash,
+  createPasswordHash,
   getCurrentTime,
   getVerificationTimeout,
   getToken,
   newPasswordContainsUsername,
   newPasswordContainsEmail,
-  getRefreshTimeout,
   encodeSingleAvatar,
   encodeMultipleAvatars,
+  createTokenHash,
+  compareTokenHash,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
 import { AdminUpdateUserDto } from '../admin/dto/admin-update-user.dto';
@@ -62,7 +62,7 @@ export class UserService {
         throw new ConflictException(ErrorMessages.EMAIL_USED);
       }
       data.email_unverified = dto.email_unverified;
-      data.verifyToken = await createHash(token);
+      data.verifyToken = createTokenHash(token);
       data.verifyTimeout = getVerificationTimeout();
     }
 
@@ -115,10 +115,10 @@ export class UserService {
     if (newPasswordContainsEmail(newPassword, email)) {
       throw new BadRequestException(ErrorMessages.EMAIL_IN_PASSWORD);
     }
-    if (!(await compareHash(currentPassword, user.password))) {
+    if (!(await comparePasswordHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
-    return await this.modifyPassword(userId, await createHash(newPassword));
+    return await this.modifyPassword(userId, await createPasswordHash(newPassword));
   }
 
   async getOwnProfile(userId: string) {
@@ -209,8 +209,8 @@ export class UserService {
     const created = await this.createUser(
       newUser.username,
       newUser.email_unverified,
-      await createHash(newUser.password),
-      await createHash(token),
+      await createPasswordHash(newUser.password),
+      createTokenHash(token),
       getVerificationTimeout(),
     );
     await this.userEmailsService.sendVerificationEmail(
@@ -226,7 +226,7 @@ export class UserService {
     if (
       !found ||
       !found.verifyToken ||
-      !(await compareHash(token, found.verifyToken)) ||
+      !compareTokenHash(token, found.verifyToken) ||
       !found.email_unverified ||
       !found.verifyTimeout ||
       found.verifyTimeout < new Date()
@@ -256,7 +256,7 @@ export class UserService {
     if (
       !found ||
       !found.verifyToken ||
-      !(await compareHash(token, found.verifyToken))
+      !compareTokenHash(token, found.verifyToken)
     ) {
       return null;
     }
@@ -277,7 +277,7 @@ export class UserService {
     }
     const data: Record<string, unknown> = {};
     const token = getToken();
-    data.verifyToken = await createHash(token);
+    data.verifyToken = createTokenHash(token);
     data.verifyTimeout = getVerificationTimeout();
     const result = await this.modifyVerificationData(userId, data);
     const updated = await this.userExistsOrThrow(userId);
@@ -291,32 +291,18 @@ export class UserService {
     return result;
   }
 
-  async generateRefreshToken(
-    userId: string,
-  ): Promise<{ token: string; timeout: Date }> {
+  async updateRefreshToken(userId: string, refreshToken: string, timeout: Date) {
     await this.userExistsOrThrow(userId);
-    const token = getToken();
-    const timeout = getRefreshTimeout();
-    const result = await this.modifyRefreshToken(
+    return await this.modifyRefreshToken(
       userId,
-      await createHash(token),
-      timeout,
+      createTokenHash(refreshToken),
+      timeout
     );
-    if (
-      !result.refreshToken ||
-      !(await compareHash(token, result.refreshToken))
-    ) {
-      throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
-    }
-    return { token: token, timeout: timeout };
   }
 
   async removeRefreshToken(userId: string) {
     await this.userExistsOrThrow(userId);
-    const result = await this.deleteRefreshToken(userId);
-    if (result.refreshToken !== null) {
-      throw new InternalServerErrorException(ErrorMessages.REF_TOK_DEL_ERR);
-    }
+    return await this.deleteRefreshToken(userId);
   }
 
   //CALLED FROM ADMIN SERVICE
@@ -419,7 +405,7 @@ export class UserService {
     userId: string,
     newData: Record<string, unknown>,
   ) {
-    await this.prisma.user.update({
+    return await this.prisma.user.update({
       where: { id: userId },
       data: newData,
       select: { id: true },
@@ -454,7 +440,7 @@ export class UserService {
     return await this.prisma.user.update({
       where: { id: userID },
       data: { password: newPassword },
-      select: { id: true },
+      select: { id: true, rank: true },
     });
   }
 
@@ -480,11 +466,7 @@ export class UserService {
     });
   }
 
-  private async modifyRefreshToken(
-    userId: string,
-    newToken: string | null,
-    timeout: Date,
-  ) {
+  private async modifyRefreshToken(userId: string, newToken: string, timeout: Date) {
     return await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: newToken, refreshTimeout: timeout },
@@ -557,7 +539,6 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
-        refreshTimeout: true,
       },
     });
     if (!found) {
@@ -581,9 +562,15 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
-        refreshTimeout: true,
       },
     });
+  }
+
+  async userExistsByRefreshTokenHash(toFind: string) {
+    return await this.prisma.user.findUnique({
+      where: { refreshToken: toFind },
+      select: { id: true, rank: true, refreshTimeout: true }
+    })
   }
 
   private async userExists(toFind: string) {
@@ -598,7 +585,6 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
-        refreshTimeout: true,
       },
     });
   }

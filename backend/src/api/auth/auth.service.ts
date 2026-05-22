@@ -2,9 +2,17 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { compareHash, getCurrentTime } from '../user/utils/user.utils';
+import {
+  comparePasswordHash,
+  createTokenHash,
+  getCurrentTime,
+  getRefreshTimeout,
+  getToken,
+} from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
+import { TokenPair } from './jwt/auth.token-pair';
+import { Ranks } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class AuthService {
@@ -17,50 +25,38 @@ export class AuthService {
     return await this.userService.addUser(createUserDto);
   }
 
-  async login(
-    email: string,
-    password: string,
-  ): Promise<{ refreshToken: string; timeout: Date; accessToken: string }> {
+  async login(email: string, password: string): Promise<TokenPair> {
     const found = await this.userService.userExistsByEmail(email);
     if (
       !found ||
       (found.email && found.email !== email) ||
-      !(await compareHash(password, found.password))
+      !(await comparePasswordHash(password, found.password))
     ) {
       throw new UnauthorizedException('Email address or password incorrect.');
     }
-    const refresh = await this.userService.generateRefreshToken(found.id);
-    const access = await this.generateJwtToken(found.id);
-    return {
-      refreshToken: refresh.token,
-      timeout: refresh.timeout,
-      accessToken: access,
-    };
+    return this.generateTokenPair(found.id, found.rank);
   }
 
   async logout(userId: string) {
     return await this.userService.removeRefreshToken(userId);
   }
 
-  async refresh(jwtToken: string, refreshToken: string) {
-    const payload: JwtPayload = this.jwtService.decode(jwtToken);
-    if (!payload) {
-      throw new UnauthorizedException();
-    }
-    const found = await this.userService.userExistsOrThrow(payload.id);
+  async refresh(refreshToken: string): Promise<string> {
+    const hash = createTokenHash(refreshToken);
+    const user = await this.userService.userExistsByRefreshTokenHash(hash);
     if (
-      !found.refreshToken ||
-      !found.refreshTimeout ||
-      found.refreshTimeout < getCurrentTime() ||
-      !(await compareHash(refreshToken, found.refreshToken))
+      !user ||
+      !user.refreshTimeout ||
+      user.refreshTimeout < getCurrentTime()
     ) {
       throw new UnauthorizedException();
     }
-    return await this.generateJwtToken(payload.id);
+    return await this.generateJwtToken(user.id, user.rank);
   }
 
   async updatePassword(userId: string, dto: UpdatePasswordDto) {
-    return await this.userService.updatePassword(userId, dto);
+    const result = await this.userService.updatePassword(userId, dto);
+    return await this.generateTokenPair(userId, result.rank);
   }
 
   async verifyEmail(userId: string, token: string) {
@@ -79,13 +75,31 @@ export class AuthService {
     return await this.userService.resendVerificationEmail(userId);
   }
 
-  // Generate JWT
-  async generateJwtToken(userId: string) {
-    const user = await this.userService.userExistsOrThrow(userId);
-    const payload = {
+  // Generate JWT / Refresh Token
+  async generateTokenPair(userId: string, rank: Ranks): Promise<TokenPair> {
+    const access = await this.generateJwtToken(userId, rank);
+    const refresh = await this.generateRefreshToken(userId);
+    return {
+      accessToken: access,
+      refreshToken: refresh.token,
+      refreshTimeout: refresh.timeout,
+    };
+  }
+
+  async generateJwtToken(userId: string, rank: Ranks) {
+    const payload: JwtPayload = {
       id: userId,
-      rank: user.rank,
+      rank: rank,
     };
     return await this.jwtService.signAsync(payload);
+  }
+
+  async generateRefreshToken(
+    userId: string,
+  ): Promise<{ token: string; timeout: Date }> {
+    const token = getToken();
+    const timeout = getRefreshTimeout();
+    await this.userService.updateRefreshToken(userId, token, timeout);
+    return { token, timeout };
   }
 }
