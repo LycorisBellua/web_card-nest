@@ -64,6 +64,7 @@ export class AuthService {
     if (!verified) {
       return { url: `${process.env.HOME_URL}/verify-error` };
     }
+    this.userService.removeRefreshToken(userId);
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
