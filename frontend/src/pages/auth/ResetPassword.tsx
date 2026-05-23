@@ -36,7 +36,7 @@ function ResetPasswordQuery() {
       return;
     }
     try {
-      const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
+      const res = await fetch('/api/auth/reset-password1', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ function ResetPasswordEdit({ email, token }: { email: string; token: string }) {
       return;
     }
     try {
-      const res = await fetch('/api/reset-password', {
+      const res = await fetch('/api/auth/reset-password2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
