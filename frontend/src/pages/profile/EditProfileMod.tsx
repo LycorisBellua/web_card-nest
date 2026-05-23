@@ -102,7 +102,7 @@ function EditProfileMod({ otherUser }: { otherUser: UserLimited }) {
       requests.push(
         fetch(`/api/users/${otherUser.id}`, {
           method: 'PATCH',
-          headers: { 'Content-type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         }),
       );

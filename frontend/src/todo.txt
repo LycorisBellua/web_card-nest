@@ -31,12 +31,13 @@ remove the friendship of course.
 
 pages/auth/ResetPassword.tsx:39:      const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
 pages/auth/ResetPassword.tsx:115:      const res = await fetch('/api/reset-password', {
-pages/profile/EditProfile.tsx:122:        fetch(`/api/users/${user.id}`, {
-pages/profile/EditProfile.tsx:132:        fetch(`/api/users/${user.id}/password`, {
 pages/profile/EditProfileMod.tsx:103:        fetch(`/api/users/${otherUser.id}`, {
 pages/profile/DangerZoneAdmin.tsx:31:      const res = await fetch(`/api/users/${otherUser.id}/rank`, {
 pages/profile/DangerZoneAdmin.tsx:47:      const res = await fetch(`/api/users/${otherUser.id}`, {
 pages/profile/DangerZone.tsx:22:      const res = await fetch(`/api/users/${user.id}/rank`, {
+
+ISSUES
+- pages/profile/EditProfile.tsx: "Update username/email/avatar/desc".
 
 --------------------------------------------------------------------------------
 
@@ -45,9 +46,9 @@ pages/profile/DangerZone.tsx:22:      const res = await fetch(`/api/users/${user
 - [x] Logout
 - [x] Resend Verification Email
 - [x] Refresh
-- [ ] Update password
+- [x] Update password
 - [x] Remove a user
-- [ ] Update username/email/avatar/desc
+- [.] Update username/email/avatar/desc
 - [x] Get own profile
 - [ ] Get user by id
 - [ ] Get user by username

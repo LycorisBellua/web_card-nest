@@ -59,15 +59,17 @@ export function validatePassword(
   const passwordLower: string = upassword.toLowerCase();
   if (uname.length && passwordLower.includes(uname.toLowerCase()))
     errors.push('The password cannot contain the username.');
-  const atIndex: number = uemail.indexOf('@');
-  if (atIndex !== -1) {
-    const localPart: string = uemail.substring(0, atIndex);
-    const domainPart: string = uemail.substring(atIndex + 1);
-    if (
-      (localPart && passwordLower.includes(localPart.toLowerCase())) ||
-      (domainPart && passwordLower.includes(domainPart.toLowerCase()))
-    ) {
-      errors.push('The password cannot contain the email address.');
+  if (uemail) {
+    const atIndex: number = uemail.indexOf('@');
+    if (atIndex !== -1) {
+      const localPart: string = uemail.substring(0, atIndex);
+      const domainPart: string = uemail.substring(atIndex + 1);
+      if (
+        (localPart && passwordLower.includes(localPart.toLowerCase())) ||
+        (domainPart && passwordLower.includes(domainPart.toLowerCase()))
+      ) {
+        errors.push('The password cannot contain the email address.');
+      }
     }
   }
   if (/\p{Cc}/gu.test(upassword)) {
