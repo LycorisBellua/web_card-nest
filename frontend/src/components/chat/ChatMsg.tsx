@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { Msg } from 'context/Types';
+import type { UserLimited, Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
 import { CanDisciplineThisUser } from 'functions/Ranks';
@@ -112,8 +112,9 @@ const TextModerated = styled(Text)`
 `;
 
 function ChatMsg({ msg }: { msg: Msg }) {
-  const { user, users } = useUser();
-  const author = users.find((u) => u.id === msg.authorId) ?? null;
+  const { user } = useUser();
+  const author: UserLimited = null; //TODO
+  //const author = users.find((u) => u.id === msg.authorId) ?? null;
   const can_discipline = CanDisciplineThisUser(user, author);
 
   const avatar = author?.avatar ?? '';

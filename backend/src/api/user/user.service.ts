@@ -512,21 +512,42 @@ export class UserService {
   private async findProfileById(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
     });
   }
 
   private async findProfileByUsername(toFind: string) {
     return await this.prisma.user.findFirst({
       where: { username: { equals: toFind, mode: 'insensitive' } },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
     });
   }
 
   private async listAllByUsername(incPending: boolean) {
     return await this.prisma.user.findMany({
       where: incPending ? {} : { rank: { not: Ranks.PENDING } },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
       orderBy: { username: 'asc' },
     });
   }
@@ -534,7 +555,14 @@ export class UserService {
   private async listAllByDate(incPending: boolean) {
     return await this.prisma.user.findMany({
       where: incPending ? {} : { rank: { not: Ranks.PENDING } },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
       orderBy: { date: 'asc' },
     });
   }

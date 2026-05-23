@@ -74,6 +74,7 @@ export async function ResendVerificationEmailRequest(
   if (!res.ok) {
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
     const resRetry = await fetch('/api/auth/resend', {
       method: 'GET',
       headers: {
@@ -104,6 +105,7 @@ export async function ChangeRankRequest(
   if (!res.ok) {
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
     const resRetry = await fetch('/api/admin/rank', {
       method: 'PATCH',
       headers: {
@@ -130,6 +132,7 @@ export async function DeleteSelfRequest(accessToken: string): Promise<string> {
   if (!res.ok) {
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
     const resRetry = await fetch('/api/user', {
       method: 'DELETE',
       headers: {
@@ -154,6 +157,7 @@ export async function DeleteUserRequest(
   if (!res.ok) {
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
     const resRetry = await fetch(`/api/admin/${userId}`, {
       method: 'DELETE',
       headers: {

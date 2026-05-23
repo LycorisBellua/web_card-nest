@@ -10,8 +10,9 @@ import ChatInput from 'components/chat/ChatInput';
 
 function Lobby() {
   // TODO: Replace with real time data
-  const { user, users, threads, postMessage } = useUser();
-  const nbr_online = users.filter((u) => u.isOnline).length;
+  const { user, threads, postMessage } = useUser();
+  const nbr_online = 0;
+  //const nbr_online = users.filter((u) => u.isOnline).length;
   const thread = threads.find((t) => t.id === 'thread_group_lobby');
   const lastMsg = thread?.messages.at(-1);
   const grouped =

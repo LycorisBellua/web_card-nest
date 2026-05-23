@@ -14,7 +14,7 @@ import Modal from 'components/misc/Modal';
 
 function PublicProfile() {
   const { username } = useParams<{ username: string }>();
-  const { user, users, friends } = useUser();
+  const { user, friends } = useUser();
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [error, setError] = useState('');
@@ -24,9 +24,11 @@ function PublicProfile() {
   if (!username || username.toLowerCase() == 'guest') return <GuestProfile />;
 
   // TODO: Fetch user data using `username`. In the meantime, use the context.
-  const otherUser = users.find(
+  const otherUser = null;
+  /*const otherUser = users.find(
     (u) => u.username.toLowerCase() === username?.toLowerCase(),
   );
+  */
   //
   if (!otherUser) return <NotFound />;
 

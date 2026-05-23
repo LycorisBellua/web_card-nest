@@ -50,7 +50,7 @@ ISSUES
 - [x] Get own profile
 - [ ] Get user by id
 - [ ] Get user by username
-- [ ] Get all users sorted by username
+- [x] Get all users sorted by username
 - [ ] [Admin] Modify a user account details
 - [.] [Admin] Change a user rank
 - [.] [Admin] Remove a user

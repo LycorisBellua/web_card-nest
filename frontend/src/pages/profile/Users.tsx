@@ -1,10 +1,44 @@
+import { useState, useEffect } from 'react';
 import { useUser } from 'context/useUser';
+import type { User, UserLimited } from 'context/Types';
 import NotFound from 'pages/NotFound';
 import { ScrollablePage } from 'components/general/Scrollable';
 import UserBtn from 'components/btn/UserBtn';
 
 function Users() {
-  const { user, users } = useUser();
+  const { user, setUser } = useUser();
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const fetchUserList = async () => {
+      try {
+        let res = await fetch('/api/user/all/username', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${user.accessToken}`,
+          },
+        });
+        if (!res.ok) {
+          if (res.status != 401) return;
+          const accessToken = await RefreshTokenRequest(user.accessToken);
+          if (!accessToken.length) return;
+          setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+          res = await fetch('/api/user/all/username', {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${user.accessToken}`,
+            },
+          });
+          if (!res.ok) return;
+        }
+        const data = (await res.json()) as UserLimited[];
+        setUsers(data);
+      } catch {
+        setUsers([]);
+      }
+    };
+    void fetchUserList();
+  }, [user]);
 
   if (!user || user.rank.toLowerCase() == 'pending') return <NotFound />;
 

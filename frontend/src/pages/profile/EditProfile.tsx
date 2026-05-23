@@ -135,14 +135,16 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
 
         if (res.status === 401) {
           token = await RefreshTokenRequest(token);
-          res = await fetch('/api/user/update', {
-            method: 'PATCH',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-          });
+          if (token.length) {
+            res = await fetch('/api/user/update', {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(body),
+            });
+          }
         }
 
         if (!res.ok) {
@@ -180,17 +182,19 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
 
         if (res.status === 401) {
           token = await RefreshTokenRequest(token);
-          res = await fetch('/api/auth/password', {
-            method: 'PATCH',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              oldPassword: currentPassword,
-              newPassword: sanitizedPassword,
-            }),
-          });
+          if (token.length) {
+            res = await fetch('/api/auth/password', {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                oldPassword: currentPassword,
+                newPassword: sanitizedPassword,
+              }),
+            });
+          }
         }
 
         if (!res.ok) {
@@ -213,7 +217,9 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         token = data.accessToken;
       }
 
-      setUser((old) => (old ? { ...old, accessToken: token } : null));
+      if (token.length) {
+        setUser((prev) => ({ ...prev, accessToken: token }) as User);
+      }
     } catch {
       setIsSaving(false);
       setDisplaySpinner(false);
