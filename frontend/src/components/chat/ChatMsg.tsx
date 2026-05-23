@@ -34,7 +34,7 @@ const Row = styled.div<{ $rank: string }>`
             background: rgba(240, 192, 64, 0.07);
           }
         `;
-      case 'mod':
+      case 'moderator':
         return css`
           background: rgba(212, 160, 112, 0.04);
           box-shadow: inset 2px 0 0 rgba(212, 160, 112, 0.4);
@@ -76,7 +76,7 @@ const NameWrap = styled.div<{ $rank: string }>`
   ${({ $rank }) => {
     switch ($rank) {
       case 'admin':
-      case 'mod':
+      case 'moderator':
         return css`
           display: flex;
           align-items: center;

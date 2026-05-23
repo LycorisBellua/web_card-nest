@@ -54,7 +54,7 @@ export async function FetchSelfRequest(
     avatar: data.avatar,
     rank: data.rank,
     registered: new Date(data.date),
-    description: data.desc,
+    desc: data.desc,
     isOnline: true,
     email: data.email,
     unverifiedEmail: data.email_unverified,
@@ -79,6 +79,41 @@ export async function ResendVerificationEmailRequest(
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+    });
+    if (!resRetry.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function ChangeRankRequest(
+  accessToken: string,
+  userId: string,
+  newRank: string,
+): Promise<string> {
+  const res = await fetch(`/api/admin/rank`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      targetId: userId,
+      rank: newRank.toUpperCase(),
+    }),
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    const resRetry = await fetch(`/api/admin/rank`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        targetId: userId,
+        rank: newRank.toUpperCase(),
+      }),
     });
     if (!resRetry.ok) return '';
   }

@@ -10,7 +10,7 @@ const otherUsers: UserLimited[] = [
     avatar: 'https://pics.craiyon.com/2023-11-16/Gf0MaOtPQDeq60d49Ai6uA.webp',
     rank: 'user',
     registered: new Date('2026-03-02'),
-    description: '',
+    desc: '',
     isOnline: true,
   },
   {
@@ -20,7 +20,7 @@ const otherUsers: UserLimited[] = [
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRR_uvplX64OVu7oEysYZ5HjfMVUgjb9LEzEllowZk8UA&s',
     rank: 'admin',
     registered: new Date('2026-03-02'),
-    description: '',
+    desc: '',
     isOnline: true,
   },
   {
@@ -30,7 +30,7 @@ const otherUsers: UserLimited[] = [
       'https://college.taylors.edu.my/content/dam/taylorsrevamp/college/student-life/news-and-articles/2024/shadows-in-the-candles-glow-bringing-sustainability-to-light/taylors-article-shadows-in-the-candles-glow-hero-banner-mobile-768x650.png/jcr:content/renditions/cq5dam.web.768.650.webp',
     rank: 'user',
     registered: new Date('2026-03-02'),
-    description: '',
+    desc: '',
     isOnline: false,
   },
   {
@@ -39,7 +39,7 @@ const otherUsers: UserLimited[] = [
     avatar: '',
     rank: 'user',
     registered: new Date('2026-03-02'),
-    description: '',
+    desc: '',
     isOnline: true,
   },
   {
@@ -47,9 +47,9 @@ const otherUsers: UserLimited[] = [
     username: 'Sagewick',
     avatar:
       'https://static.vecteezy.com/ti/vecteur-libre/p1/43511509-cerise-fleurs-illustration-vectoriel.jpg',
-    rank: 'mod',
+    rank: 'moderator',
     registered: new Date('2026-03-02'),
-    description: '',
+    desc: '',
     isOnline: false,
   },
   {
@@ -57,9 +57,9 @@ const otherUsers: UserLimited[] = [
     username: 'Tealeaf',
     avatar:
       'https://thumbs.dreamstime.com/b/cute-kawaii-teapot-cartoon-floral-accent-illustration-cheerful-yellow-pink-lid-teal-handle-adorned-flower-style-445328393.jpg',
-    rank: 'mod',
+    rank: 'moderator',
     registered: new Date('2026-03-02'),
-    description: '',
+    desc: '',
     isOnline: false,
   },
 ];

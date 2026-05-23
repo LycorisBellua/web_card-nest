@@ -44,7 +44,7 @@ export function DisplayPublicUserInfo({ user }: { user: UserLimitedOrGuest }) {
         <UsernameBig rank={user.rank} value={user.username} />
         <RankBadgeBig rank={user.rank} />
         <p>Registered: {GetDate(user.registered)}</p>
-        <p>Description: {user.description}</p>
+        <p>Description: {user.desc}</p>
       </PublicRightCol>
     </PublicWrapper>
   );

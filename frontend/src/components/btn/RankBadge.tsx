@@ -15,9 +15,8 @@ const Badge = styled.span<{ $rank: string }>`
           color: #f5c842;
           background: rgba(240, 192, 64, 0.1);
           border: 1px solid rgba(240, 192, 64, 0.3);
-          content: 'Admin';
         `;
-      case 'mod':
+      case 'moderator':
         return css`
           font-family: inherit;
           font-size: 0.55rem;
@@ -29,7 +28,6 @@ const Badge = styled.span<{ $rank: string }>`
           color: #c89050;
           background: rgba(212, 160, 112, 0.14);
           border: 1px solid rgba(212, 160, 112, 0.28);
-          content: 'Mod';
         `;
       default:
         return '';
@@ -52,9 +50,8 @@ const BadgeBig = styled.span<{ $rank: string }>`
           color: #f5c842;
           background: rgba(240, 192, 64, 0.1);
           border: 1px solid rgba(240, 192, 64, 0.3);
-          content: 'Admin';
         `;
-      case 'mod':
+      case 'moderator':
         return css`
           font-family: inherit;
           font-size: 0.75rem;
@@ -66,7 +63,6 @@ const BadgeBig = styled.span<{ $rank: string }>`
           color: #c89050;
           background: rgba(212, 160, 112, 0.14);
           border: 1px solid rgba(212, 160, 112, 0.28);
-          content: 'Mod';
         `;
       default:
         return '';
@@ -75,15 +71,19 @@ const BadgeBig = styled.span<{ $rank: string }>`
 `;
 
 export function RankBadge({ rank }: { rank: string }) {
-  if (rank == 'admin' || rank == 'mod') {
-    return <Badge $rank={rank}>{rank}</Badge>;
+  rank = rank.toLowerCase();
+  if (rank == 'admin' || rank == 'moderator') {
+    return <Badge $rank={rank}>{rank == 'moderator' ? 'mod' : rank}</Badge>;
   }
   return <></>;
 }
 
 export function RankBadgeBig({ rank }: { rank: string }) {
-  if (rank == 'admin' || rank == 'mod') {
-    return <BadgeBig $rank={rank}>{rank}</BadgeBig>;
+  rank = rank.toLowerCase();
+  if (rank == 'admin' || rank == 'moderator') {
+    return (
+      <BadgeBig $rank={rank}>{rank == 'moderator' ? 'mod' : rank}</BadgeBig>
+    );
   }
   return <></>;
 }

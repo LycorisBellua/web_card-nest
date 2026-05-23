@@ -32,11 +32,8 @@ remove the friendship of course.
 pages/profile/EditProfileMod.tsx:103:        fetch(`/api/users/${otherUser.id}`, {
 pages/profile/DangerZoneAdmin.tsx:31:      const res = await fetch(`/api/users/${otherUser.id}/rank`, {
 pages/profile/DangerZoneAdmin.tsx:47:      const res = await fetch(`/api/users/${otherUser.id}`, {
-pages/profile/DangerZone.tsx:22:      const res = await fetch(`/api/users/${user.id}/rank`, {
 
 ISSUES
-- pages/profile/EditProfile.tsx:
-	"Update username/email/avatar/desc".
 - pages/auth/ResetPassword.tsx:
 	I don't have the backend yet.
 
@@ -49,13 +46,13 @@ ISSUES
 - [x] Refresh
 - [x] Update password
 - [x] Remove a user
-- [.] Update username/email/avatar/desc
+- [x] Update username/email/avatar/desc
 - [x] Get own profile
 - [ ] Get user by id
 - [ ] Get user by username
 - [ ] Get all users sorted by username
 - [ ] [Admin] Modify a user account details
-- [ ] [Admin] Change a user rank
+- [.] [Admin] Change a user rank
 - [ ] [Admin] Remove a user
 - [ ] Add a friend
 - [ ] Remove a friend

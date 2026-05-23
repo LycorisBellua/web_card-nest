@@ -25,7 +25,7 @@ import styled from 'styled-components';
 type FieldErrors = {
   avatar: string[];
   username: string[];
-  description: string[];
+  desc: string[];
   email: string[];
   newPassword: string[];
   server: string[];
@@ -34,7 +34,7 @@ type FieldErrors = {
 const emptyFieldErrors = (): FieldErrors => ({
   avatar: [],
   username: [],
-  description: [],
+  desc: [],
   email: [],
   newPassword: [],
   server: [],
@@ -51,7 +51,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
 
   const [avatar, setAvatar] = useState<File | '' | undefined>(undefined);
   const [username, setUsername] = useState('');
-  const [description, setDescription] = useState('');
+  const [desc, setDesc] = useState('');
   const [email, setEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -59,7 +59,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
   const hasPendingChanges =
     avatar !== undefined ||
     username !== '' ||
-    description !== '' ||
+    desc !== '' ||
     email !== '' ||
     newPassword !== '';
 
@@ -73,7 +73,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
 
     const sanitizedUsername = username !== '' ? sanitizeUsername(username) : '';
     const sanitizedDescription =
-      description !== '' ? sanitizeDescription(description) : '';
+      desc !== '' ? sanitizeDescription(desc) : '';
     const sanitizedEmail = email !== '' ? sanitizeEmail(email) : '';
     const sanitizedPassword =
       newPassword !== '' ? sanitizePassword(newPassword) : '';
@@ -84,7 +84,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     if (sanitizedUsername !== '')
       nextErrors.username.push(...validateUsername(sanitizedUsername));
     if (sanitizedDescription !== '')
-      nextErrors.description.push(...validateDescription(sanitizedDescription));
+      nextErrors.desc.push(...validateDescription(sanitizedDescription));
     if (sanitizedEmail !== '')
       nextErrors.email.push(...validateEmail(sanitizedEmail));
     if (sanitizedPassword !== '') {
@@ -125,12 +125,6 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
       let token = user.accessToken;
 
       if (Object.keys(body).length > 0) {
-        /*
-		TODO: Update username/email/avatar/desc
-		- Check the response success object.
-		- I always receive "Forbidden" for some reason (same with verified email).
-		*/
-
         let res = await fetch(`/api/user/update`, {
           method: 'PATCH',
           headers: {
@@ -229,7 +223,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
 
     setAvatar(undefined);
     setUsername('');
-    setDescription('');
+    setDesc('');
     setEmail('');
     setCurrentPassword('');
     setNewPassword('');
@@ -240,36 +234,43 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
   }
 
   const SaveButton = hasPendingChanges && !isSaving ? BtnDefault : BtnDisabled;
+  const isVerified = user.rank.toLowerCase() != 'pending';
 
   return (
     <div>
       <h2>Edit Profile</h2>
-      <UpdateAvatar
-        key={`avatar-${resetKey}`}
-        user={user}
-        pendingAvatar={avatar}
-        onChange={setAvatar}
-        errors={fieldErrors.avatar}
-      />
+      {isVerified && (
+        <UpdateAvatar
+          key={`avatar-${resetKey}`}
+          user={user}
+          pendingAvatar={avatar}
+          onChange={setAvatar}
+          errors={fieldErrors.avatar}
+        />
+      )}
       <div className="main">
-        <UpdateUsername
-          key={`username-${resetKey}`}
-          user={user}
-          onChange={setUsername}
-          errors={fieldErrors.username}
-        />
-        <UpdateDescription
-          key={`description-${resetKey}`}
-          user={user}
-          onChange={setDescription}
-          errors={fieldErrors.description}
-        />
-        <UpdateEmail
-          key={`email-${resetKey}`}
-          user={user}
-          onChange={setEmail}
-          errors={fieldErrors.email}
-        />
+        {isVerified && (
+          <>
+            <UpdateUsername
+              key={`username-${resetKey}`}
+              user={user}
+              onChange={setUsername}
+              errors={fieldErrors.username}
+            />
+            <UpdateDescription
+              key={`desc-${resetKey}`}
+              user={user}
+              onChange={setDesc}
+              errors={fieldErrors.desc}
+            />
+            <UpdateEmail
+              key={`email-${resetKey}`}
+              user={user}
+              onChange={setEmail}
+              errors={fieldErrors.email}
+            />
+          </>
+        )}
         <UpdatePassword
           key={`password-${resetKey}`}
           onChange={setNewPassword}
@@ -405,10 +406,10 @@ function UpdateDescription({
   return (
     <div>
       <TextareaField
-        id="user-description"
-        name="user-description"
+        id="user-desc"
+        name="user-desc"
         label="New description"
-        placeholder={user.description}
+        placeholder={user.desc}
         rows={4}
         wrap="soft"
         value={value ?? ''}

@@ -4,7 +4,7 @@ export type UserLimited = {
   avatar: string;
   rank: string;
   registered: Date;
-  description: string;
+  desc: string;
   isOnline: boolean;
 };
 
