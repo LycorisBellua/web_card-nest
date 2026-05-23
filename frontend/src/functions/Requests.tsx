@@ -74,6 +74,34 @@ export async function ResendVerificationEmailRequest(
   if (!res.ok) {
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
+    const resRetry = await fetch('/api/auth/resend', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!resRetry.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function DeleteSelfRequest(accessToken: string): Promise<string> {
+  const res = await fetch(`/api/user`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    const resRetry = await fetch(`/api/user`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!resRetry.ok) return '';
   }
   return accessToken;
 }

@@ -120,7 +120,7 @@ function ChatMsg({ msg }: { msg: Msg }) {
   const isOnline = author?.isOnline ?? false;
   const rank = author?.rank ?? 'guest';
   const username = author?.username ?? 'Guest';
-  const is_logged_in = !!user && !!user.email;
+  const is_logged_in = !!user && user.rank.toLowerCase() != 'pending';
 
   // TODO: When clicking on Moderate, make the msg content empty, and switch
   // the `moderated` field to true

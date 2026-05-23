@@ -98,7 +98,7 @@ const SubNav = styled.nav`
 function Nav({ onDMsClick }: { onDMsClick: () => void }) {
   const { user } = useUser();
 
-  const is_logged_in = !!user && !!user.email;
+  const is_logged_in = !!user && user.rank.toLowerCase() != 'pending';
 
   return (
     <>

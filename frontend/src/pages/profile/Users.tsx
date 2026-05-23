@@ -6,7 +6,7 @@ import UserBtn from 'components/btn/UserBtn';
 function Users() {
   const { user, users } = useUser();
 
-  if (!user || !user.email) return <NotFound />;
+  if (!user || user.rank.toLowerCase() == 'pending') return <NotFound />;
 
   return (
     <ScrollablePage>

@@ -29,6 +29,15 @@ FRIENDSHIP & BLOCK
 - The friends list is part of the public display, but without the button to 
 remove the friendship of course.
 
+pages/auth/ResetPassword.tsx:39:      const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
+pages/auth/ResetPassword.tsx:115:      const res = await fetch('/api/reset-password', {
+pages/profile/EditProfile.tsx:122:        fetch(`/api/users/${user.id}`, {
+pages/profile/EditProfile.tsx:132:        fetch(`/api/users/${user.id}/password`, {
+pages/profile/EditProfileMod.tsx:103:        fetch(`/api/users/${otherUser.id}`, {
+pages/profile/DangerZoneAdmin.tsx:31:      const res = await fetch(`/api/users/${otherUser.id}/rank`, {
+pages/profile/DangerZoneAdmin.tsx:47:      const res = await fetch(`/api/users/${otherUser.id}`, {
+pages/profile/DangerZone.tsx:22:      const res = await fetch(`/api/users/${user.id}/rank`, {
+
 --------------------------------------------------------------------------------
 
 - [x] Add a user
@@ -37,15 +46,15 @@ remove the friendship of course.
 - [x] Resend Verification Email
 - [x] Refresh
 - [ ] Update password
-- [ ] Remove a user
+- [x] Remove a user
 - [ ] Update username/email/avatar/desc
 - [x] Get own profile
 - [ ] Get user by id
 - [ ] Get user by username
 - [ ] Get all users sorted by username
-- [ ] Modify a user account details
-- [ ] Change a user rank
-- [ ] Remove a user
+- [ ] [Admin] Modify a user account details
+- [ ] [Admin] Change a user rank
+- [ ] [Admin] Remove a user
 - [ ] Add a friend
 - [ ] Remove a friend
 - [ ] Accept friend request

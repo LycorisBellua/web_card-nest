@@ -117,6 +117,34 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     if (sanitizedDescription !== '') body.description = sanitizedDescription;
     if (sanitizedEmail !== '') body.unverifiedEmail = sanitizedEmail;
 
+    /*
+TODO
+//Update password
+curl --request PATCH \
+--url http://localhost:3000/api/auth/password \
+--header 'Authorization: Bearer insert_jwt_token' \
+--header 'Content-Type: application/json' \
+--data '{
+"oldPassword": "",
+"newPassword": ""
+}'
+
+// Update username/email/avatar/desc
+- All fields optional, include only the ones you want to change
+- If included: username and email_unverified must be valid (can’t be empty/null)
+- Avatar and desc: empty string to delete from db
+curl --request PATCH \
+--url http://localhost:3000/api/user/update \
+--header 'Authorization: Bearer insert_jwt_token' \
+--header 'Content-Type: application/json' \
+--data '{
+"username": "",
+"email_unverified": "",
+"avatar": "",
+"desc": ""
+}'
+*/
+
     if (Object.keys(body).length > 0) {
       requests.push(
         fetch(`/api/users/${user.id}`, {

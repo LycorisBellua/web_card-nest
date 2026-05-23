@@ -153,7 +153,7 @@ function Sidebar({
 }) {
   const { user, friends } = useUser();
 
-  if (!user || !user.email) return <></>;
+  if (!user || user.rank.toLowerCase() == 'pending') return <></>;
   return (
     <>
       <Backdrop $isOpen={isOpen} onClick={onClose} />

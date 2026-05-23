@@ -43,7 +43,8 @@ function DM() {
     }
   }, [user?.id, lastMsg]);
 
-  if (!user || !user.email || !friend || !thread) return <NotFound />;
+  if (!user || user.rank.toLowerCase() == 'pending' || !friend || !thread)
+    return <NotFound />;
 
   return (
     <ChatPage>

@@ -11,12 +11,12 @@ function ResetPassword() {
   const email = searchParams.get('email');
   const token = searchParams.get('token');
   if (email && token) {
-    return <ResetPasswordConfirm email={email} token={token} />;
+    return <ResetPasswordEdit email={email} token={token} />;
   }
-  return <ResetPasswordRequest />;
+  return <ResetPasswordQuery />;
 }
 
-function ResetPasswordRequest() {
+function ResetPasswordQuery() {
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [message, setMessage] = useState('');
@@ -86,13 +86,7 @@ function ResetPasswordRequest() {
   );
 }
 
-function ResetPasswordConfirm({
-  email,
-  token,
-}: {
-  email: string;
-  token: string;
-}) {
+function ResetPasswordEdit({ email, token }: { email: string; token: string }) {
   const [message, setMessage] = useState('');
   const [uPwd, setUPwd] = useState('');
   const [uPwdConfirm, setUPwdConfirm] = useState('');

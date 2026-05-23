@@ -19,7 +19,7 @@ function PublicProfile() {
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [error, setError] = useState('');
 
-  if (!user || !user.email) return <NotFound />;
+  if (!user || user.rank.toLowerCase() == 'pending') return <NotFound />;
 
   if (!username || username.toLowerCase() == 'guest') return <GuestProfile />;
 

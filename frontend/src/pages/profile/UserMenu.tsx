@@ -36,10 +36,14 @@ function UserMenu() {
   };
 
   const handleLogout = async () => {
-    await LogoutRequest(user.accessToken);
-    setOpen(false);
-    setUser(null);
-    window.location.href = '/';
+    try {
+      await LogoutRequest(user.accessToken);
+      setOpen(false);
+      setUser(null);
+      window.location.href = '/';
+    } catch {
+      setOpen(false);
+    }
   };
 
   return (

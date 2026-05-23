@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useUser } from 'context/useUser';
 import type { User } from 'context/Types';
+import { DeleteSelfRequest } from 'functions/Requests';
 import { BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
@@ -35,15 +36,15 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
   async function handleDelete() {
     closeModals();
     try {
-      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        setError(`Error ${res.status}: ${res.statusText}`);
+      const newAccessToken = await DeleteSelfRequest(user.accessToken);
+      if (!newAccessToken.length) {
+        setError('Error occurred');
         return;
       }
       setUser(null);
       window.location.href = '/';
     } catch {
-      setError('An error occurred. Please try again.');
+      setError('Error occurred');
     }
   }
 
