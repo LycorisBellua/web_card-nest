@@ -29,11 +29,11 @@ FRIENDSHIP & BLOCK
 - The friends list is part of the public display, but without the button to 
 remove the friendship of course.
 
-pages/profile/EditProfileMod.tsx:103:        fetch(`/api/users/${otherUser.id}`, {
-pages/profile/DangerZoneAdmin.tsx:31:      const res = await fetch(`/api/users/${otherUser.id}/rank`, {
-pages/profile/DangerZoneAdmin.tsx:47:      const res = await fetch(`/api/users/${otherUser.id}`, {
-
 ISSUES
+- pages/profile/DangerZoneAdmin.tsx:
+	Check requests.
+- pages/profile/EditProfileMod.tsx:
+	Implement requests (based on EditProfile.tsx).
 - pages/auth/ResetPassword.tsx:
 	I don't have the backend yet.
 
@@ -53,7 +53,7 @@ ISSUES
 - [ ] Get all users sorted by username
 - [ ] [Admin] Modify a user account details
 - [.] [Admin] Change a user rank
-- [ ] [Admin] Remove a user
+- [.] [Admin] Remove a user
 - [ ] Add a friend
 - [ ] Remove a friend
 - [ ] Accept friend request

@@ -72,8 +72,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     setIsSaving(true);
 
     const sanitizedUsername = username !== '' ? sanitizeUsername(username) : '';
-    const sanitizedDescription =
-      desc !== '' ? sanitizeDescription(desc) : '';
+    const sanitizedDescription = desc !== '' ? sanitizeDescription(desc) : '';
     const sanitizedEmail = email !== '' ? sanitizeEmail(email) : '';
     const sanitizedPassword =
       newPassword !== '' ? sanitizePassword(newPassword) : '';
@@ -125,7 +124,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
       let token = user.accessToken;
 
       if (Object.keys(body).length > 0) {
-        let res = await fetch(`/api/user/update`, {
+        let res = await fetch('/api/user/update', {
           method: 'PATCH',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -136,7 +135,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
 
         if (res.status === 401) {
           token = await RefreshTokenRequest(token);
-          res = await fetch(`/api/user/update`, {
+          res = await fetch('/api/user/update', {
             method: 'PATCH',
             headers: {
               Authorization: `Bearer ${token}`,
@@ -167,7 +166,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
       }
 
       if (sanitizedPassword !== '') {
-        let res = await fetch(`/api/auth/password`, {
+        let res = await fetch('/api/auth/password', {
           method: 'PATCH',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -181,7 +180,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
 
         if (res.status === 401) {
           token = await RefreshTokenRequest(token);
-          res = await fetch(`/api/auth/password`, {
+          res = await fetch('/api/auth/password', {
             method: 'PATCH',
             headers: {
               Authorization: `Bearer ${token}`,

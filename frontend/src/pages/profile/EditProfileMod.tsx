@@ -60,8 +60,7 @@ function EditProfileMod({ otherUser }: { otherUser: UserLimited }) {
     setIsSaving(true);
 
     const sanitizedUsername = username !== '' ? sanitizeUsername(username) : '';
-    const sanitizedDescription =
-      desc !== '' ? sanitizeDescription(desc) : '';
+    const sanitizedDescription = desc !== '' ? sanitizeDescription(desc) : '';
 
     const nextErrors: FieldErrors = emptyFieldErrors();
     if (avatar instanceof File)

@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import type { UserLimited } from 'context/Types';
+import type { User, UserLimited } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { CanDisciplineThisUser } from 'functions/Ranks';
+import { ChangeRankRequest, DeleteUserRequest } from 'functions/Requests';
 import { BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
 function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const [isDownrankModalOpen, setIsDownrankModalOpen] = useState(false);
   const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
   const [error, setError] = useState('');
@@ -27,33 +28,42 @@ function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
 
   async function handleDownrank() {
     closeModals();
+    // TODO: Test that the request works. Only the admin is allowed here.
+    // TODO: Other user is modified. Is the change immediate on the front?
     try {
-      const res = await fetch(`/api/users/${otherUser.id}/rank`, {
-        method: 'PATCH',
-      });
-      if (!res.ok) {
-        setError(`Error ${res.status}: ${res.statusText}`);
+      const newRank = 'user';
+      const newAccessToken = await ChangeRankRequest(
+        user.accessToken,
+        otherUser.id,
+        newRank,
+      );
+      if (!newAccessToken.length) {
+        setError('Error occurred');
         return;
       }
-      // TODO: Other user is modified. Is the change immediate on the front?
+      setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
     } catch {
-      setError('An error occurred. Please try again.');
+      setError('Error occurred');
     }
   }
 
   async function handleDelete() {
     closeModals();
+    // TODO: Test that the request works. Only the admin is allowed here.
+    // TODO: Other user is deleted. Is the change immediate on the front?
     try {
-      const res = await fetch(`/api/users/${otherUser.id}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) {
-        setError(`Error ${res.status}: ${res.statusText}`);
+      const newAccessToken = await DeleteUserRequest(
+        user.accessToken,
+        otherUser.id,
+      );
+      if (!newAccessToken.length) {
+        setError('Error occurred');
         return;
       }
-      // TODO: Other user is deleted. Is the change immediate on the front?
+      setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
+      window.location.href = '/';
     } catch {
-      setError('An error occurred. Please try again.');
+      setError('Error occurred');
     }
   }
 
