@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useUser } from 'context/useUser';
 import type { User, UserLimited } from 'context/Types';
+import { RefreshTokenRequest } from 'functions/Requests';
 import NotFound from 'pages/NotFound';
 import { ScrollablePage } from 'components/general/Scrollable';
 import UserBtn from 'components/btn/UserBtn';
 
 function Users() {
   const { user, setUser } = useUser();
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<UserLimited[]>([]);
 
   useEffect(() => {
     const fetchUserList = async () => {
       try {
+        if (!user) return;
         let res = await fetch('/api/user/all/username', {
           method: 'GET',
           headers: {
@@ -38,7 +40,7 @@ function Users() {
       }
     };
     void fetchUserList();
-  }, [user]);
+  }, [user, setUser]);
 
   if (!user || user.rank.toLowerCase() == 'pending') return <NotFound />;
 

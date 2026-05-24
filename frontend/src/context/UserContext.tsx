@@ -5,8 +5,8 @@ export type UserContextType = {
   user: User;
   setUser: React.Dispatch<React.SetStateAction<User>>;
   friends: UserLimited[];
-  addFriend: (username: string) => void;
-  removeFriend: (username: string) => void;
+  //addFriend: (username: string) => void;
+  //removeFriend: (username: string) => void;
   threads: Thread[];
   postMessage: (threadId: string, content: string) => void;
 };

@@ -55,7 +55,7 @@ export async function FetchSelfRequest(
     rank: data.rank,
     registered: new Date(data.date),
     desc: data.desc,
-    isOnline: true,
+    isOnline: false,
     email: data.email,
     unverifiedEmail: data.email_unverified,
     accessToken: accessToken,

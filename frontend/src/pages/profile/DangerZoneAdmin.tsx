@@ -3,12 +3,13 @@ import type { User, UserLimited } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import { ChangeRankRequest, DeleteUserRequest } from 'functions/Requests';
-import { BtnDanger } from 'components/btn/Btn';
+import { BtnDanger, BtnAccent } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
 function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
   const { user, setUser } = useUser();
   const [isDownrankModalOpen, setIsDownrankModalOpen] = useState(false);
+  const [isUprankModalOpen, setIsUprankModalOpen] = useState(false);
   const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
   const [error, setError] = useState('');
 
@@ -22,18 +23,36 @@ function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
 
   function closeModals() {
     setIsDownrankModalOpen(false);
+    setIsUprankModalOpen(false);
     setIsDeletionModalOpen(false);
     setError('');
   }
 
   async function handleDownrank() {
     closeModals();
-    // TODO: Test that the request works. Only the admin is allowed here.
-    // TODO: Other user is modified. Is the change immediate on the front?
     try {
       const newRank = 'user';
       const newAccessToken = await ChangeRankRequest(
-        user.accessToken,
+        user!.accessToken,
+        otherUser.id,
+        newRank,
+      );
+      if (!newAccessToken.length) {
+        setError('Error occurred');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
+    } catch {
+      setError('Error occurred');
+    }
+  }
+
+  async function handleUprank() {
+    closeModals();
+    try {
+      const newRank = 'moderator';
+      const newAccessToken = await ChangeRankRequest(
+        user!.accessToken,
         otherUser.id,
         newRank,
       );
@@ -49,11 +68,9 @@ function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
 
   async function handleDelete() {
     closeModals();
-    // TODO: Test that the request works. Only the admin is allowed here.
-    // TODO: Other user is deleted. Is the change immediate on the front?
     try {
       const newAccessToken = await DeleteUserRequest(
-        user.accessToken,
+        user!.accessToken,
         otherUser.id,
       );
       if (!newAccessToken.length) {
@@ -70,9 +87,14 @@ function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
   return (
     <div>
       <h2>Danger zone</h2>
-      <BtnDanger onClick={() => setIsDownrankModalOpen(true)}>
+      {otherUser.rank.toLowerCase() == 'moderator' ?
+	  <BtnDanger onClick={() => setIsDownrankModalOpen(true)}>
         Remove Mod Rank
       </BtnDanger>
+	  : otherUser.rank.toLowerCase() == 'user' ?
+	  <BtnAccent onClick={() => setIsUprankModalOpen(true)}>
+        Give Mod Rank
+      </BtnAccent> : <></>}
       <BtnDanger onClick={() => setIsDeletionModalOpen(true)}>
         Delete Account
       </BtnDanger>
@@ -83,6 +105,15 @@ function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
         onConfirm={() => void handleDownrank()}
         title="Remove Mod Rank"
         textMain="Are you sure you don't want this user to be a mod anymore?"
+        textCancel="Cancel"
+        textConfirm="Confirm"
+      />
+      <Modal
+        isOpen={isUprankModalOpen}
+        onCancel={() => closeModals()}
+        onConfirm={() => void handleUprank()}
+        title="Give Mod Rank"
+        textMain="Are you sure you want this user to be a mod?"
         textCancel="Cancel"
         textConfirm="Confirm"
       />

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import type { UserLimitedOrGuest } from 'context/Types';
+import type { User, UserLimitedOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
+import { RefreshTokenRequest } from 'functions/Requests';
 import ToggleChatTimeout from 'pages/profile/ToggleChatTimeout';
 import GuestProfile from 'pages/profile/GuestProfile';
 import EditProfileMod from 'pages/profile/EditProfileMod';
@@ -14,24 +15,69 @@ import Modal from 'components/misc/Modal';
 
 function PublicProfile() {
   const { username } = useParams<{ username: string }>();
-  const { user, friends } = useUser();
+  const { user, setUser, friends } = useUser();
+  const [otherUser, setOtherUser] = useState<UserLimitedOrGuest>(null);
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [error, setError] = useState('');
 
-  if (!user || user.rank.toLowerCase() == 'pending') return <NotFound />;
+  const noAccess = !user || user.rank.toLowerCase() == 'pending';
+  const isGuest = !username || username.toLowerCase() == 'guest';
 
-  if (!username || username.toLowerCase() == 'guest') return <GuestProfile />;
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        if (noAccess || isGuest) return;
+        let res = await fetch(`/api/user/username/${username}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${user.accessToken}`,
+          },
+        });
+        if (!res.ok) {
+          if (res.status != 401) return;
+          const accessToken = await RefreshTokenRequest(user.accessToken);
+          if (!accessToken.length) return;
+          setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+          res = await fetch(`/api/user/username/${username}`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${user.accessToken}`,
+            },
+          });
+          if (!res.ok) return;
+        }
+        const data = (await res.json()) as {
+          id: string;
+          username: string;
+          avatar: string;
+          rank: string;
+          date: Date;
+          desc: string;
+          email: string;
+          email_unverified: string;
+        };
+        setOtherUser({
+          id: data.id,
+          username: data.username,
+          avatar: data.avatar,
+          rank: data.rank,
+          registered: new Date(data.date),
+          desc: data.desc,
+          isOnline: false,
+        } as UserLimitedOrGuest);
+      } catch {
+        setOtherUser(null);
+      }
+    };
+    void fetchUser();
+  }, [user, setUser, isGuest, noAccess, username]);
 
-  // TODO: Fetch user data using `username`. In the meantime, use the context.
-  const otherUser = null;
-  /*const otherUser = users.find(
-    (u) => u.username.toLowerCase() === username?.toLowerCase(),
-  );
-  */
-  //
-  if (!otherUser) return <NotFound />;
+  if (noAccess) return <NotFound />;
+  else if (isGuest) return <GuestProfile />;
+  else if (!otherUser) return <NotFound />;
 
+  // TODO
   const is_friend = friends.find(
     (u) => u.username.toLowerCase() === username?.toLowerCase(),
   );
@@ -89,13 +135,14 @@ function PublicProfile() {
   return (
     <ScrollablePage>
       <DisplayPublicUserInfo user={otherUser} />
+      {user.id != otherUser.id &&
       <div>
         {is_friend && (
           <Link to={`/chat/${username}`}>
             <BtnDefault>DM</BtnDefault>
           </Link>
         )}
-        <BtnDefault onClick={() => clickFriend()}>
+		<BtnDefault onClick={() => clickFriend()}>
           {is_friend
             ? 'Remove Friendship'
             : friend_request_sent
@@ -109,7 +156,7 @@ function PublicProfile() {
         {error && <p>{error}</p>}
         <EditProfileMod otherUser={otherUser} />
         <DangerZoneAdmin otherUser={otherUser} />
-      </div>
+      </div>}
       <Modal
         isOpen={isFriendModalOpen}
         onCancel={() => closeModals()}

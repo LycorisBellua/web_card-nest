@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { UserContext } from 'context/UserContext';
-import type { User, Thread } from 'context/Types';
+import type { User, UserLimited, Thread } from 'context/Types';
 import { RefreshTokenRequest, FetchSelfRequest } from 'functions/Requests';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -21,9 +21,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // TODO: Use real data
-  const [friendUsernames, setFriendUsernames] = useState<string[]>([]);
+  //const [friendUsernames, setFriendUsernames] = useState<string[]>([]);
 
-  const friends = [];
+  const friends: UserLimited[] = [];
   /*
   const friends = !user
     ? []
@@ -35,7 +35,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             numeric: true,
           }),
         );
-  */
 
   function addFriend(username: string) {
     setFriendUsernames((prev) => [...prev, username]);
@@ -44,6 +43,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   function removeFriend(username: string) {
     setFriendUsernames((prev) => prev.filter((u) => u !== username));
   }
+  */
 
   const [threads, setThreads] = useState<Thread[]>([
     {
@@ -134,8 +134,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         user,
         setUser,
         friends,
-        addFriend,
-        removeFriend,
+        //addFriend,
+        //removeFriend,
         threads,
         postMessage,
       }}

@@ -1,9 +1,4 @@
 CONNECTION TO THE BACKEND
-- The WebSockets and game-related features are put aside for now.
-- If a request receives a 401 error, it means the access token expired. Call 
-`RefreshTokenRequest(expired_access_token)` to get issued a new one. If this 
-fails, then this functions calls `LogoutRequest`.
-
 - The frontend has been created in isolation. Make use of the backend and 
 remove the placeholder content.
 - Finish whatever TODOs are present in the frontend.
@@ -29,15 +24,13 @@ FRIENDSHIP & BLOCK
 - The friends list is part of the public display, but without the button to 
 remove the friendship of course.
 
+--------------------------------------------------------------------------------
+
 ISSUES
-- pages/profile/DangerZoneAdmin.tsx:
-	Check requests.
 - pages/profile/EditProfileMod.tsx:
 	Implement requests (based on EditProfile.tsx).
 - pages/auth/ResetPassword.tsx:
 	I don't have the backend yet.
-
---------------------------------------------------------------------------------
 
 - [x] Add a user
 - [x] Login
@@ -48,12 +41,11 @@ ISSUES
 - [x] Remove a user
 - [x] Update username/email/avatar/desc
 - [x] Get own profile
-- [ ] Get user by id
-- [ ] Get user by username
+- [x] Get user by username ("by id" version is unused)
 - [x] Get all users sorted by username
 - [ ] [Admin] Modify a user account details
-- [.] [Admin] Change a user rank
-- [.] [Admin] Remove a user
+- [x] [Admin] Change a user rank
+- [x] [Admin] Remove a user
 - [ ] Add a friend
 - [ ] Remove a friend
 - [ ] Accept friend request
