@@ -2,7 +2,6 @@ CONNECTION TO THE BACKEND
 - Finish whatever TODOs are present in the frontend.
 
 FRIENDSHIP & BLOCK
-- Buttons for friendship and blocking on the public profile of target user.
 - Blocked list (only your own profile) -> link to users profile.
 - Friends list (public + your own profile) -> link to users profile.
 - Section for your sent friend requests -> link to users profile.

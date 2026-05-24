@@ -334,3 +334,202 @@ export async function FetchSelfReceivedListRequest(
   const users = (await res.json()) as LimitedUser[];
   return { accessToken, users };
 }
+
+export async function RemoveFriendshipRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch(`/api/rel/friend/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch(`/api/rel/friend/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function AskFriendshipRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch('/api/rel/friend', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      targetId: userId,
+    }),
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/rel/friend', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        targetId: userId,
+      }),
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function CancelFriendshipRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch(`/api/rel/friend/cancel/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch(`/api/rel/friend/cancel/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function AcceptFriendshipRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch('/api/rel/friend/accept', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      targetId: userId,
+    }),
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/rel/friend/accept', {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        targetId: userId,
+      }),
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function RejectFriendshipRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch(`/api/rel/friend/reject/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch(`/api/rel/friend/reject/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function UnblockingRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch(`/api/rel/block/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch(`/api/rel/block/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function BlockingRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch('/api/rel/block', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      targetId: userId,
+    }),
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/rel/block', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        targetId: userId,
+      }),
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}

@@ -2,7 +2,20 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { User, OtherUserOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
-import { RefreshTokenRequest } from 'functions/Requests';
+import {
+  RefreshTokenRequest,
+  FetchSelfBlockedListRequest,
+  FetchSelfFriendListRequest,
+  FetchSelfSentListRequest,
+  FetchSelfReceivedListRequest,
+  RemoveFriendshipRequest,
+  AskFriendshipRequest,
+  CancelFriendshipRequest,
+  AcceptFriendshipRequest,
+  RejectFriendshipRequest,
+  UnblockingRequest,
+  BlockingRequest,
+} from 'functions/Requests';
 import ToggleChatTimeout from 'pages/profile/ToggleChatTimeout';
 import GuestProfile from 'pages/profile/GuestProfile';
 import EditProfileMod from 'pages/profile/EditProfileMod';
@@ -15,8 +28,18 @@ import Modal from 'components/misc/Modal';
 
 function PublicProfile() {
   const { username } = useParams<{ username: string }>();
-  const { user, setUser, blocked, friends, sentFriends, receivedFriends } =
-    useUser();
+  const {
+    user,
+    setUser,
+    blocked,
+    setBlocked,
+    friends,
+    setFriends,
+    sentFriends,
+    setSentFriends,
+    receivedFriends,
+    setReceivedFriends,
+  } = useUser();
   const [otherUser, setOtherUser] = useState<OtherUserOrGuest>(null);
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
@@ -121,122 +144,210 @@ function PublicProfile() {
 
   function clickFriend() {
     if (is_friend) {
-      removeFriendship();
+      void removeFriendship();
     } else if (friend_request_sent) {
-      cancelFriendRequest();
+      void cancelFriendRequest();
     } else if (friend_request_received) {
-      rejectFriendRequest();
+      void rejectFriendRequest();
     } else if (is_blocked) {
       setIsFriendModalOpen(true);
     } else {
-      sendFriendRequest();
+      void sendFriendRequest();
     }
   }
 
   function clickBlock() {
     if (is_blocked) {
-      unblockUser();
+      void unblockUser();
     } else if (is_friend) {
       setIsBlockModalOpen(true);
     } else {
-      blockUser();
+      void blockUser();
     }
   }
 
-  function removeFriendship() {
-    // TODO: Request to remove friendship.
-    /*
-		res = await fetch(`/api/rel/friend/${targetId}`, {
-		  method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-		});
-	*/
+  async function removeFriendship() {
+    try {
+      let accessToken = await RemoveFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data = await FetchSelfBlockedListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setFriends(data.users);
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Remove Friendship"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Remove Friendship"');
+    }
   }
 
-  function sendFriendRequest() {
-    // TODO: Request to send friend request.
-    /*
-		res = await fetch('/api/rel/friend', {
-		  method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            targetId: targetId,
-          }),
-		});
-	*/
+  async function sendFriendRequest() {
+    try {
+      let accessToken = await AskFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data = await FetchSelfSentListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setSentFriends(data.users);
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Send Friend Request"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Send Friend Request"');
+    }
   }
 
-  function cancelFriendRequest() {
-    // TODO: Request to cancel a sent friend request.
-    /*
-		res = await fetch(`/api/rel/friend/cancel/${targetId}`, {
-		  method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-		});
-	*/
+  async function cancelFriendRequest() {
+    try {
+      let accessToken = await CancelFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data = await FetchSelfSentListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setSentFriends(data.users);
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Cancel Friend Request"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Cancel Friend Request"');
+    }
   }
 
-  function acceptFriendRequest() {
-    // TODO: Request to accept a received friend request.
-    /*
-		res = await fetch('/api/rel/friend/accept', {
-		  method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            targetId: targetId,
-          }),
-		});
-	*/
+  async function acceptFriendRequest() {
+    try {
+      let accessToken = await AcceptFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data1 = await FetchSelfReceivedListRequest(accessToken);
+        accessToken = data1.accessToken;
+        if (accessToken.length) {
+          setReceivedFriends(data1.users);
+          const data2 = await FetchSelfFriendListRequest(accessToken);
+          accessToken = data2.accessToken;
+          if (accessToken.length) {
+            setFriends(data2.users);
+          }
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Accept Friend Request"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Accept Friend Request"');
+    }
   }
 
-  function rejectFriendRequest() {
-    // TODO: Request to reject a received friend request.
-    /*
-		res = await fetch(`/api/rel/friend/reject/${targetId}`, {
-		  method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-		});
-	*/
+  async function rejectFriendRequest() {
+    try {
+      let accessToken = await RejectFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        let data = await FetchSelfReceivedListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setReceivedFriends(data.users);
+          data = await FetchSelfFriendListRequest(accessToken);
+          accessToken = data.accessToken;
+          if (accessToken.length) {
+            setFriends(data.users);
+          }
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Reject Friend Request"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Reject Friend Request"');
+    }
   }
 
-  function unblockUser() {
-    // TODO: Request to unblock other user.
-    /*
-		res = await fetch(`/api/rel/block/${targetId}`, {
-		  method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-		});
-	*/
+  async function unblockUser() {
+    try {
+      let accessToken = await UnblockingRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data = await FetchSelfBlockedListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setBlocked(data.users);
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Unblock User"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Unblock User"');
+    }
   }
 
-  function blockUser() {
-    // TODO: Request to block other user.
-    /*
-		res = await fetch('/api/rel/block', {
-		  method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            targetId: targetId,
-          }),
-		});
-	*/
+  async function blockUser() {
+    setIsBlockModalOpen(false);
+    try {
+      let accessToken = await BlockingRequest(user!.accessToken, otherUser!.id);
+      if (accessToken.length) {
+        let data = await FetchSelfBlockedListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setBlocked(data.users);
+          data = await FetchSelfFriendListRequest(accessToken);
+          accessToken = data.accessToken;
+          if (accessToken.length) {
+            setFriends(data.users);
+            data = await FetchSelfSentListRequest(accessToken);
+            accessToken = data.accessToken;
+            if (accessToken.length) {
+              setSentFriends(data.users);
+              data = await FetchSelfReceivedListRequest(accessToken);
+              accessToken = data.accessToken;
+              if (accessToken.length) {
+                setReceivedFriends(data.users);
+              }
+            }
+          }
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Block User"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Block User"');
+    }
   }
 
   return (
@@ -259,7 +370,7 @@ function PublicProfile() {
                   : 'Send Friend Request'}
           </BtnDefault>
           {friend_request_received && (
-            <BtnDefault onClick={() => acceptFriendRequest()}>
+            <BtnDefault onClick={() => void acceptFriendRequest()}>
               Accept Friend Request
             </BtnDefault>
           )}
