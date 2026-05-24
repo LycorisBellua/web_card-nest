@@ -1,7 +1,12 @@
 CONNECTION TO THE BACKEND
-- The frontend has been created in isolation. Make use of the backend and 
-remove the placeholder content.
 - Finish whatever TODOs are present in the frontend.
+
+FRIENDSHIP & BLOCK
+- Buttons for friendship and blocking on the public profile of target user.
+- Blocked list (only your own profile) -> link to users profile.
+- Friends list (public + your own profile) -> link to users profile.
+- Section for your sent friend requests -> link to users profile.
+- Section for your received friend requests -> link to users profile.
 
 DATA EXTRACTION PAGE
 - To extract their data, the user has a menu with different checkboxes they can 
@@ -13,16 +18,6 @@ though, they need to have posted at least one message.
 - Let the user choose between JSON and CSV. Both are also possible.
 - The user downloads the data from the website directly.
 - Spinner for data extraction.
-
-FRIENDSHIP & BLOCK
-- Blocked list (private), link to users profile.
-- From the blocked list, button to unblock.
-- Friends list (public), link to users profile.
-- From the friends list, button to remove friendship.
-- Section for your pending requests. Button to cancel a request.
-- Section for requests you have received. Button to accept and button to reject.
-- The friends list is part of the public display, but without the button to 
-remove the friendship of course.
 
 PASSWORD RESET
 - pages/auth/ResetPassword.tsx: I don't have the backend yet.
@@ -47,83 +42,10 @@ three browsers to fix any potential issue.
 
 CONNECTION TO THE BACKEND
 - WebSockets (without the game).
+- Lobby & DMs: The frontend has been created in isolation. Make use of the 
+backend and remove the placeholder content.
 
 GAME
 - Black Crown tables.
 - Online mode with WebSockets.
 - ...
-
---------------------------------------------------------------------------------
-
-		/*
-		SEND FRIEND REQUEST
-
-		res = await fetch('/api/rel/friend', {
-		  method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            targetId: '019e59c3-dd5e-7150-8cb4-09beb0df65cd',
-          }),
-		});
-		*/
-
-		/*
-		ACCEPT FRIEND REQUEST
-
-		res = await fetch('/api/rel/friend/accept', {
-		  method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            targetId: '019e596a-a2b8-73ee-9430-4d4a0abbefa6',
-          }),
-		});
-		data = await res.json();
-		*/
-
-		/*
-		SENT REQUESTS
-        [{ avatar: string; id: string; username: string; }]
-
-		res = await fetch('/api/rel/friend/sent', {
-		  method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-		});
-		data = await res.json();
-		*/
-
-		/*
-		RECEIVED REQUESTS
-		[{ avatar: string; id: string; username: string; }]
-
-		res = await fetch('/api/rel/friend/received', {
-		  method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-		});
-		data = await res.json();
-		*/
-
-		/*
-		BLOCK USER
-
-		res = await fetch('/api/rel/block', {
-		  method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            targetId: '019e596a-a2b8-73ee-9430-4d4a0abbefa6',
-          }),
-		});
-		data = await res.json();
-		*/

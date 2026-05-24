@@ -16,7 +16,13 @@ import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
 
 function SignUp() {
-  const { setUser, setFriends, setBlocked } = useUser();
+  const {
+    setUser,
+    setBlocked,
+    setFriends,
+    setSentFriends,
+    setReceivedFriends,
+  } = useUser();
   const [uname, setUname] = useState('');
   const [uemail, setUEmail] = useState('');
   const [upassword, setUPassword] = useState('');
@@ -69,8 +75,10 @@ function SignUp() {
       const dataSignup = (await res.json()) as { accessToken: string };
       const dataSelf = await FetchSelfRequest(dataSignup.accessToken);
       setUser(dataSelf.user);
-      setFriends(dataSelf.friends);
       setBlocked(dataSelf.blocked);
+      setFriends(dataSelf.friends);
+      setSentFriends(dataSelf.sentFriends);
+      setReceivedFriends(dataSelf.receivedFriends);
       if (!dataSelf.user) {
         setError(['Internal error.']);
       } else {

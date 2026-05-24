@@ -15,7 +15,8 @@ import Modal from 'components/misc/Modal';
 
 function PublicProfile() {
   const { username } = useParams<{ username: string }>();
-  const { user, setUser, friends } = useUser();
+  const { user, setUser, blocked, friends, sentFriends, receivedFriends } =
+    useUser();
   const [otherUser, setOtherUser] = useState<OtherUserOrGuest>(null);
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
@@ -99,12 +100,18 @@ function PublicProfile() {
   else if (isGuest) return <GuestProfile />;
   else if (!otherUser) return <NotFound />;
 
-  // TODO
   const is_friend = friends.find(
     (u) => u.username.toLowerCase() === username?.toLowerCase(),
   );
-  const is_blocked = false;
-  const friend_request_sent = false;
+  const is_blocked = blocked.find(
+    (u) => u.username.toLowerCase() === username?.toLowerCase(),
+  );
+  const friend_request_sent = sentFriends.find(
+    (u) => u.username.toLowerCase() === username?.toLowerCase(),
+  );
+  const friend_request_received = receivedFriends.find(
+    (u) => u.username.toLowerCase() === username?.toLowerCase(),
+  );
 
   function closeModals() {
     setIsFriendModalOpen(false);
@@ -117,6 +124,8 @@ function PublicProfile() {
       removeFriendship();
     } else if (friend_request_sent) {
       cancelFriendRequest();
+    } else if (friend_request_received) {
+      rejectFriendRequest();
     } else if (is_blocked) {
       setIsFriendModalOpen(true);
     } else {
@@ -136,22 +145,98 @@ function PublicProfile() {
 
   function removeFriendship() {
     // TODO: Request to remove friendship.
-  }
-
-  function cancelFriendRequest() {
-    // TODO: Request to cancel friend request.
+    /*
+		res = await fetch(`/api/rel/friend/${targetId}`, {
+		  method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+		});
+	*/
   }
 
   function sendFriendRequest() {
     // TODO: Request to send friend request.
+    /*
+		res = await fetch('/api/rel/friend', {
+		  method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            targetId: targetId,
+          }),
+		});
+	*/
+  }
+
+  function cancelFriendRequest() {
+    // TODO: Request to cancel a sent friend request.
+    /*
+		res = await fetch(`/api/rel/friend/cancel/${targetId}`, {
+		  method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+		});
+	*/
+  }
+
+  function acceptFriendRequest() {
+    // TODO: Request to accept a received friend request.
+    /*
+		res = await fetch('/api/rel/friend/accept', {
+		  method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            targetId: targetId,
+          }),
+		});
+	*/
+  }
+
+  function rejectFriendRequest() {
+    // TODO: Request to reject a received friend request.
+    /*
+		res = await fetch(`/api/rel/friend/reject/${targetId}`, {
+		  method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+		});
+	*/
   }
 
   function unblockUser() {
     // TODO: Request to unblock other user.
+    /*
+		res = await fetch(`/api/rel/block/${targetId}`, {
+		  method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+		});
+	*/
   }
 
   function blockUser() {
     // TODO: Request to block other user.
+    /*
+		res = await fetch('/api/rel/block', {
+		  method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            targetId: targetId,
+          }),
+		});
+	*/
   }
 
   return (
@@ -169,8 +254,15 @@ function PublicProfile() {
               ? 'Remove Friendship'
               : friend_request_sent
                 ? 'Cancel Friend Request'
-                : 'Send Friend Request'}
+                : friend_request_received
+                  ? 'Reject Friend Request'
+                  : 'Send Friend Request'}
           </BtnDefault>
+          {friend_request_received && (
+            <BtnDefault onClick={() => acceptFriendRequest()}>
+              Accept Friend Request
+            </BtnDefault>
+          )}
           <BtnDanger onClick={() => clickBlock()}>
             {is_blocked ? 'Unblock' : 'Block'}
           </BtnDanger>

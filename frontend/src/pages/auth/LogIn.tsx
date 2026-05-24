@@ -8,7 +8,13 @@ import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
 
 function LogIn() {
-  const { setUser, setFriends, setBlocked } = useUser();
+  const {
+    setUser,
+    setBlocked,
+    setFriends,
+    setSentFriends,
+    setReceivedFriends,
+  } = useUser();
   const [logMail, setLogMail] = useState('');
   const [logPwd, setLogPwd] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -53,8 +59,10 @@ function LogIn() {
       const dataLogin = (await res.json()) as { accessToken: string };
       const dataSelf = await FetchSelfRequest(dataLogin.accessToken);
       setUser(dataSelf.user);
-      setFriends(dataSelf.friends);
       setBlocked(dataSelf.blocked);
+      setFriends(dataSelf.friends);
+      setSentFriends(dataSelf.sentFriends);
+      setReceivedFriends(dataSelf.receivedFriends);
       if (!dataSelf.user) {
         setErrors(['Internal error']);
       } else {

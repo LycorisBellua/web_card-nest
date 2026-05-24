@@ -5,8 +5,10 @@ import { RefreshTokenRequest, FetchSelfRequest } from 'functions/Requests';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
-  const [friends, setFriends] = useState<LimitedUser[]>([]);
   const [blocked, setBlocked] = useState<LimitedUser[]>([]);
+  const [friends, setFriends] = useState<LimitedUser[]>([]);
+  const [sentFriends, setSentFriends] = useState<LimitedUser[]>([]);
+  const [receivedFriends, setReceivedFriends] = useState<LimitedUser[]>([]);
 
   useEffect(() => {
     const automaticLogin = async () => {
@@ -15,12 +17,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (!accessToken.length) return;
         const data = await FetchSelfRequest(accessToken);
         setUser(data.user);
-        setFriends(data.friends);
         setBlocked(data.blocked);
+        setFriends(data.friends);
+        setSentFriends(data.sentFriends);
+        setReceivedFriends(data.receivedFriends);
       } catch {
         setUser(null);
-        setFriends([]);
         setBlocked([]);
+        setFriends([]);
+        setSentFriends([]);
+        setReceivedFriends([]);
       }
     };
     void automaticLogin();
@@ -114,10 +120,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         setUser,
-        friends,
-        setFriends,
         blocked,
         setBlocked,
+        friends,
+        setFriends,
+        sentFriends,
+        setSentFriends,
+        receivedFriends,
+        setReceivedFriends,
         threads,
         postMessage,
       }}

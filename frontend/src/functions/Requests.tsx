@@ -25,8 +25,10 @@ export async function LogoutRequest(accessToken: string): Promise<void> {
 
 export async function FetchSelfRequest(accessToken: string): Promise<{
   user: User | null;
-  friends: LimitedUser[];
   blocked: LimitedUser[];
+  friends: LimitedUser[];
+  sentFriends: LimitedUser[];
+  receivedFriends: LimitedUser[];
 }> {
   const res = await fetch('/api/user/me', {
     method: 'GET',
@@ -35,9 +37,23 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
     },
   });
   if (!res.ok) {
-    if (res.status != 401) return { user: null, friends: [], blocked: [] };
+    if (res.status != 401)
+      return {
+        user: null,
+        blocked: [],
+        friends: [],
+        sentFriends: [],
+        receivedFriends: [],
+      };
     const newAccessToken = await RefreshTokenRequest(accessToken);
-    if (!newAccessToken.length) return { user: null, friends: [], blocked: [] };
+    if (!newAccessToken.length)
+      return {
+        user: null,
+        blocked: [],
+        friends: [],
+        sentFriends: [],
+        receivedFriends: [],
+      };
     accessToken = newAccessToken;
   }
   const data = (await res.json()) as {
@@ -62,14 +78,54 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
     unverifiedEmail: data.email_unverified,
     accessToken: accessToken,
   } as User;
-  const fl = await FetchSelfFriendListRequest(accessToken);
-  if (!fl.accessToken.length) return { user: null, friends: [], blocked: [] };
-  accessToken = fl.accessToken;
   const bl = await FetchSelfBlockedListRequest(accessToken);
-  if (!bl.accessToken.length) return { user: null, friends: [], blocked: [] };
+  if (!bl.accessToken.length)
+    return {
+      user: null,
+      blocked: [],
+      friends: [],
+      sentFriends: [],
+      receivedFriends: [],
+    };
   accessToken = bl.accessToken;
+  const fl = await FetchSelfFriendListRequest(accessToken);
+  if (!fl.accessToken.length)
+    return {
+      user: null,
+      blocked: [],
+      friends: [],
+      sentFriends: [],
+      receivedFriends: [],
+    };
+  accessToken = fl.accessToken;
+  const sl = await FetchSelfSentListRequest(accessToken);
+  if (!sl.accessToken.length)
+    return {
+      user: null,
+      blocked: [],
+      friends: [],
+      sentFriends: [],
+      receivedFriends: [],
+    };
+  accessToken = sl.accessToken;
+  const rl = await FetchSelfReceivedListRequest(accessToken);
+  if (!rl.accessToken.length)
+    return {
+      user: null,
+      blocked: [],
+      friends: [],
+      sentFriends: [],
+      receivedFriends: [],
+    };
+  accessToken = rl.accessToken;
   user!.accessToken = accessToken;
-  return { user: user, friends: fl.users, blocked: bl.users };
+  return {
+    user: user,
+    blocked: bl.users,
+    friends: fl.users,
+    sentFriends: sl.users,
+    receivedFriends: rl.users,
+  };
 }
 
 export async function ResendVerificationEmailRequest(
@@ -179,6 +235,31 @@ export async function DeleteUserRequest(
   return accessToken;
 }
 
+export async function FetchSelfBlockedListRequest(
+  accessToken: string,
+): Promise<{ accessToken: string; users: LimitedUser[] }> {
+  let res = await fetch('/api/rel/block', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', users: [] };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', users: [] };
+    res = await fetch('/api/rel/block', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', users: [] };
+  }
+  const users = (await res.json()) as LimitedUser[];
+  return { accessToken, users };
+}
+
 export async function FetchSelfFriendListRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; users: LimitedUser[] }> {
@@ -204,10 +285,10 @@ export async function FetchSelfFriendListRequest(
   return { accessToken, users };
 }
 
-export async function FetchSelfBlockedListRequest(
+export async function FetchSelfSentListRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; users: LimitedUser[] }> {
-  let res = await fetch('/api/rel/block', {
+  let res = await fetch('/api/rel/friend/sent', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -217,7 +298,32 @@ export async function FetchSelfBlockedListRequest(
     if (res.status != 401) return { accessToken: '', users: [] };
     accessToken = await RefreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', users: [] };
-    res = await fetch('/api/rel/block', {
+    res = await fetch('/api/rel/friend/sent', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', users: [] };
+  }
+  const users = (await res.json()) as LimitedUser[];
+  return { accessToken, users };
+}
+
+export async function FetchSelfReceivedListRequest(
+  accessToken: string,
+): Promise<{ accessToken: string; users: LimitedUser[] }> {
+  let res = await fetch('/api/rel/friend/received', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', users: [] };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', users: [] };
+    res = await fetch('/api/rel/friend/received', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
