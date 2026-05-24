@@ -1,8 +1,8 @@
-import type { UserLimitedOrGuest } from 'context/Types';
+import type { OtherUserOrGuest } from 'context/Types';
 
 export function CanDisciplineThisUser(
-  user: UserLimitedOrGuest,
-  otherUser: UserLimitedOrGuest,
+  user: OtherUserOrGuest,
+  otherUser: OtherUserOrGuest,
 ): boolean {
   const is_admin = !!user && user.rank.toLowerCase() == 'admin';
   const is_mod = !!user && user.rank.toLowerCase() == 'moderator';

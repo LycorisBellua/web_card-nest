@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import type { User, UserLimited } from 'context/Types';
+import type { User, OtherUser } from 'context/Types';
 import { useUser } from 'context/useUser';
 import {
   sanitizeUsername,
@@ -34,8 +34,8 @@ const emptyFieldErrors = (): FieldErrors => ({
 });
 
 interface Props {
-  otherUser: UserLimited;
-  setOtherUser: (e: UserLimited) => void;
+  otherUser: OtherUser;
+  setOtherUser: (e: OtherUser) => void;
 }
 
 function EditProfileMod({ otherUser, setOtherUser }: Props) {
@@ -148,7 +148,7 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
       }
       if (token.length) {
         setUser((prev) => ({ ...prev, accessToken: token }) as User);
-        setOtherUser({ ...otherUser, ...body } as UserLimited);
+        setOtherUser({ ...otherUser, ...body } as OtherUser);
       }
     } catch {
       setIsSaving(false);
@@ -211,7 +211,7 @@ function UpdateAvatar({
   onChange,
   errors,
 }: {
-  otherUser: UserLimited;
+  otherUser: OtherUser;
   pendingAvatar: File | '' | undefined;
   onChange: (f: File | '') => void;
   errors: string[];
@@ -273,7 +273,7 @@ function UpdateUsername({
   onChange,
   errors,
 }: {
-  otherUser: UserLimited;
+  otherUser: OtherUser;
   onChange: (v: string) => void;
   errors: string[];
 }) {
@@ -305,7 +305,7 @@ function UpdateDescription({
   onChange,
   errors,
 }: {
-  otherUser: UserLimited;
+  otherUser: OtherUser;
   onChange: (v: string) => void;
   errors: string[];
 }) {

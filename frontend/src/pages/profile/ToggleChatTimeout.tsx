@@ -1,9 +1,9 @@
-import type { UserLimitedOrGuest } from 'context/Types';
+import type { OtherUserOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import { BtnDefault } from 'components/btn/Btn';
 
-function ToggleChatTimeout({ otherUser }: { otherUser: UserLimitedOrGuest }) {
+function ToggleChatTimeout({ otherUser }: { otherUser: OtherUserOrGuest }) {
   const { user } = useUser();
 
   if (!CanDisciplineThisUser(user, otherUser)) {

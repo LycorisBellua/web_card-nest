@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import type { UserLimitedOrGuest } from 'context/Types';
+import type { OtherUserOrGuest } from 'context/Types';
 import UserBtnBase from 'components/btn/UserBtnBase';
 
 const Wrapper = styled.div`
@@ -14,7 +14,7 @@ function UserBtn({
   path,
   onClick,
 }: {
-  user: UserLimitedOrGuest;
+  user: OtherUserOrGuest;
   path: string;
   onClick?: () => void;
 }) {

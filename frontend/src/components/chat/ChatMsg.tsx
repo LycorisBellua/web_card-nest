@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { /*UserLimitedOrGuest,*/ Msg } from 'context/Types';
+import type { /*OtherUserOrGuest,*/ Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
 import { CanDisciplineThisUser } from 'functions/Ranks';

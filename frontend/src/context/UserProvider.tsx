@@ -1,49 +1,30 @@
 import { useState, useEffect } from 'react';
 import { UserContext } from 'context/UserContext';
-import type { User, UserLimited, Thread } from 'context/Types';
+import type { User, LimitedUser, Thread } from 'context/Types';
 import { RefreshTokenRequest, FetchSelfRequest } from 'functions/Requests';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
+  const [friends, setFriends] = useState<LimitedUser[]>([]);
+  const [blocked, setBlocked] = useState<LimitedUser[]>([]);
 
   useEffect(() => {
     const automaticLogin = async () => {
       try {
         const accessToken = await RefreshTokenRequest('');
         if (!accessToken.length) return;
-        const user = await FetchSelfRequest(accessToken);
-        setUser(user);
+        const data = await FetchSelfRequest(accessToken);
+        setUser(data.user);
+        setFriends(data.friends);
+        setBlocked(data.blocked);
       } catch {
         setUser(null);
+        setFriends([]);
+        setBlocked([]);
       }
     };
     void automaticLogin();
   }, []);
-
-  // TODO: Use real data
-  //const [friendUsernames, setFriendUsernames] = useState<string[]>([]);
-
-  const friends: UserLimited[] = [];
-  /*
-  const friends = !user
-    ? []
-    : otherUsers
-        .filter((u) => friendUsernames.includes(u.username))
-        .sort((a, b) =>
-          a.username.localeCompare(b.username, undefined, {
-            sensitivity: 'base',
-            numeric: true,
-          }),
-        );
-
-  function addFriend(username: string) {
-    setFriendUsernames((prev) => [...prev, username]);
-  }
-
-  function removeFriend(username: string) {
-    setFriendUsernames((prev) => prev.filter((u) => u !== username));
-  }
-  */
 
   const [threads, setThreads] = useState<Thread[]>([
     {
@@ -134,8 +115,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         user,
         setUser,
         friends,
-        //addFriend,
-        //removeFriend,
+        setFriends,
+        blocked,
+        setBlocked,
         threads,
         postMessage,
       }}

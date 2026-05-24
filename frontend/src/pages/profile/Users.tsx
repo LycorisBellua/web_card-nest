@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUser } from 'context/useUser';
-import type { User, UserLimited } from 'context/Types';
+import type { User, OtherUser } from 'context/Types';
 import { RefreshTokenRequest } from 'functions/Requests';
 import NotFound from 'pages/NotFound';
 import { ScrollablePage } from 'components/general/Scrollable';
@@ -8,7 +8,7 @@ import UserBtn from 'components/btn/UserBtn';
 
 function Users() {
   const { user, setUser } = useUser();
-  const [users, setUsers] = useState<UserLimited[]>([]);
+  const [users, setUsers] = useState<OtherUser[]>([]);
 
   useEffect(() => {
     const fetchUserList = async () => {
@@ -33,7 +33,7 @@ function Users() {
           });
           if (!res.ok) return;
         }
-        const data = (await res.json()) as UserLimited[];
+        const data = (await res.json()) as OtherUser[];
         setUsers(data);
       } catch {
         setUsers([]);

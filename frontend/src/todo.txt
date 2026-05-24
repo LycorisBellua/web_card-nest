@@ -24,28 +24,24 @@ FRIENDSHIP & BLOCK
 - The friends list is part of the public display, but without the button to 
 remove the friendship of course.
 
+PASSWORD RESET
+- pages/auth/ResetPassword.tsx: I don't have the backend yet.
+
 --------------------------------------------------------------------------------
 
-ISSUES
-- pages/auth/ResetPassword.tsx:
-	I don't have the backend yet.
-- Console errors:
-	There must not be any error in the console, actually. So, refresh yourself 
-	every 5 minutes. Also, check the console after a logout.
-
-- [ ] Add a friend
-- [ ] Remove a friend
-- [ ] Accept friend request
-- [ ] Reject friend request
-- [ ] Cancel friend request
-- [ ] Get friends list
-- [ ] Get sent requests
-- [ ] Get received requests
-- [ ] Block user
-- [ ] Unblock user
-- [ ] Get blocked user list
-- [ ] Extract user data CSV format
-- [ ] Extract user data JSON format
+CONSOLE ERRORS
+- There must not be any error in the console, actually. So, the 401 one must be 
+gone. For the automatic login, this means receiving a non HttpOnly cookie just 
+to indicate the presence of the refresh token cookie, which is hidden from JS.
+- As for the other 401 errors, refresh the access token cookie yourself every 4 
+minutes instead of waiting for it to expire.
+- As for the fact that after 30 days the refresh token expires, which might 
+lead to a 401 error as well, it's okay, as it wouldn't show during the defense. 
+While these API responses are not errors, and are part of the ordinary function 
+of a web app, an evaluator might see them as errors so I'd rather save us the 
+headache.
+- Before looking into WebSockets, test the app and check the console on all 
+three browsers to fix any potential issue.
 
 --------------------------------------------------------------------------------
 
@@ -56,3 +52,78 @@ GAME
 - Black Crown tables.
 - Online mode with WebSockets.
 - ...
+
+--------------------------------------------------------------------------------
+
+		/*
+		SEND FRIEND REQUEST
+
+		res = await fetch('/api/rel/friend', {
+		  method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            targetId: '019e59c3-dd5e-7150-8cb4-09beb0df65cd',
+          }),
+		});
+		*/
+
+		/*
+		ACCEPT FRIEND REQUEST
+
+		res = await fetch('/api/rel/friend/accept', {
+		  method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            targetId: '019e596a-a2b8-73ee-9430-4d4a0abbefa6',
+          }),
+		});
+		data = await res.json();
+		*/
+
+		/*
+		SENT REQUESTS
+        [{ avatar: string; id: string; username: string; }]
+
+		res = await fetch('/api/rel/friend/sent', {
+		  method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+		});
+		data = await res.json();
+		*/
+
+		/*
+		RECEIVED REQUESTS
+		[{ avatar: string; id: string; username: string; }]
+
+		res = await fetch('/api/rel/friend/received', {
+		  method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+		});
+		data = await res.json();
+		*/
+
+		/*
+		BLOCK USER
+
+		res = await fetch('/api/rel/block', {
+		  method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            targetId: '019e596a-a2b8-73ee-9430-4d4a0abbefa6',
+          }),
+		});
+		data = await res.json();
+		*/

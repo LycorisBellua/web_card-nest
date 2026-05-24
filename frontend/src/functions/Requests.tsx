@@ -1,4 +1,4 @@
-import type { User } from 'context/Types';
+import type { User, LimitedUser } from 'context/Types';
 
 export async function RefreshTokenRequest(
   accessToken: string,
@@ -23,9 +23,11 @@ export async function LogoutRequest(accessToken: string): Promise<void> {
   });
 }
 
-export async function FetchSelfRequest(
-  accessToken: string,
-): Promise<User | null> {
+export async function FetchSelfRequest(accessToken: string): Promise<{
+  user: User | null;
+  friends: LimitedUser[];
+  blocked: LimitedUser[];
+}> {
   const res = await fetch('/api/user/me', {
     method: 'GET',
     headers: {
@@ -33,9 +35,9 @@ export async function FetchSelfRequest(
     },
   });
   if (!res.ok) {
-    if (res.status != 401) return null;
+    if (res.status != 401) return { user: null, friends: [], blocked: [] };
     const newAccessToken = await RefreshTokenRequest(accessToken);
-    if (!newAccessToken.length) return null;
+    if (!newAccessToken.length) return { user: null, friends: [], blocked: [] };
     accessToken = newAccessToken;
   }
   const data = (await res.json()) as {
@@ -48,7 +50,7 @@ export async function FetchSelfRequest(
     email: string;
     email_unverified: string;
   };
-  return {
+  const user = {
     id: data.id,
     username: data.username,
     avatar: data.avatar,
@@ -60,12 +62,20 @@ export async function FetchSelfRequest(
     unverifiedEmail: data.email_unverified,
     accessToken: accessToken,
   } as User;
+  const fl = await FetchSelfFriendListRequest(accessToken);
+  if (!fl.accessToken.length) return { user: null, friends: [], blocked: [] };
+  accessToken = fl.accessToken;
+  const bl = await FetchSelfBlockedListRequest(accessToken);
+  if (!bl.accessToken.length) return { user: null, friends: [], blocked: [] };
+  accessToken = bl.accessToken;
+  user!.accessToken = accessToken;
+  return { user: user, friends: fl.users, blocked: bl.users };
 }
 
 export async function ResendVerificationEmailRequest(
   accessToken: string,
 ): Promise<string> {
-  const res = await fetch('/api/auth/resend', {
+  let res = await fetch('/api/auth/resend', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -75,13 +85,13 @@ export async function ResendVerificationEmailRequest(
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
-    const resRetry = await fetch('/api/auth/resend', {
+    res = await fetch('/api/auth/resend', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    if (!resRetry.ok) return '';
+    if (!res.ok) return '';
   }
   return accessToken;
 }
@@ -91,7 +101,7 @@ export async function ChangeRankRequest(
   userId: string,
   newRank: string,
 ): Promise<string> {
-  const res = await fetch('/api/admin/rank', {
+  let res = await fetch('/api/admin/rank', {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -106,7 +116,7 @@ export async function ChangeRankRequest(
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
-    const resRetry = await fetch('/api/admin/rank', {
+    res = await fetch('/api/admin/rank', {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -117,13 +127,13 @@ export async function ChangeRankRequest(
         rank: newRank.toUpperCase(),
       }),
     });
-    if (!resRetry.ok) return '';
+    if (!res.ok) return '';
   }
   return accessToken;
 }
 
 export async function DeleteSelfRequest(accessToken: string): Promise<string> {
-  const res = await fetch('/api/user', {
+  let res = await fetch('/api/user', {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -133,13 +143,13 @@ export async function DeleteSelfRequest(accessToken: string): Promise<string> {
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
-    const resRetry = await fetch('/api/user', {
+    res = await fetch('/api/user', {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    if (!resRetry.ok) return '';
+    if (!res.ok) return '';
   }
   return accessToken;
 }
@@ -148,7 +158,7 @@ export async function DeleteUserRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
-  const res = await fetch(`/api/admin/${userId}`, {
+  let res = await fetch(`/api/admin/${userId}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -158,13 +168,63 @@ export async function DeleteUserRequest(
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
-    const resRetry = await fetch(`/api/admin/${userId}`, {
+    res = await fetch(`/api/admin/${userId}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    if (!resRetry.ok) return '';
+    if (!res.ok) return '';
   }
   return accessToken;
+}
+
+export async function FetchSelfFriendListRequest(
+  accessToken: string,
+): Promise<{ accessToken: string; users: LimitedUser[] }> {
+  let res = await fetch('/api/rel/friend', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', users: [] };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', users: [] };
+    res = await fetch('/api/rel/friend', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', users: [] };
+  }
+  const users = (await res.json()) as LimitedUser[];
+  return { accessToken, users };
+}
+
+export async function FetchSelfBlockedListRequest(
+  accessToken: string,
+): Promise<{ accessToken: string; users: LimitedUser[] }> {
+  let res = await fetch('/api/rel/block', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', users: [] };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', users: [] };
+    res = await fetch('/api/rel/block', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', users: [] };
+  }
+  const users = (await res.json()) as LimitedUser[];
+  return { accessToken, users };
 }

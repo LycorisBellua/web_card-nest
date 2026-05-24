@@ -21,7 +21,9 @@ function DM() {
   //
   const thread_name = `thread_dm_${friend?.username?.toLowerCase()}`;
   const thread = threads.find((t) => thread_name === t.id);
-  const nbr_online = friend?.isOnline ? 2 : 1;
+  // TODO: `isOnline` doesn't exist on type LimitedUser (relationships would
+  // need to return OtherUser isntead of LimitedUser)
+  const nbr_online = 0; //friend?.isOnline ? 2 : 1;
   const lastMsg = thread?.messages.at(-1);
   const grouped =
     thread?.messages.reduce<Record<string, Msg[]>>((acc, msg) => {

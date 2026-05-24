@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import type { User, UserLimitedOrGuest } from 'context/Types';
+import type { User, OtherUserOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { RefreshTokenRequest } from 'functions/Requests';
 import ToggleChatTimeout from 'pages/profile/ToggleChatTimeout';
@@ -16,7 +16,7 @@ import Modal from 'components/misc/Modal';
 function PublicProfile() {
   const { username } = useParams<{ username: string }>();
   const { user, setUser, friends } = useUser();
-  const [otherUser, setOtherUser] = useState<UserLimitedOrGuest>(null);
+  const [otherUser, setOtherUser] = useState<OtherUserOrGuest>(null);
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [error, setError] = useState('');
@@ -83,7 +83,7 @@ function PublicProfile() {
           registered: new Date(data.date),
           desc: data.desc,
           isOnline: false,
-        } as UserLimitedOrGuest);
+        } as OtherUserOrGuest);
       } catch (e) {
         if (e instanceof DOMException && e.name === 'AbortError') return;
         if (e instanceof Error && e.message.includes('abort')) return;
@@ -174,7 +174,7 @@ function PublicProfile() {
           <BtnDanger onClick={() => clickBlock()}>
             {is_blocked ? 'Unblock' : 'Block'}
           </BtnDanger>
-          <ToggleChatTimeout otherUser={otherUser as UserLimitedOrGuest} />
+          <ToggleChatTimeout otherUser={otherUser as OtherUserOrGuest} />
           {error && <p>{error}</p>}
           <EditProfileMod
             otherUser={otherUser}

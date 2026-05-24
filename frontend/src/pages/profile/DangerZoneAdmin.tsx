@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import type { User, UserLimited } from 'context/Types';
+import type { User, OtherUser } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import { ChangeRankRequest, DeleteUserRequest } from 'functions/Requests';
 import { BtnDanger, BtnAccent } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
-function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
+function DangerZoneAdmin({ otherUser }: { otherUser: OtherUser }) {
   const { user, setUser } = useUser();
   const [isDownrankModalOpen, setIsDownrankModalOpen] = useState(false);
   const [isUprankModalOpen, setIsUprankModalOpen] = useState(false);

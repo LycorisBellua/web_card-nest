@@ -8,7 +8,7 @@ import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
 
 function LogIn() {
-  const { setUser } = useUser();
+  const { setUser, setFriends, setBlocked } = useUser();
   const [logMail, setLogMail] = useState('');
   const [logPwd, setLogPwd] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -50,10 +50,12 @@ function LogIn() {
         setErrors([data.message]);
         return;
       }
-      const data = (await res.json()) as { accessToken: string };
-      const user = await FetchSelfRequest(data.accessToken);
-      setUser(user);
-      if (!user) {
+      const dataLogin = (await res.json()) as { accessToken: string };
+      const dataSelf = await FetchSelfRequest(dataLogin.accessToken);
+      setUser(dataSelf.user);
+      setFriends(dataSelf.friends);
+      setBlocked(dataSelf.blocked);
+      if (!dataSelf.user) {
         setErrors(['Internal error']);
       } else {
         setMessage('Login success! Redirecting to your profile...');

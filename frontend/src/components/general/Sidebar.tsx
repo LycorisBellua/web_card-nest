@@ -1,4 +1,5 @@
 import { useUser } from 'context/useUser';
+import type { OtherUser } from 'context/Types';
 import styled from 'styled-components';
 import { ScrollableArea } from 'components/general/Scrollable';
 import UserBtn from 'components/btn/UserBtn';
@@ -167,7 +168,7 @@ function Sidebar({
               friends.map((e) => (
                 <UserBtn
                   key={e.id}
-                  user={e}
+                  user={e as OtherUser}
                   path={`/chat/${e.username}`}
                   onClick={onClose}
                 />

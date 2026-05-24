@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { User, UserLimitedOrGuest } from 'context/Types';
+import type { User, OtherUserOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { GetDate } from 'functions/Time';
 import { ResendVerificationEmailRequest } from 'functions/Requests';
@@ -25,7 +25,7 @@ const PublicRightCol = styled.div`
   align-items: flex-start;
 `;
 
-export function DisplayPublicUserInfo({ user }: { user: UserLimitedOrGuest }) {
+export function DisplayPublicUserInfo({ user }: { user: OtherUserOrGuest }) {
   if (!user) {
     return (
       <PublicWrapper>

@@ -1,12 +1,13 @@
 import { createContext } from 'react';
-import type { User, UserLimited, Thread } from 'context/Types';
+import type { User, LimitedUser, Thread } from 'context/Types';
 
 export type UserContextType = {
   user: User;
   setUser: React.Dispatch<React.SetStateAction<User>>;
-  friends: UserLimited[];
-  //addFriend: (username: string) => void;
-  //removeFriend: (username: string) => void;
+  friends: LimitedUser[];
+  setFriends: React.Dispatch<React.SetStateAction<LimitedUser[]>>;
+  blocked: LimitedUser[];
+  setBlocked: React.Dispatch<React.SetStateAction<LimitedUser[]>>;
   threads: Thread[];
   postMessage: (threadId: string, content: string) => void;
 };
