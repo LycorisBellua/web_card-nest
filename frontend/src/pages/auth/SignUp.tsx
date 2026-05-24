@@ -75,9 +75,7 @@ function SignUp() {
         setMessage(
           "You've signed up successfully! Redirecting to your profile...",
         );
-        setTimeout(() => {
-          void navigate('/profile');
-        }, 2000);
+        await navigate('/profile');
       }
     } catch {
       setError(['Internal error.']);

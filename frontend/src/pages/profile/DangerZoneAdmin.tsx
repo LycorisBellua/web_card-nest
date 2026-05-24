@@ -87,14 +87,17 @@ function DangerZoneAdmin({ otherUser }: { otherUser: UserLimited }) {
   return (
     <div>
       <h2>Danger zone</h2>
-      {otherUser.rank.toLowerCase() == 'moderator' ?
-	  <BtnDanger onClick={() => setIsDownrankModalOpen(true)}>
-        Remove Mod Rank
-      </BtnDanger>
-	  : otherUser.rank.toLowerCase() == 'user' ?
-	  <BtnAccent onClick={() => setIsUprankModalOpen(true)}>
-        Give Mod Rank
-      </BtnAccent> : <></>}
+      {otherUser.rank.toLowerCase() == 'moderator' ? (
+        <BtnDanger onClick={() => setIsDownrankModalOpen(true)}>
+          Remove Mod Rank
+        </BtnDanger>
+      ) : otherUser.rank.toLowerCase() == 'user' ? (
+        <BtnAccent onClick={() => setIsUprankModalOpen(true)}>
+          Give Mod Rank
+        </BtnAccent>
+      ) : (
+        <></>
+      )}
       <BtnDanger onClick={() => setIsDeletionModalOpen(true)}>
         Delete Account
       </BtnDanger>

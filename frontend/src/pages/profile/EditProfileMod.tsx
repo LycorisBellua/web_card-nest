@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import type { UserLimited } from 'context/Types';
+import type { User, UserLimited } from 'context/Types';
 import { useUser } from 'context/useUser';
 import {
   sanitizeUsername,
@@ -10,6 +10,7 @@ import {
   validateDescription,
   validateAvatar,
 } from 'functions/UserValidation';
+import { RefreshTokenRequest } from 'functions/Requests';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
 import { AvatarBig } from 'components/btn/Avatar';
@@ -32,8 +33,13 @@ const emptyFieldErrors = (): FieldErrors => ({
   server: [],
 });
 
-function EditProfileMod({ otherUser }: { otherUser: UserLimited }) {
-  const { user } = useUser();
+interface Props {
+  otherUser: UserLimited;
+  setOtherUser: (e: UserLimited) => void;
+}
+
+function EditProfileMod({ otherUser, setOtherUser }: Props) {
+  const { user, setUser } = useUser();
   const [displaySpinner, setDisplaySpinner] = useState(false);
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>(emptyFieldErrors());
@@ -72,12 +78,11 @@ function EditProfileMod({ otherUser }: { otherUser: UserLimited }) {
 
     const hasFieldErrors = Object.values(nextErrors).some((e) => e.length > 0);
     if (hasFieldErrors) {
+      setDisplaySpinner(false);
       setFieldErrors(nextErrors);
       setIsSaving(false);
       return;
     }
-
-    const requests: Promise<Response>[] = [];
 
     const body: Record<string, unknown> = {};
     if (avatar !== undefined) {
@@ -97,32 +102,58 @@ function EditProfileMod({ otherUser }: { otherUser: UserLimited }) {
     if (sanitizedUsername !== '') body.username = sanitizedUsername;
     if (sanitizedDescription !== '') body.desc = sanitizedDescription;
 
-    if (Object.keys(body).length > 0) {
-      requests.push(
-        fetch(`/api/users/${otherUser.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        }),
-      );
-    }
+    try {
+      let token = user!.accessToken;
 
-    const responses = await Promise.all(requests);
-    const failed = responses.filter((r) => !r.ok);
-    if (failed.length > 0) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        server: failed.map((r) => `Error ${r.status}: ${r.statusText}`),
-      }));
+      if (Object.keys(body).length > 0) {
+        body.targetId = otherUser.id;
+        let res = await fetch('/api/admin/modify', {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (res.status === 401) {
+          token = await RefreshTokenRequest(token);
+          if (token.length) {
+            res = await fetch('/api/admin/modify', {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(body),
+            });
+          }
+        }
+
+        if (!res.ok) {
+          const data = (await res.json().catch(() => null)) as {
+            message: string;
+          } | null;
+          setFieldErrors((prev) => ({
+            ...prev,
+            server: [
+              ...prev.server,
+              data?.message ?? `Error ${res.status}: ${res.statusText}`,
+            ],
+          }));
+          setIsSaving(false);
+          setDisplaySpinner(false);
+          return;
+        }
+      }
+      if (token.length) {
+        setUser((prev) => ({ ...prev, accessToken: token }) as User);
+        setOtherUser({ ...otherUser, ...body } as UserLimited);
+      }
+    } catch {
       setIsSaving(false);
       setDisplaySpinner(false);
       return;
-    }
-
-    if (Object.keys(body).length > 0) {
-      //const updated = (await responses[0].json()) as Partial<UserLimited>;
-      //setUser((old) => (old ? { ...old, ...updated } : null));
-      //TODO: This other user is modified. Is the change immediate on the front?
     }
 
     setAvatar(undefined);

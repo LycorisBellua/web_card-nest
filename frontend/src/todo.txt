@@ -27,25 +27,12 @@ remove the friendship of course.
 --------------------------------------------------------------------------------
 
 ISSUES
-- pages/profile/EditProfileMod.tsx:
-	Implement requests (based on EditProfile.tsx).
 - pages/auth/ResetPassword.tsx:
 	I don't have the backend yet.
+- Console errors:
+	There must not be any error in the console, actually. So, refresh yourself 
+	every 5 minutes. Also, check the console after a logout.
 
-- [x] Add a user
-- [x] Login
-- [x] Logout
-- [x] Resend Verification Email
-- [x] Refresh
-- [x] Update password
-- [x] Remove a user
-- [x] Update username/email/avatar/desc
-- [x] Get own profile
-- [x] Get user by username ("by id" version is unused)
-- [x] Get all users sorted by username
-- [ ] [Admin] Modify a user account details
-- [x] [Admin] Change a user rank
-- [x] [Admin] Remove a user
 - [ ] Add a friend
 - [ ] Remove a friend
 - [ ] Accept friend request

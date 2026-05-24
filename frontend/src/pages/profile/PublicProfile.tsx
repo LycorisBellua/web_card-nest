@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { User, UserLimitedOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { RefreshTokenRequest } from 'functions/Requests';
@@ -20,19 +20,36 @@ function PublicProfile() {
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const noAccess = !user || user.rank.toLowerCase() == 'pending';
   const isGuest = !username || username.toLowerCase() == 'guest';
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchUser = async () => {
       try {
+        if (
+          username &&
+          otherUser &&
+          username.toLowerCase() != otherUser.username.toLowerCase()
+        ) {
+          await navigate(`/user/${otherUser.username}`);
+          return;
+        }
         if (noAccess || isGuest) return;
+        if (
+          otherUser &&
+          username.toLowerCase() === otherUser.username.toLowerCase()
+        )
+          return;
         let res = await fetch(`/api/user/username/${username}`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${user.accessToken}`,
           },
+          signal: controller.signal,
         });
         if (!res.ok) {
           if (res.status != 401) return;
@@ -44,6 +61,7 @@ function PublicProfile() {
             headers: {
               Authorization: `Bearer ${user.accessToken}`,
             },
+            signal: controller.signal,
           });
           if (!res.ok) return;
         }
@@ -66,12 +84,16 @@ function PublicProfile() {
           desc: data.desc,
           isOnline: false,
         } as UserLimitedOrGuest);
-      } catch {
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
+        if (e instanceof Error && e.message.includes('abort')) return;
         setOtherUser(null);
       }
     };
+
     void fetchUser();
-  }, [user, setUser, isGuest, noAccess, username]);
+    return () => controller.abort();
+  }, [user, setUser, isGuest, noAccess, username, otherUser, navigate]);
 
   if (noAccess) return <NotFound />;
   else if (isGuest) return <GuestProfile />;
@@ -135,28 +157,32 @@ function PublicProfile() {
   return (
     <ScrollablePage>
       <DisplayPublicUserInfo user={otherUser} />
-      {user.id != otherUser.id &&
-      <div>
-        {is_friend && (
-          <Link to={`/chat/${username}`}>
-            <BtnDefault>DM</BtnDefault>
-          </Link>
-        )}
-		<BtnDefault onClick={() => clickFriend()}>
-          {is_friend
-            ? 'Remove Friendship'
-            : friend_request_sent
-              ? 'Cancel Friend Request'
-              : 'Send Friend Request'}
-        </BtnDefault>
-        <BtnDanger onClick={() => clickBlock()}>
-          {is_blocked ? 'Unblock' : 'Block'}
-        </BtnDanger>
-        <ToggleChatTimeout otherUser={otherUser as UserLimitedOrGuest} />
-        {error && <p>{error}</p>}
-        <EditProfileMod otherUser={otherUser} />
-        <DangerZoneAdmin otherUser={otherUser} />
-      </div>}
+      {user.id != otherUser.id && (
+        <div>
+          {is_friend && (
+            <Link to={`/chat/${username}`}>
+              <BtnDefault>DM</BtnDefault>
+            </Link>
+          )}
+          <BtnDefault onClick={() => clickFriend()}>
+            {is_friend
+              ? 'Remove Friendship'
+              : friend_request_sent
+                ? 'Cancel Friend Request'
+                : 'Send Friend Request'}
+          </BtnDefault>
+          <BtnDanger onClick={() => clickBlock()}>
+            {is_blocked ? 'Unblock' : 'Block'}
+          </BtnDanger>
+          <ToggleChatTimeout otherUser={otherUser as UserLimitedOrGuest} />
+          {error && <p>{error}</p>}
+          <EditProfileMod
+            otherUser={otherUser}
+            setOtherUser={(e) => setOtherUser(e)}
+          />
+          <DangerZoneAdmin otherUser={otherUser} />
+        </div>
+      )}
       <Modal
         isOpen={isFriendModalOpen}
         onCancel={() => closeModals()}

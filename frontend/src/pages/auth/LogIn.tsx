@@ -60,7 +60,7 @@ function LogIn() {
         setLogMail('');
         setLogPwd('');
         setErrors([]);
-        setTimeout(() => navigate('/profile'), 2000);
+        await navigate('/profile');
       }
     } catch {
       setErrors(['Internal error']);
