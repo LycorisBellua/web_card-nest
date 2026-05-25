@@ -97,7 +97,6 @@ const BadgeBig = styled.span<{ $rank: string }>`
 `;
 
 export function RankBadge({ rank }: { rank: string }) {
-  if (!rank) return <></>;
   rank = rank.toLowerCase();
   rank = rank == 'moderator' ? 'mod' : rank;
   if (rank == 'admin' || rank == 'mod' || rank == 'pending') {
@@ -107,7 +106,6 @@ export function RankBadge({ rank }: { rank: string }) {
 }
 
 export function RankBadgeBig({ rank }: { rank: string }) {
-  if (!rank) return <></>;
   rank = rank.toLowerCase();
   rank = rank == 'moderator' ? 'mod' : rank;
   if (rank == 'admin' || rank == 'mod' || rank == 'pending') {

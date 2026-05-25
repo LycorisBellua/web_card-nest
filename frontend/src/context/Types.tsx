@@ -2,10 +2,10 @@ export type LimitedUser = {
   id: string;
   username: string;
   avatar: string;
+  rank: string;
 };
 
 export type OtherUser = LimitedUser & {
-  rank: string;
   registered: Date;
   desc: string;
   isOnline: boolean;
