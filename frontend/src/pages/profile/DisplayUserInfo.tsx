@@ -56,6 +56,9 @@ export function DisplayPrivateUserInfo({ user }: { user: NonNullable<User> }) {
       <h2>Private Info</h2>
       <p>Email: {user.email ?? '[None / Pending verification]'}</p>
       {user.unverifiedEmail && <VerifyEmail user={user} />}
+      <Link to="/data-extraction">
+        <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
+      </Link>
     </div>
   );
 }
@@ -93,9 +96,6 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
         <div key={i}>{err}</div>
       ))}
       {message && <p>{message}</p>}
-      <Link to="/data-extraction">
-        <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
-      </Link>
     </div>
   );
 }

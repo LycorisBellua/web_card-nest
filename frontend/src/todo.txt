@@ -1,14 +1,9 @@
 FRIENDSHIP & BLOCK
-- In EditProfileMod and DangerZoneAdmin, maybe I should modify `friends` if 
-`otherUser` is in it. But then, should I also modify `blocked`, `sentFriends` 
-and `receivedFriends`? 
-- Blocked list (only your own profile) -> link to users profile.
-- Section for your sent friend requests -> link to users profile.
-- Section for your received friend requests -> link to users profile.
+- In EditProfileMod and DangerZoneAdmin, modify `friends`, `blocked`, 
+`sentFriends` and `receivedFriends` if `otherUser` is in it.
 
-CONNECTION TO THE BACKEND
+USER EDIT
 - Fix the avatar edit.
-- Finish whatever TODOs are present in the frontend.
 
 DATA EXTRACTION PAGE
 - To extract their data, the user has a menu with different checkboxes they can 
@@ -20,11 +15,6 @@ though, they need to have posted at least one message.
 - Let the user choose between JSON and CSV. Both are also possible.
 - The user downloads the data from the website directly.
 - Spinner for data extraction.
-
-PASSWORD RESET
-- pages/auth/ResetPassword.tsx: I don't have the backend yet.
-
---------------------------------------------------------------------------------
 
 CONSOLE ERRORS
 - There must not be any error in the console, actually. So, the 401 one must be 
@@ -42,10 +32,14 @@ three browsers to fix any potential issue.
 
 --------------------------------------------------------------------------------
 
+PASSWORD RESET
+- pages/auth/ResetPassword.tsx: I don't have the backend yet.
+
 CONNECTION TO THE BACKEND
 - WebSockets (without the game).
 - Lobby & DMs: The frontend has been created in isolation. Make use of the 
 backend and remove the placeholder content.
+- Finish whatever TODOs are present in the frontend.
 
 GAME
 - Black Crown tables.
