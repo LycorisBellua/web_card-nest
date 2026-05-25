@@ -9,6 +9,7 @@ export type OtherUser = LimitedUser & {
   registered: Date;
   desc: string;
   isOnline: boolean;
+  friends: LimitedUser[];
 };
 
 export type User =

@@ -1,11 +1,14 @@
-CONNECTION TO THE BACKEND
-- Finish whatever TODOs are present in the frontend.
-
 FRIENDSHIP & BLOCK
+- In EditProfileMod and DangerZoneAdmin, maybe I should modify `friends` if 
+`otherUser` is in it. But then, should I also modify `blocked`, `sentFriends` 
+and `receivedFriends`? 
 - Blocked list (only your own profile) -> link to users profile.
-- Friends list (public + your own profile) -> link to users profile.
 - Section for your sent friend requests -> link to users profile.
 - Section for your received friend requests -> link to users profile.
+
+CONNECTION TO THE BACKEND
+- Fix the avatar edit.
+- Finish whatever TODOs are present in the frontend.
 
 DATA EXTRACTION PAGE
 - To extract their data, the user has a menu with different checkboxes they can 

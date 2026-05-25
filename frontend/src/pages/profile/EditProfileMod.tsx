@@ -149,6 +149,9 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
       if (token.length) {
         setUser((prev) => ({ ...prev, accessToken: token }) as User);
         setOtherUser({ ...otherUser, ...body } as OtherUser);
+        if (sanitizedUsername) {
+          window.history.replaceState(null, '', `/user/${sanitizedUsername}`);
+        }
       }
     } catch {
       setIsSaving(false);

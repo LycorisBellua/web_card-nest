@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import type { User, OtherUserOrGuest } from 'context/Types';
+import type { User, OtherUserOrGuest, LimitedUser } from 'context/Types';
 import { useUser } from 'context/useUser';
 import {
   RefreshTokenRequest,
@@ -15,6 +15,7 @@ import {
   RejectFriendshipRequest,
   UnblockingRequest,
   BlockingRequest,
+  FetchOtherFriendListRequest,
 } from 'functions/Requests';
 import ToggleChatTimeout from 'pages/profile/ToggleChatTimeout';
 import GuestProfile from 'pages/profile/GuestProfile';
@@ -22,6 +23,7 @@ import EditProfileMod from 'pages/profile/EditProfileMod';
 import DangerZoneAdmin from 'pages/profile/DangerZoneAdmin';
 import NotFound from 'pages/NotFound';
 import { DisplayPublicUserInfo } from 'pages/profile/DisplayUserInfo';
+import { DisplayPublicFriendList } from 'pages/profile/DisplayRelationships';
 import { ScrollablePage } from 'components/general/Scrollable';
 import { BtnDefault, BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
@@ -41,6 +43,7 @@ function PublicProfile() {
     setReceivedFriends,
   } = useUser();
   const [otherUser, setOtherUser] = useState<OtherUserOrGuest>(null);
+  const fetchedUsernameRef = useRef<string | null>(null);
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [error, setError] = useState('');
@@ -54,18 +57,9 @@ function PublicProfile() {
 
     const fetchUser = async () => {
       try {
-        if (
-          username &&
-          otherUser &&
-          username.toLowerCase() != otherUser.username.toLowerCase()
-        ) {
-          await navigate(`/user/${otherUser.username}`);
-          return;
-        }
         if (noAccess || isGuest) return;
         if (
-          otherUser &&
-          username.toLowerCase() === otherUser.username.toLowerCase()
+          fetchedUsernameRef.current?.toLowerCase() === username?.toLowerCase()
         )
           return;
         let res = await fetch(`/api/user/username/${username}`, {
@@ -75,15 +69,15 @@ function PublicProfile() {
           },
           signal: controller.signal,
         });
+        let accessToken = user.accessToken;
         if (!res.ok) {
           if (res.status != 401) return;
-          const accessToken = await RefreshTokenRequest(user.accessToken);
+          accessToken = await RefreshTokenRequest(accessToken);
           if (!accessToken.length) return;
-          setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
           res = await fetch(`/api/user/username/${username}`, {
             method: 'GET',
             headers: {
-              Authorization: `Bearer ${user.accessToken}`,
+              Authorization: `Bearer ${accessToken}`,
             },
             signal: controller.signal,
           });
@@ -99,7 +93,7 @@ function PublicProfile() {
           email: string;
           email_unverified: string;
         };
-        setOtherUser({
+        const tmpUser = {
           id: data.id,
           username: data.username,
           avatar: data.avatar,
@@ -107,7 +101,21 @@ function PublicProfile() {
           registered: new Date(data.date),
           desc: data.desc,
           isOnline: false,
-        } as OtherUserOrGuest);
+          friends: [],
+        } as OtherUserOrGuest;
+        const friendData = (await FetchOtherFriendListRequest(
+          accessToken,
+          tmpUser!.id,
+        )) as {
+          accessToken: string;
+          users: LimitedUser[];
+        };
+        accessToken = friendData.accessToken;
+        if (!accessToken.length) return;
+        tmpUser!.friends = friendData.users;
+        fetchedUsernameRef.current = username ?? null;
+        setOtherUser(tmpUser);
+        setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
       } catch (e) {
         if (e instanceof DOMException && e.name === 'AbortError') return;
         if (e instanceof Error && e.message.includes('abort')) return;
@@ -353,8 +361,10 @@ function PublicProfile() {
   return (
     <ScrollablePage>
       <DisplayPublicUserInfo user={otherUser} />
+      <DisplayPublicFriendList user={otherUser} />
       {user.id != otherUser.id && (
         <div>
+          <h2>Actions</h2>
           {is_friend && (
             <Link to={`/chat/${username}`}>
               <BtnDefault>DM</BtnDefault>
@@ -383,7 +393,10 @@ function PublicProfile() {
             otherUser={otherUser}
             setOtherUser={(e) => setOtherUser(e)}
           />
-          <DangerZoneAdmin otherUser={otherUser} />
+          <DangerZoneAdmin
+            otherUser={otherUser}
+            setOtherUser={(e) => setOtherUser(e)}
+          />
         </div>
       )}
       <Modal

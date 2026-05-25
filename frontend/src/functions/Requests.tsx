@@ -78,6 +78,14 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
     unverifiedEmail: data.email_unverified,
     accessToken: accessToken,
   } as User;
+  if (user!.rank.toLowerCase() == 'pending')
+    return {
+      user: user,
+      blocked: [],
+      friends: [],
+      sentFriends: [],
+      receivedFriends: [],
+    };
   const bl = await FetchSelfBlockedListRequest(accessToken);
   if (!bl.accessToken.length)
     return {
@@ -532,4 +540,30 @@ export async function BlockingRequest(
     if (!res.ok) return '';
   }
   return accessToken;
+}
+
+export async function FetchOtherFriendListRequest(
+  accessToken: string,
+  userId: string,
+): Promise<{ accessToken: string; users: LimitedUser[] }> {
+  let res = await fetch(`/api/rel/friend/${userId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', users: [] };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', users: [] };
+    res = await fetch(`/api/rel/friend/${userId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', users: [] };
+  }
+  const users = (await res.json()) as LimitedUser[];
+  return { accessToken, users };
 }

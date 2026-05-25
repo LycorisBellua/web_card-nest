@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import type { User, OtherUser } from 'context/Types';
+import type { User, OtherUserOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import { ChangeRankRequest, DeleteUserRequest } from 'functions/Requests';
 import { BtnDanger, BtnAccent } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
-function DangerZoneAdmin({ otherUser }: { otherUser: OtherUser }) {
+interface Props {
+  otherUser: OtherUserOrGuest;
+  setOtherUser: (e: OtherUserOrGuest) => void;
+}
+
+function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
   const { user, setUser } = useUser();
   const [isDownrankModalOpen, setIsDownrankModalOpen] = useState(false);
   const [isUprankModalOpen, setIsUprankModalOpen] = useState(false);
@@ -34,7 +39,7 @@ function DangerZoneAdmin({ otherUser }: { otherUser: OtherUser }) {
       const newRank = 'user';
       const newAccessToken = await ChangeRankRequest(
         user!.accessToken,
-        otherUser.id,
+        otherUser!.id,
         newRank,
       );
       if (!newAccessToken.length) {
@@ -42,6 +47,8 @@ function DangerZoneAdmin({ otherUser }: { otherUser: OtherUser }) {
         return;
       }
       setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
+      otherUser!.rank = newRank;
+      setOtherUser(otherUser);
     } catch {
       setError('Error occurred');
     }
@@ -53,7 +60,7 @@ function DangerZoneAdmin({ otherUser }: { otherUser: OtherUser }) {
       const newRank = 'moderator';
       const newAccessToken = await ChangeRankRequest(
         user!.accessToken,
-        otherUser.id,
+        otherUser!.id,
         newRank,
       );
       if (!newAccessToken.length) {
@@ -61,6 +68,8 @@ function DangerZoneAdmin({ otherUser }: { otherUser: OtherUser }) {
         return;
       }
       setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
+      otherUser!.rank = newRank;
+      setOtherUser(otherUser);
     } catch {
       setError('Error occurred');
     }
@@ -71,14 +80,15 @@ function DangerZoneAdmin({ otherUser }: { otherUser: OtherUser }) {
     try {
       const newAccessToken = await DeleteUserRequest(
         user!.accessToken,
-        otherUser.id,
+        otherUser!.id,
       );
       if (!newAccessToken.length) {
         setError('Error occurred');
         return;
       }
       setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
-      window.location.href = '/';
+      setOtherUser(null);
+      window.location.href = '/users';
     } catch {
       setError('Error occurred');
     }
