@@ -4,6 +4,7 @@ import { Ranks } from 'src/generated/prisma/enums';
 import { createHash as sha } from 'crypto';
 
 export function getToken(): string {
+
   return randomBytes(32).toString('hex');
 }
 

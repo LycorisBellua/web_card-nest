@@ -24,6 +24,8 @@ import {
   compareTokenHash,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
+import { SendMailService } from '../sendMail/sendMail.service';
+import { EmailContents } from './email_data/EmailContents';
 import { AdminUpdateUserDto } from '../admin/dto/admin-update-user.dto';
 import { UpdateRankDto } from '../admin/dto/update-rank.dto';
 
@@ -32,6 +34,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userEmailsService: UserEmailsService,
+    private readonly sendMail: SendMailService,
   ) {}
 
   // CALLED FROM USER CONTROLLER
@@ -376,7 +379,7 @@ export class UserService {
     });
   }
 
-  private async deleteUser(userId: string) {
+private async deleteUser(userId: string) {
     return await this.prisma.user.delete({
       where: { id: userId },
       select: { id: true },
