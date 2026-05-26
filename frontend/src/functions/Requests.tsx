@@ -1,4 +1,5 @@
 import type { User, LimitedUser } from 'context/Types';
+import { addAvatarPrefix } from 'functions/UserValidation';
 
 export async function RefreshTokenRequest(
   accessToken: string,
@@ -45,8 +46,8 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
         sentFriends: [],
         receivedFriends: [],
       };
-    const newAccessToken = await RefreshTokenRequest(accessToken);
-    if (!newAccessToken.length)
+    const newaccessToken = await RefreshTokenRequest(accessToken);
+    if (!newaccessToken.length)
       return {
         user: null,
         blocked: [],
@@ -54,7 +55,7 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
         sentFriends: [],
         receivedFriends: [],
       };
-    accessToken = newAccessToken;
+    accessToken = newaccessToken;
   }
   const data = (await res.json()) as {
     id: string;
@@ -69,13 +70,13 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
   const user = {
     id: data.id,
     username: data.username,
-    avatar: data.avatar,
+    avatar: addAvatarPrefix(data.avatar),
     rank: data.rank,
     registered: new Date(data.date),
     desc: data.desc,
     isOnline: false,
     email: data.email,
-    unverifiedEmail: data.email_unverified,
+    email_unverified: data.email_unverified,
     accessToken: accessToken,
   } as User;
   if (user!.rank.toLowerCase() == 'pending')
@@ -265,7 +266,11 @@ export async function FetchSelfBlockedListRequest(
     if (!res.ok) return { accessToken: '', users: [] };
   }
   const users = (await res.json()) as LimitedUser[];
-  return { accessToken, users };
+  const prefixed = users.map((u) => ({
+    ...u,
+    avatar: addAvatarPrefix(u.avatar),
+  }));
+  return { accessToken: accessToken, users: prefixed };
 }
 
 export async function FetchSelfFriendListRequest(
@@ -290,7 +295,11 @@ export async function FetchSelfFriendListRequest(
     if (!res.ok) return { accessToken: '', users: [] };
   }
   const users = (await res.json()) as LimitedUser[];
-  return { accessToken, users };
+  const prefixed = users.map((u) => ({
+    ...u,
+    avatar: addAvatarPrefix(u.avatar),
+  }));
+  return { accessToken: accessToken, users: prefixed };
 }
 
 export async function FetchSelfSentListRequest(
@@ -315,7 +324,11 @@ export async function FetchSelfSentListRequest(
     if (!res.ok) return { accessToken: '', users: [] };
   }
   const users = (await res.json()) as LimitedUser[];
-  return { accessToken, users };
+  const prefixed = users.map((u) => ({
+    ...u,
+    avatar: addAvatarPrefix(u.avatar),
+  }));
+  return { accessToken: accessToken, users: prefixed };
 }
 
 export async function FetchSelfReceivedListRequest(
@@ -340,7 +353,11 @@ export async function FetchSelfReceivedListRequest(
     if (!res.ok) return { accessToken: '', users: [] };
   }
   const users = (await res.json()) as LimitedUser[];
-  return { accessToken, users };
+  const prefixed = users.map((u) => ({
+    ...u,
+    avatar: addAvatarPrefix(u.avatar),
+  }));
+  return { accessToken: accessToken, users: prefixed };
 }
 
 export async function RemoveFriendshipRequest(
@@ -565,5 +582,9 @@ export async function FetchOtherFriendListRequest(
     if (!res.ok) return { accessToken: '', users: [] };
   }
   const users = (await res.json()) as LimitedUser[];
-  return { accessToken, users };
+  const prefixed = users.map((u) => ({
+    ...u,
+    avatar: addAvatarPrefix(u.avatar),
+  }));
+  return { accessToken: accessToken, users: prefixed };
 }

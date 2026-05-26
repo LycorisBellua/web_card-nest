@@ -436,11 +436,22 @@ export class UserService {
     userId: string,
     newData: Record<string, unknown>,
   ) {
-    return await this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id: userId },
       data: newData,
-      select: { desc: true, email_unverified: true, username: true },
+      select: {
+        desc: true,
+        email_unverified: true,
+        username: true,
+        avatar: true,
+      },
     });
+    return {
+      ...updated,
+      avatar: updated.avatar
+        ? Buffer.from(updated.avatar).toString('base64')
+        : null,
+    };
   }
 
   private async modifyPassword(userID: string, newPassword: string) {

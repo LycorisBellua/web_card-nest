@@ -13,6 +13,7 @@ import {
   validatePassword,
   validateDescription,
   validateAvatar,
+  addAvatarPrefix,
 } from 'functions/UserValidation';
 import { RefreshTokenRequest } from 'functions/Requests';
 import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
@@ -87,7 +88,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     if (sanitizedEmail !== '')
       nextErrors.email.push(...validateEmail(sanitizedEmail));
     if (sanitizedPassword !== '') {
-      const tmpEmail = sanitizedEmail ?? user.email ?? user.unverifiedEmail;
+      const tmpEmail = sanitizedEmail ?? user.email ?? user.email_unverified;
       nextErrors.newPassword.push(
         ...validatePassword(sanitizedPassword, user.username, tmpEmail),
       );
@@ -116,11 +117,22 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         });
       }
     }
-    if (sanitizedUsername !== '') body.username = sanitizedUsername;
-    if (sanitizedDescription !== '') body.desc = sanitizedDescription;
-    if (sanitizedEmail !== '') body.email_unverified = sanitizedEmail;
+    if (sanitizedUsername !== '' && sanitizedUsername != user.username) {
+      body.username = sanitizedUsername;
+    }
+    if (sanitizedDescription !== '' && sanitizedDescription != user.desc) {
+      body.desc = sanitizedDescription;
+    }
+    if (
+      sanitizedEmail !== '' &&
+      sanitizedEmail != user.email &&
+      sanitizedEmail != user.email_unverified
+    ) {
+      body.email_unverified = sanitizedEmail;
+    }
 
     try {
+      const tmpUser = { ...user };
       let token = user.accessToken;
 
       if (Object.keys(body).length > 0) {
@@ -164,7 +176,11 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         }
 
         const updated = (await res.json()) as Partial<NonNullable<User>>;
-        setUser((old) => (old ? { ...old, ...updated } : null));
+        if (updated.username) tmpUser.username = updated.username;
+        if (updated.desc) tmpUser.desc = updated.desc;
+        if (updated.email_unverified)
+          tmpUser.email_unverified = updated.email_unverified;
+        tmpUser.avatar = addAvatarPrefix(updated.avatar ?? '');
       }
 
       if (sanitizedPassword !== '') {
@@ -218,7 +234,8 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
       }
 
       if (token.length) {
-        setUser((prev) => ({ ...prev, accessToken: token }) as User);
+        tmpUser.accessToken = token;
+        setUser(tmpUser);
       }
     } catch {
       setIsSaving(false);

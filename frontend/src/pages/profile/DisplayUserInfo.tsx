@@ -55,7 +55,7 @@ export function DisplayPrivateUserInfo({ user }: { user: NonNullable<User> }) {
     <div>
       <h2>Private Info</h2>
       <p>Email: {user.email ?? '[None / Pending verification]'}</p>
-      {user.unverifiedEmail && <VerifyEmail user={user} />}
+      {user.email_unverified && <VerifyEmail user={user} />}
       <Link to="/data-extraction">
         <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
       </Link>
@@ -70,14 +70,14 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
 
   async function handleVerifyEmail() {
     try {
-      const newAccessToken = await ResendVerificationEmailRequest(
+      const newaccessToken = await ResendVerificationEmailRequest(
         user.accessToken,
       );
-      if (!newAccessToken.length) {
+      if (!newaccessToken.length) {
         setErrors(['Error occurred']);
         return;
       }
-      setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
+      setUser((prev) => ({ ...prev, accessToken: newaccessToken }) as User);
       setMessage("You'll receive a verification link shortly...");
     } catch {
       setErrors(['Error occurred']);
@@ -87,7 +87,7 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
   return (
     <div>
       <div>
-        <p>Unverified email: {user.unverifiedEmail}</p>
+        <p>Unverified email: {user.email_unverified}</p>
         <BtnDefault onClick={() => void handleVerifyEmail()}>
           Resend Verification Email
         </BtnDefault>

@@ -405,7 +405,7 @@ export function IsAvatarNotTooBig(validationOptions?: ValidationOptions) {
           if (!value) return true;
           const buf = decodeAvatarBase64(value);
           if (!buf) return true;
-          return buf.length <= 1 * 1024 * 1024;
+          return buf.length <= 2 * 1024 * 1024;
         },
         defaultMessage: buildMessage(
           (eachPrefix) => eachPrefix + 'The avatar must be under 1 MB.',

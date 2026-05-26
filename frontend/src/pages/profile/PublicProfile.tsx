@@ -17,6 +17,7 @@ import {
   BlockingRequest,
   FetchOtherFriendListRequest,
 } from 'functions/Requests';
+import { addAvatarPrefix } from 'functions/UserValidation';
 import ToggleChatTimeout from 'pages/profile/ToggleChatTimeout';
 import GuestProfile from 'pages/profile/GuestProfile';
 import EditProfileMod from 'pages/profile/EditProfileMod';
@@ -96,7 +97,7 @@ function PublicProfile() {
         const tmpUser = {
           id: data.id,
           username: data.username,
-          avatar: data.avatar,
+          avatar: addAvatarPrefix(data.avatar),
           rank: data.rank,
           registered: new Date(data.date),
           desc: data.desc,

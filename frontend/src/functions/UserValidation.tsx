@@ -119,3 +119,10 @@ export async function validateAvatar(uavatar: File): Promise<string[]> {
     errors.push('The avatar must be under 400x400 pixels.');
   return errors;
 }
+
+export function addAvatarPrefix(avatar: string): string {
+  if (avatar && !avatar.startsWith('data:image/png;base64,')) {
+    avatar = `data:image/png;base64,${avatar}`;
+  }
+  return avatar;
+}

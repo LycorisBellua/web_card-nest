@@ -37,16 +37,16 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
     closeModals();
     try {
       const newRank = 'user';
-      const newAccessToken = await ChangeRankRequest(
+      const newaccessToken = await ChangeRankRequest(
         user!.accessToken,
         otherUser!.id,
         newRank,
       );
-      if (!newAccessToken.length) {
+      if (!newaccessToken.length) {
         setError('Error occurred');
         return;
       }
-      setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
+      setUser((prev) => ({ ...prev, accessToken: newaccessToken }) as User);
       otherUser!.rank = newRank;
       setOtherUser(otherUser);
     } catch {
@@ -58,16 +58,16 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
     closeModals();
     try {
       const newRank = 'moderator';
-      const newAccessToken = await ChangeRankRequest(
+      const newaccessToken = await ChangeRankRequest(
         user!.accessToken,
         otherUser!.id,
         newRank,
       );
-      if (!newAccessToken.length) {
+      if (!newaccessToken.length) {
         setError('Error occurred');
         return;
       }
-      setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
+      setUser((prev) => ({ ...prev, accessToken: newaccessToken }) as User);
       otherUser!.rank = newRank;
       setOtherUser(otherUser);
     } catch {
@@ -78,15 +78,15 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
   async function handleDelete() {
     closeModals();
     try {
-      const newAccessToken = await DeleteUserRequest(
+      const newaccessToken = await DeleteUserRequest(
         user!.accessToken,
         otherUser!.id,
       );
-      if (!newAccessToken.length) {
+      if (!newaccessToken.length) {
         setError('Error occurred');
         return;
       }
-      setUser((prev) => ({ ...prev, accessToken: newAccessToken }) as User);
+      setUser((prev) => ({ ...prev, accessToken: newaccessToken }) as User);
       setOtherUser(null);
       window.location.href = '/users';
     } catch {

@@ -2,9 +2,6 @@ FRIENDSHIP & BLOCK
 - In EditProfileMod and DangerZoneAdmin, modify `friends`, `blocked`, 
 `sentFriends` and `receivedFriends` if `otherUser` is in it.
 
-USER EDIT
-- Fix the avatar edit.
-
 DATA EXTRACTION PAGE
 - To extract their data, the user has a menu with different checkboxes they can 
 choose from, or all of them: their user profile, and any chat they participated 
@@ -39,6 +36,7 @@ CONNECTION TO THE BACKEND
 - WebSockets (without the game).
 - Lobby & DMs: The frontend has been created in isolation. Make use of the 
 backend and remove the placeholder content.
+- Chat timeout toggle.
 - Finish whatever TODOs are present in the frontend.
 
 GAME

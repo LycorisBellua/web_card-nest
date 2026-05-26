@@ -9,6 +9,7 @@ import {
   validateUsername,
   validateDescription,
   validateAvatar,
+  addAvatarPrefix,
 } from 'functions/UserValidation';
 import { RefreshTokenRequest } from 'functions/Requests';
 import { CanDisciplineThisUser } from 'functions/Ranks';
@@ -99,10 +100,16 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
         });
       }
     }
-    if (sanitizedUsername !== '') body.username = sanitizedUsername;
-    if (sanitizedDescription !== '') body.desc = sanitizedDescription;
+
+    if (sanitizedUsername !== '' && sanitizedUsername != otherUser.username) {
+      body.username = sanitizedUsername;
+    }
+    if (sanitizedDescription !== '' && sanitizedDescription != otherUser.desc) {
+      body.desc = sanitizedDescription;
+    }
 
     try {
+      const tmpOtherUser = { ...otherUser };
       let token = user!.accessToken;
 
       if (Object.keys(body).length > 0) {
@@ -145,10 +152,16 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
           setDisplaySpinner(false);
           return;
         }
+
+        const updated = (await res.json()) as Partial<NonNullable<OtherUser>>;
+        if (updated.username) tmpOtherUser.username = updated.username;
+        if (updated.desc) tmpOtherUser.desc = updated.desc;
+        tmpOtherUser.avatar = addAvatarPrefix(updated.avatar ?? '');
       }
+
       if (token.length) {
         setUser((prev) => ({ ...prev, accessToken: token }) as User);
-        setOtherUser({ ...otherUser, ...body } as OtherUser);
+        setOtherUser(tmpOtherUser);
         if (sanitizedUsername) {
           window.history.replaceState(null, '', `/user/${sanitizedUsername}`);
         }

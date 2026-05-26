@@ -21,18 +21,18 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
     closeModals();
     try {
       const newRank = 'user';
-      const newAccessToken = await ChangeRankRequest(
+      const newaccessToken = await ChangeRankRequest(
         user.accessToken,
         user.id,
         newRank,
       );
-      if (!newAccessToken.length) {
+      if (!newaccessToken.length) {
         setError('Error occurred');
         return;
       }
       setUser(
         (prev) =>
-          ({ ...prev, accessToken: newAccessToken, rank: newRank }) as User,
+          ({ ...prev, accessToken: newaccessToken, rank: newRank }) as User,
       );
     } catch {
       setError('Error occurred');
@@ -42,8 +42,8 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
   async function handleDelete() {
     closeModals();
     try {
-      const newAccessToken = await DeleteSelfRequest(user.accessToken);
-      if (!newAccessToken.length) {
+      const newaccessToken = await DeleteSelfRequest(user.accessToken);
+      if (!newaccessToken.length) {
         setError('Error occurred');
         return;
       }

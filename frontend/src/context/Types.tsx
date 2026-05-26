@@ -15,7 +15,7 @@ export type OtherUser = LimitedUser & {
 export type User =
   | (OtherUser & {
       email: string;
-      unverifiedEmail: string;
+      email_unverified: string;
       accessToken: string;
     })
   | null;

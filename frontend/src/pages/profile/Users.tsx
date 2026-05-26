@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from 'context/useUser';
 import type { User, OtherUser } from 'context/Types';
 import { RefreshTokenRequest } from 'functions/Requests';
+import { addAvatarPrefix } from 'functions/UserValidation';
 import NotFound from 'pages/NotFound';
 import { ScrollablePage } from 'components/general/Scrollable';
 import UserBtn from 'components/btn/UserBtn';
@@ -34,7 +35,11 @@ function Users() {
           if (!res.ok) return;
         }
         const data = (await res.json()) as OtherUser[];
-        setUsers(data);
+        const prefixed = data.map((u) => ({
+          ...u,
+          avatar: addAvatarPrefix(u.avatar),
+        }));
+        setUsers(prefixed);
       } catch {
         setUsers([]);
       }
