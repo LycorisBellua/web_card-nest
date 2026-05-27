@@ -11,7 +11,13 @@ import {
   validateAvatar,
   addAvatarPrefix,
 } from 'functions/UserValidation';
-import { RefreshTokenRequest } from 'functions/Requests';
+import {
+  RefreshTokenRequest,
+  FetchSelfBlockedListRequest,
+  FetchSelfFriendListRequest,
+  FetchSelfSentListRequest,
+  FetchSelfReceivedListRequest,
+} from 'functions/Requests';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
 import { AvatarBig } from 'components/btn/Avatar';
@@ -40,7 +46,18 @@ interface Props {
 }
 
 function EditProfileMod({ otherUser, setOtherUser }: Props) {
-  const { user, setUser } = useUser();
+  const {
+    user,
+    setUser,
+    blocked,
+    setBlocked,
+    friends,
+    setFriends,
+    sentFriends,
+    setSentFriends,
+    receivedFriends,
+    setReceivedFriends,
+  } = useUser();
   const [displaySpinner, setDisplaySpinner] = useState(false);
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>(emptyFieldErrors());
@@ -57,6 +74,37 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
 
   const hasPendingChanges =
     avatar !== undefined || username !== '' || desc !== '';
+
+  async function updateRelationships(accessToken: string): Promise<string> {
+    const inBlocked = blocked.some((u) => u.id === otherUser.id);
+    const inFriends = friends.some((u) => u.id === otherUser.id);
+    const inSentFriends = sentFriends.some((u) => u.id === otherUser.id);
+    const inReceivedFriends = receivedFriends.some(
+      (u) => u.id === otherUser.id,
+    );
+    if (inBlocked) {
+      const data = await FetchSelfBlockedListRequest(accessToken);
+      if (!data.accessToken.length) return '';
+      accessToken = data.accessToken;
+      setBlocked(data.users);
+    } else if (inFriends) {
+      const data = await FetchSelfFriendListRequest(accessToken);
+      if (!data.accessToken.length) return '';
+      accessToken = data.accessToken;
+      setFriends(data.users);
+    } else if (inSentFriends) {
+      const data = await FetchSelfSentListRequest(accessToken);
+      if (!data.accessToken.length) return '';
+      accessToken = data.accessToken;
+      setSentFriends(data.users);
+    } else if (inReceivedFriends) {
+      const data = await FetchSelfReceivedListRequest(accessToken);
+      if (!data.accessToken.length) return '';
+      accessToken = data.accessToken;
+      setReceivedFriends(data.users);
+    }
+    return accessToken;
+  }
 
   async function handleSave() {
     if (!hasPendingChanges || isSaving) return;
@@ -160,8 +208,11 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
       }
 
       if (token.length) {
-        setUser((prev) => ({ ...prev, accessToken: token }) as User);
         setOtherUser(tmpOtherUser);
+        token = await updateRelationships(token);
+        if (token.length) {
+          setUser((prev) => ({ ...prev, accessToken: token }) as User);
+        }
         if (sanitizedUsername) {
           window.history.replaceState(null, '', `/user/${sanitizedUsername}`);
         }
