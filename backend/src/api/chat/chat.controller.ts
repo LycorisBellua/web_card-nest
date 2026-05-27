@@ -6,24 +6,40 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Get('id/:sender/:receiver')
-  async getChatId(
+  async getDMId(
     @Param('sender') sender: string,
     @Param('receiver') receiver: string,
   ) {
-    return this.chatService.getChatId(sender, receiver);
+    return await this.chatService.getDMId(sender, receiver);
   }
 
-  @Post()
-  async saveMessage(
+  @Post('dm')
+  async saveDM(
     @Body('chatId') chatId: string,
     @Body('senderId') senderId: string,
     @Body('message') message: string,
   ) {
-    return this.chatService.saveMessage(chatId, senderId, message);
+    return await this.chatService.saveDM(chatId, senderId, message);
   }
 
-  @Get('messages/:chatId')
-  async getMessages(@Param('chatId') chatId: string) {
-    return this.chatService.getChatHistory(chatId);
+  @Get('dm/:chatId/:userId')
+  async getDMHistory(
+    @Param('chatId') chatId: string,
+    @Param('userId') userId: string,
+  ) {
+    return await this.chatService.getDMHistory(userId, chatId);
+  }
+
+  @Post('lobby')
+  async saveLobbyMessage(
+    @Body('senderId') senderId: string,
+    @Body('message') message: string,
+  ) {
+    return await this.chatService.saveLobbyMessage(senderId, message);
+  }
+
+  @Get('lobby')
+  async getLobbyHistory() {
+    return await this.chatService.getLobbyHistory();
   }
 }

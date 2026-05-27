@@ -9,26 +9,28 @@ datasource db {
 }
 
 model User {
-  id               String     @id @default(uuid(7))
-  username         String     @unique
-  email            String?    @unique
-  email_unverified String?    @unique
+  id               String         @id @default(uuid(7))
+  username         String         @unique
+  email            String?        @unique
+  email_unverified String?        @unique
   password         String
-  desc             String?    @db.VarChar(200)
+  desc             String?        @db.VarChar(200)
   avatar           Bytes?
-  rank             Ranks      @default(PENDING)
-  date             DateTime   @default(now())
-  verifyToken      String?    @unique
+  rank             Ranks          @default(PENDING)
+  date             DateTime       @default(now())
+  verifyToken      String?        @unique
   verifyTimeout    DateTime?
-  refreshToken     String?    @unique
+  refreshToken     String?        @unique
   refreshTimeout   DateTime?
-  sentRequests     Friend[]   @relation("requester")
-  receivedRequests Friend[]   @relation("addressee")
-  blocked          Block[]    @relation("blocker")
-  blockedBy        Block[]    @relation("blocked")
-  chatUserA        Chat[]     @relation("userA")
-  chatUserB        Chat[]     @relation("userB")
-  messageSender    Message[]  @relation("sender")
+  sentRequests     Friend[]       @relation("requester")
+  receivedRequests Friend[]       @relation("addressee")
+  blocked          Block[]        @relation("blocker")
+  blockedBy        Block[]        @relation("blocked")
+  chatUserA        Chat[]         @relation("userA")
+  chatUserB        Chat[]         @relation("userB")
+  messageSender    Message[]      @relation("sender")
+  lobbyMessages    LobbyMessage[] @relation("sender")
+  lobbyBan         LobbyBan[]     @relation("user")
 }
 
 enum Ranks {
@@ -67,25 +69,37 @@ model Block {
 }
 
 model Chat {
-  userA     User?     @relation("userA", fields: [userAId], references: [id], onDelete: Cascade)
-  userAId   String?
-  userB     User?     @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
-  userBId   String?
-  messages  Message[] @relation("chat")
-  id        String    @id @default(uuid(7))
+  userA    User      @relation("userA", fields: [userAId], references: [id], onDelete: Cascade)
+  userAId  String
+  userB    User      @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
+  userBId  String
+  messages Message[] @relation("chat")
+  id       String    @id @default(uuid(7))
 
   @@unique([userAId, userBId])
   @@index([userBId])
 }
 
 model Message {
-  id        String    @id @default(uuid(7))
-  chat      Chat      @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
-  chatId    String
-  message   String    @db.VarChar(500)
-  sender    User?      @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
-  senderId  String?
-  date      DateTime  @default(now())
+  id       String @id @default(uuid(7))
+  chat     Chat   @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
+  chatId   String
+  message  String @db.VarChar(500)
+  sender   User   @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId String
 
   @@index([chatId])
+}
+
+model LobbyMessage {
+  id       String  @id @default(uuid(7))
+  sender   User?   @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
+  senderId String?
+  message  String  @db.VarChar(500)
+}
+
+model LobbyBan {
+  user   User     @relation("user", fields: [userId], references: [id], onDelete: Cascade)
+  userId String   @id
+  date   DateTime @default(now())
 }

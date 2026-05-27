@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -17,13 +19,14 @@ import { AdminService } from './admin.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RankGuard } from '../auth/guards/auth.rankguard';
 import { UpdateRankDto } from './dto/update-rank.dto';
+import { RelUuidDto } from '../relationships/dto/rel-uuid.dto';
 
+@UseGuards(AuthGuard, RankGuard)
+@RequiredRank(Ranks.MODERATOR)
 @Controller('api/admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @UseGuards(AuthGuard, RankGuard)
-  @RequiredRank(Ranks.MODERATOR)
   @Patch('modify')
   async adminModifyUser(
     @Req() req: ExpressRequest,
@@ -37,8 +40,6 @@ export class AdminController {
     );
   }
 
-  @UseGuards(AuthGuard, RankGuard)
-  @RequiredRank(Ranks.MODERATOR)
   @Patch('rank')
   async adminModifyRank(
     @Req() req: ExpressRequest,
@@ -52,7 +53,6 @@ export class AdminController {
     );
   }
 
-  @UseGuards(AuthGuard, RankGuard)
   @RequiredRank(Ranks.ADMIN)
   @Delete(':userId')
   async adminRemoveUser(
@@ -65,5 +65,34 @@ export class AdminController {
       user.rank as Ranks,
       targetId,
     );
+  }
+
+  @Post('ban')
+  async lobbyChatBan(@Req() req: ExpressRequest, @Body() dto: RelUuidDto) {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.lobbyChatBan(
+      user.id,
+      user.rank as Ranks,
+      dto.targetId,
+    );
+  }
+
+  @Delete('ban/:targetId')
+  async lobbyChatUnban(
+    @Req() req: ExpressRequest,
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ) {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.lobbyChatUnban(
+      user.id,
+      user.rank as Ranks,
+      targetId,
+    );
+  }
+
+  @Get('ban')
+  async fetchBanList(@Req() req: ExpressRequest) {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.fetchBanList(user.id, user.rank as Ranks);
   }
 }

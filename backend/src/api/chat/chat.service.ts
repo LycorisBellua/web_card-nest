@@ -1,17 +1,27 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
-  ChatList,
-  ChatParticipants,
-  chatSelect,
-  MessageHistory,
-  messageSelect,
-  NewMessage,
+  DMChatId,
+  dMChatIdSelect,
+  DMHistory,
+  DMMessageId,
+  dmMessageIdSelect,
+  dMMessageOrderBy,
+  dMMessageSelect,
+  DMParticipants,
+  LobbyHistory,
+  LobbyMessageId,
+  lobbyMessageIdSelect,
+  lobbyMessageOrderBy,
+  lobbyMessageSelect,
+  NewDMMessage,
+  NewLobbyMessage,
 } from './types/chat.types';
 import { Prisma } from 'src/generated/prisma/client';
 import { ChatError } from './errors/chat.errors';
@@ -20,10 +30,10 @@ import { ChatError } from './errors/chat.errors';
 export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getChatId(sender: string, receiver: string) {
+  async getDMId(sender: string, receiver: string): Promise<DMChatId> {
     const sorted = this.sortUserIds(sender, receiver);
     try {
-      return (await this.createChat(sorted)).id;
+      return await this.createDMChat(sorted);
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         this.handleErrors(err);
@@ -32,9 +42,14 @@ export class ChatService {
     }
   }
 
-  async saveMessage(chatId: string, senderId: string, message: string) {
+  async saveDM(
+    chatId: string,
+    senderId: string,
+    message: string,
+  ): Promise<DMMessageId> {
+    await this.participantCheck(senderId, chatId);
     try {
-      return await this.createMessage({
+      return await this.createDMMessage({
         chatId: chatId,
         senderId: senderId,
         message: message,
@@ -47,12 +62,29 @@ export class ChatService {
     }
   }
 
-  async getChatHistory(chatId: string) {
-    return await this.findMessages(chatId);
+  async getDMHistory(userId: string, chatId: string): Promise<DMHistory> {
+    await this.participantCheck(userId, chatId);
+    return await this.findDMMessages(chatId);
+  }
+
+  async saveLobbyMessage(senderId: string, message: string) {
+    await this.banCheck(senderId);
+    try {
+      return this.createLobbyMessage({ senderId, message });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        this.handleErrors(err);
+      }
+      throw err;
+    }
+  }
+
+  async getLobbyHistory(): Promise<LobbyHistory> {
+    return await this.findLobbyMessages();
   }
 
   // HELPER FUNCTIONS
-  private sortUserIds(sender: string, receiver: string): ChatParticipants {
+  private sortUserIds(sender: string, receiver: string): DMParticipants {
     if (sender < receiver) {
       return { userAId: sender, userBId: receiver };
     }
@@ -72,27 +104,70 @@ export class ChatService {
     }
   }
 
+  private async participantCheck(userId: string, chatId: string) {
+    const chat = await this.participantLookup(userId, chatId);
+    if (!chat) {
+      throw new ForbiddenException(ChatError.WRONG_CHAT);
+    }
+  }
+
+  private async banCheck(userId: string) {
+    const ban = await this.findBan(userId);
+    if (ban) {
+      throw new ForbiddenException(ChatError.BANNED);
+    }
+  }
+
   // DB ACCESS
-  private async createChat(users: ChatParticipants): Promise<{ id: string }> {
+  private async createDMChat(users: DMParticipants): Promise<DMChatId> {
     return await this.prisma.chat.upsert({
       where: { userAId_userBId: users },
       create: users,
       update: {},
-      select: { id: true },
+      select: dMChatIdSelect,
     });
   }
 
-  private async createMessage(data: NewMessage): Promise<{ id: string }> {
+  private async createDMMessage(data: NewDMMessage): Promise<DMMessageId> {
     return await this.prisma.message.create({
       data: data,
-      select: { id: true },
+      select: dmMessageIdSelect,
     });
   }
 
-  private async findMessages(chatId: string): Promise<MessageHistory> {
+  private async findDMMessages(chatId: string): Promise<DMHistory> {
     return await this.prisma.message.findMany({
       where: { chatId },
-      select: messageSelect,
+      select: dMMessageSelect,
+      orderBy: dMMessageOrderBy,
+    });
+  }
+
+  private async createLobbyMessage(
+    data: NewLobbyMessage,
+  ): Promise<LobbyMessageId> {
+    return await this.prisma.lobbyMessage.create({
+      data: data,
+      select: lobbyMessageIdSelect,
+    });
+  }
+
+  private async findLobbyMessages(): Promise<LobbyHistory> {
+    return await this.prisma.lobbyMessage.findMany({
+      select: lobbyMessageSelect,
+      orderBy: lobbyMessageOrderBy,
+    });
+  }
+
+  private async findBan(userId: string) {
+    return await this.prisma.lobbyBan.findUnique({
+      where: { userId },
+    });
+  }
+
+  private async participantLookup(userId: string, chatId: string) {
+    return await this.prisma.chat.findFirst({
+      where: { id: chatId, OR: [{ userAId: userId }, { userBId: userId }] },
     });
   }
 }
