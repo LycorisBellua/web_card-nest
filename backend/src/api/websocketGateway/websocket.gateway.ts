@@ -68,7 +68,7 @@ export class WebsocketServer
 
   async handleDisconnect(client: Socket) {
     const userId = this.connectedUsersSocketId.get(client.id) as string;
-    this.connectedUsersId.delete(userId);
+    this.connectedUsersId.delete(client.id);
     this.connectedUsersSocketId.delete(userId);
     const friendlist = await this.RelService.fetchFriends(userId);
     await this.UpdateFriendsFriendList(friendlist);
@@ -112,14 +112,17 @@ export class WebsocketServer
     @MessageBody() targetUserId: string,
   ): Promise<any>   {
     const SenderUserId = this.connectedUsersSocketId.get(Sender.id);
-
+    console.log("senderId : ", SenderUserId);
+    console.log("TargetId : ", targetUserId);
     if (!SenderUserId || !targetUserId) return [];
     const ConvoId = await this.chatService.getChatId(
       SenderUserId,
       targetUserId,
     );
+        console.log("CovoId : ", ConvoId);
     if (!ConvoId) return [];
     const Convo = await this.chatService.getMessages(ConvoId);
+    console.log("Convo : " ,  Convo);
     return Convo;
   }
 

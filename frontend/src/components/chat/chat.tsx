@@ -14,15 +14,12 @@ export const  Chat =  () =>
   const socket = useSocket();
   const [input, setInput] = useState('');
   const [targetUserId, setTargetUserId] = useState('');
-  console.log("HERE");
-  // const history = socket.emitWithAck('FetchConvoHistory', targetUserId);
-  console.log("HERE");
   const [messages, setMessages] = useState<any[]>([]); 
 
     
     useEffect(() => {
     socket.emit('FetchConvoHistory', targetUserId, (response: any) => {
-      console.log("HERE Useeffect :", targetUserId);
+      console.log("HERE Useeffect :", response);
       setMessages(response); // ← your return value
     });
   }, [targetUserId]);
@@ -35,7 +32,9 @@ export const  Chat =  () =>
         setMessages((prev: any) => [...prev, data]);
       });
       return () => {
+        
         socket.off('receiveMessage');
+
         socket.disconnect();
       };
     }, [socket]);

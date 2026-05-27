@@ -46,7 +46,10 @@ export class ChatService {
   }
 
   async getMessages(chatId: string) {
-    return await this.findMessages(chatId);
+    const message = await this.findMessages(chatId);
+    console.log("GETmessage : ", message);
+
+    return message ;
   }
 
   // HELPER FUNCTIONS
