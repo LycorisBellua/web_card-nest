@@ -161,4 +161,20 @@ export class AuthController {
     const user = req['user'] as JwtPayload;
     return this.authService.resendVerificationEmail(user.id);
   }
+
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() body: { email: string },
+  ): Promise<{ success: boolean; message: string }> {
+    return this.authService.executeForgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body() body: { token: string; newPassword: string },
+  ): Promise<{ success: boolean; message: string }> {
+    return this.authService.resetPassword(body.token, body.newPassword);
+  }
+
+  
 }

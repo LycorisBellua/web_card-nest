@@ -7,18 +7,21 @@ import {
   createTokenHash,
   getCurrentTime,
   getRefreshTimeout,
+  compareHash,
   getToken,
 } from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { TokenPair } from './jwt/auth.token-pair';
 import { Ranks } from 'src/generated/prisma/enums';
+import { SendMailService } from '../sendMail/sendMail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly mailer: SendMailService,
   ) {}
 
   async signup(createUserDto: CreateUserDto) {
@@ -27,14 +30,28 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<TokenPair> {
     const found = await this.userService.userExistsByEmail(email);
+
+    if (found?.loginLockedUntil && found.loginLockedUntil > new Date()) {
+      const remaining = Math.ceil((found.loginLockedUntil.getTime() - Date.now()) / 60000)
+      throw new UnauthorizedException(`Too many attempts. Try again in ${remaining} minutes.`)
+    }
+
     if (
       !found ||
       (found.email && found.email !== email) ||
       !(await comparePasswordHash(password, found.password))
     ) {
-      throw new UnauthorizedException('Email address or password incorrect.');
+      if (found) {
+        const attempts = found.loginAttempts + 1
+        await this.userService.updateLoginAttempts(
+          found.id,
+          attempts,
+          attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null
+        )
+      }
+      throw new UnauthorizedException('Email address or password incorrect.')
     }
-    return this.generateTokenPair(found.id, found.rank);
+    return await this.generateJwtToken(user.id, user.rank);
   }
 
   async logout(userId: string) {
@@ -76,23 +93,12 @@ export class AuthService {
     return await this.userService.resendVerificationEmail(userId);
   }
 
-  // Generate JWT / Refresh Token
-  async generateTokenPair(userId: string, rank: Ranks): Promise<TokenPair> {
-    const access = await this.generateJwtToken(userId, rank);
-    const refresh = await this.generateRefreshToken(userId);
-    return {
-      accessToken: access,
-      refreshToken: refresh.token,
-      refreshTimeout: refresh.timeout,
-    };
-  }
-
   async generateJwtToken(userId: string, rank: Ranks) {
-    const payload: JwtPayload = {
-      id: userId,
-      rank: rank,
-    };
-    return await this.jwtService.signAsync(payload);
+      const payload: JwtPayload = {
+        id: userId,
+        rank: rank,
+      };
+      return await this.jwtService.signAsync(payload);
   }
 
   async generateRefreshToken(

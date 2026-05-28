@@ -26,6 +26,8 @@ model User {
   receivedRequests Friend[]   @relation("addressee")
   blocked          Block[]    @relation("blocker")
   blockedBy        Block[]    @relation("blocked")
+  loginAttempts    Int       @default(0)
+  loginLockedUntil DateTime?
 }
 
 enum Ranks {
