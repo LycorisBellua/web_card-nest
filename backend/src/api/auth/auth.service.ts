@@ -109,4 +109,45 @@ export class AuthService {
     await this.userService.updateRefreshToken(userId, token, timeout);
     return { token, timeout };
   }
+  
+  async executeForgotPassword(email: string) {
+      const user = await this.userService.findUserByEmail(email)
+
+      if (!user) {
+          return { success: true, message: "If this email exists, a link has been sent." }
+      }
+
+      const token = randomBytes(32).toString('hex')
+      const expiry = new Date(Date.now() + 30 * 60 * 1000)
+      await this.userService.saveResetToken(email, await createHash(token), expiry)
+
+      const link = `${process.env.HOME_URL}/reset-password?token=${token}`
+      await this.mailer.sendMail(
+          email,
+          "Password reset",
+          `Click on this link to reset your password: ${link}\n\nThis link expires in 30 minutes.`
+      )
+
+      return { success: true, message: "If this email exists, a link has been sent." }
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+      const users = await this.userService.findUsersWithValidToken()
+
+      const user = await Promise.all(
+          users.map(async (u) => ({
+              user: u,
+              match: await compareHash(token, u.verifyToken!)
+          }))
+      ).then(results => results.find(r => r.match)?.user)
+
+      if (!user) {
+          return { success: false, message: "Invalid or expired link." }
+      }
+
+      const hashed = await createHash(newPassword)
+      await this.userService.updatePasswordAndClearToken(user.id, hashed)
+
+      return { success: true, message: "Password updated successfully." }
+  }
 }
