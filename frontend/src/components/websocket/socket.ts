@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000', {
-  autoConnect: false, 
-  withCredentials: true, 
+const socket = io('https://localhost:8080', {
+  autoConnect: false,
+  withCredentials: true,
 });
 
 export default socket;

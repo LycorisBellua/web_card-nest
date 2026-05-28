@@ -1,11 +1,12 @@
 import { SocketProvider } from '../components/websocket/socketContext';
 import { useState } from 'react';
-import { Chat } from "../components/chat/chat"
-import { FriendList } from "../components/chat/RealTimeFriendList"
+import { Chat } from '../components/chat/chat';
+import { Room } from '../components/chat/room';
+import { FriendList } from '../components/chat/RealTimeFriendList';
 // import { UserFriendList } from "../components/Chat"
 
 export function ChatApp() {
- const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState('');
   const [connected, setConnected] = useState(false);
 
   if (!connected) {
@@ -32,9 +33,9 @@ export function ChatApp() {
 
   return (
     <SocketProvider userId={userId}>
-      <FriendList/>
       <Chat />
+      <FriendList />
+      <Room />
     </SocketProvider>
   );
 }
-

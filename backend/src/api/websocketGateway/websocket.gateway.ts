@@ -1,13 +1,6 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
-  Logger,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ErrorMessages } from '../user/error_messages/ErrorMessages';
 import {
   ConnectedSocket,
   MessageBody,
@@ -18,18 +11,15 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { RelService } from '../relationships/rel.service';
-import { UserService } from 'src/api/user/user.service';
 import { ChatService } from '../chat/chat.service';
 import { FriendUser } from '../relationships/types/rel.types';
-import { MessageHistory } from '../chat/types/chat.types';
-
-
-
+import { DMChatId, LobbyHistory } from '../chat/types/chat.types';
 
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:5173',
+    origin: process.env.HOME_URL,
+    // origin: 'http://localhost:5173',
     credentials: true,
   },
 })
@@ -73,7 +63,7 @@ export class WebsocketServer
     const friendlist = await this.RelService.fetchFriends(userId);
     await this.UpdateFriendsFriendList(friendlist);
     if (this.BlockedUsersId.has(userId)) this.BlockedUsersId.delete(userId);
-    console.log('Disconnect');
+    //console.log('Disconnect');
   }
 
   async emitFriendList(@MessageBody() TargetUserId: string) {
@@ -89,9 +79,9 @@ export class WebsocketServer
         disconnected.push(friend);
       }
       this.server.to(socketId).emit('FriendListConnected', connected);
-      console.log('connected = ', connected);
+      //console.log('connected = ', connected);
       this.server.to(socketId).emit('FriendListDisconnected', disconnected);
-      console.log('disconnected = ', disconnected);
+      //console.log('disconnected = ', disconnected);
     }
   }
 
@@ -110,22 +100,33 @@ export class WebsocketServer
   async FetchConvoHistory(
     @ConnectedSocket() Sender: Socket,
     @MessageBody() targetUserId: string,
-  ): Promise<any>   {
+  ): Promise<any> {
     const SenderUserId = this.connectedUsersSocketId.get(Sender.id);
-    console.log("senderId : ", SenderUserId);
-    console.log("TargetId : ", targetUserId);
+    //console.log('senderId : ', SenderUserId);
+    //console.log('TargetId : ', targetUserId);
     if (!SenderUserId || !targetUserId) return [];
-    const ConvoId = await this.chatService.getChatId(
-      SenderUserId,
-      targetUserId,
-    );
-        console.log("CovoId : ", ConvoId);
+    const ConvoId = await this.chatService.getDMId(SenderUserId, targetUserId);
+    //console.log('CovoId : ', ConvoId);
     if (!ConvoId) return [];
-    const Convo = await this.chatService.getMessages(ConvoId);
-    console.log("Convo : " ,  Convo);
+    const Convo = await this.chatService.getDMHistory(SenderUserId, ConvoId.id);
+    //console.log('Convo : ', Convo);
     return Convo;
   }
 
+  @SubscribeMessage('FetchLobbyHistory')
+  async FetchLobbyHistory() //@ConnectedSocket() Sender: Socket,
+  : Promise<LobbyHistory> {
+    // const SenderUserId = this.connectedUsersSocketId.get(Sender.id);
+    // //console.log('senderId : ', SenderUserId);
+    // //console.log('TargetId : ', targetUserId);
+    // if (!SenderUserId || !targetUserId) return [];
+    // const ConvoId = await this.chatService.getDMId(SenderUserId, targetUserId);
+    // //console.log('CovoId : ', ConvoId);
+    // if (!ConvoId) return [];
+    // const Convo = await this.chatService.getDMHistory(SenderUserId, ConvoId.id);
+    //console.log('Convo : ', Convo);
+    return await this.chatService.getLobbyHistory();
+  }
   @SubscribeMessage('PrivateMessage')
   async SendMessageToTargetedSocket(
     @ConnectedSocket() Sender: Socket,
@@ -133,22 +134,22 @@ export class WebsocketServer
   ) {
     const ReceiverSocketId = this.connectedUsersId.get(payload.targetUserId);
     const SenderUserId = this.connectedUsersSocketId.get(Sender.id);
-    let ConvoId: string;
+    let ConvoId: DMChatId;
 
     this.logger.log('frontside userid : ', payload.targetUserId);
     this.logger.log('frontside socketid : ', ReceiverSocketId);
     if (!SenderUserId) return;
     if (ReceiverSocketId) {
       try {
-        ConvoId = await this.chatService.getChatId(
+        ConvoId = await this.chatService.getDMId(
           SenderUserId,
           payload.targetUserId,
         );
 
         if (SenderUserId && this.BlockedUsersId.has(SenderUserId)) return;
 
-        await this.chatService.saveMessage(
-          ConvoId,
+        await this.chatService.saveDM(
+          ConvoId.id,
           SenderUserId,
           payload.message,
         );
@@ -163,12 +164,14 @@ export class WebsocketServer
   }
 
   @SubscribeMessage('PublicMessage')
-  SendMessageToEveryBody(
+  async SendMessageToEveryBody(
     @ConnectedSocket() Sender: Socket,
     @MessageBody() message: string,
   ) {
     const SenderUserId = this.connectedUsersSocketId.get(Sender.id);
-    if (SenderUserId && this.BlockedUsersId.has(SenderUserId)) return;
+    if (!SenderUserId || this.BlockedUsersId.has(SenderUserId)) return;
+
+    await this.chatService.saveLobbyMessage(SenderUserId, message);
     Sender.broadcast.emit('PublicMessage', {
       Sender: SenderUserId,
       message: message,
