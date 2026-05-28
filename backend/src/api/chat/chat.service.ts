@@ -1,27 +1,44 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
-  ChatParticipants,
-  MessageHistory,
-  messageSelect,
-  NewMessage,
+  DMChatId,
+  dMChatIdSelect,
+  DMHistory,
+  DMMessageId,
+  dmMessageIdSelect,
+  dMMessageOrderBy,
+  dMMessageSelect,
+  DMParticipants,
+  LobbyHistory,
+  LobbyMessageId,
+  lobbyMessageIdSelect,
+  lobbyMessageOrderBy,
+  lobbyMessageSelect,
+  NewDMMessage,
+  NewLobbyMessage,
 } from './types/chat.types';
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma, Ranks } from 'src/generated/prisma/client';
 import { ChatError } from './errors/chat.errors';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
+  ) {}
 
-  async getChatId(sender: string, receiver: string) {
+  async getDMId(sender: string, receiver: string): Promise<DMChatId> {
     const sorted = this.sortUserIds(sender, receiver);
     try {
-      return (await this.createChat(sorted)).id;
+      await this.rankChecks(sender, receiver);
+      return await this.createDMChat(sorted);
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         this.handleErrors(err);
@@ -30,9 +47,14 @@ export class ChatService {
     }
   }
 
-  async saveMessage(chatId: string, senderId: string, message: string) {
+  async saveDM(
+    chatId: string,
+    senderId: string,
+    message: string,
+  ): Promise<DMMessageId> {
+    await this.participantCheck(senderId, chatId);
     try {
-      return await this.createMessage({
+      return await this.createDMMessage({
         chatId: chatId,
         senderId: senderId,
         message: message,
@@ -45,15 +67,29 @@ export class ChatService {
     }
   }
 
-  async getMessages(chatId: string) {
-    const message = await this.findMessages(chatId);
-    console.log("GETmessage : ", message);
+  async getDMHistory(userId: string, chatId: string): Promise<DMHistory> {
+    await this.participantCheck(userId, chatId);
+    return await this.findDMMessages(chatId);
+  }
 
-    return message ;
+  async saveLobbyMessage(senderId: string, message: string) {
+    await this.banCheck(senderId);
+    try {
+      return this.createLobbyMessage({ senderId, message });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        this.handleErrors(err);
+      }
+      throw err;
+    }
+  }
+
+  async getLobbyHistory(): Promise<LobbyHistory> {
+    return await this.findLobbyMessages();
   }
 
   // HELPER FUNCTIONS
-  private sortUserIds(sender: string, receiver: string): ChatParticipants {
+  private sortUserIds(sender: string, receiver: string): DMParticipants {
     if (sender < receiver) {
       return { userAId: sender, userBId: receiver };
     }
@@ -73,35 +109,78 @@ export class ChatService {
     }
   }
 
+  private async rankChecks(userA: string, userB: string) {
+    const a = await this.userService.userExistsOrThrow(userA);
+    const b = await this.userService.userExistsOrThrow(userB);
+    if (a.rank === Ranks.PENDING || b.rank === Ranks.PENDING) {
+      throw new ForbiddenException(ChatError.WRONG_RANK);
+    }
+  }
+
+  private async participantCheck(userId: string, chatId: string) {
+    const chat = await this.participantLookup(userId, chatId);
+    if (!chat) {
+      throw new ForbiddenException(ChatError.WRONG_CHAT);
+    }
+  }
+
+  private async banCheck(userId: string) {
+    const ban = await this.findBan(userId);
+    if (ban) {
+      throw new ForbiddenException(ChatError.BANNED);
+    }
+  }
+
   // DB ACCESS
-  private async createChat(users: ChatParticipants): Promise<{ id: string }> {
-    return await this.prisma.chat.upsert({
+  private async createDMChat(users: DMParticipants): Promise<DMChatId> {
+    return await this.prisma.dMChat.upsert({
       where: { userAId_userBId: users },
       create: users,
       update: {},
-      select: { id: true },
+      select: dMChatIdSelect,
     });
   }
 
-  private async createMessage(data: NewMessage): Promise<{ id: string }> {
-    return await this.prisma.message.create({
+  private async createDMMessage(data: NewDMMessage): Promise<DMMessageId> {
+    return await this.prisma.dMMessage.create({
       data: data,
-      select: { id: true },
+      select: dmMessageIdSelect,
     });
   }
 
-  private async findMessages(chatId: string): Promise<MessageHistory> {
-    return await this.prisma.message.findMany({
+  private async findDMMessages(chatId: string): Promise<DMHistory> {
+    return await this.prisma.dMMessage.findMany({
       where: { chatId },
-      select: messageSelect,
+      select: dMMessageSelect,
+      orderBy: dMMessageOrderBy,
     });
   }
 
-  // CALLED BY USERSERVICE.DELETEUSER()
-  async removeOrphanedChats(): Promise<number> {
-    const deleted = await this.prisma.chat.deleteMany({
-      where: { userAId: null, userBId: null },
+  private async createLobbyMessage(
+    data: NewLobbyMessage,
+  ): Promise<LobbyMessageId> {
+    return await this.prisma.lobbyMessage.create({
+      data: data,
+      select: lobbyMessageIdSelect,
     });
-    return deleted.count;
+  }
+
+  private async findLobbyMessages(): Promise<LobbyHistory> {
+    return await this.prisma.lobbyMessage.findMany({
+      select: lobbyMessageSelect,
+      orderBy: lobbyMessageOrderBy,
+    });
+  }
+
+  private async findBan(userId: string) {
+    return await this.prisma.lobbyBan.findUnique({
+      where: { userId },
+    });
+  }
+
+  private async participantLookup(userId: string, chatId: string) {
+    return await this.prisma.dMChat.findFirst({
+      where: { id: chatId, OR: [{ userAId: userId }, { userBId: userId }] },
+    });
   }
 }

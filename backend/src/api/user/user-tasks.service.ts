@@ -14,9 +14,4 @@ export class UserTasksService {
   async unverifiedUserCleanup() {
     await this.userService.unverifiedUserCleanup();
   }
-
-  @Cron(CronExpression.EVERY_HOUR)
-  async clearOrphanedChats() {
-    await this.chatService.removeOrphanedChats();
-  }
 }
