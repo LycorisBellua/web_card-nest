@@ -16,8 +16,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './auth/jwt/auth.jwt-secret';
 import { GdprController } from './gdpr/gdpr.controller';
 import { GdprService } from './gdpr/gdpr.service';
-import { PasswordResetController } from './auth/password-reset.controller';
-import { PasswordResetService } from './auth/password-reset.service';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
 
@@ -36,7 +34,6 @@ import { AdminService } from './admin/admin.service';
     RelController,
     AuthController,
     GdprController,
-    PasswordResetController,
     AdminController,
   ],
   providers: [
@@ -48,7 +45,6 @@ import { AdminService } from './admin/admin.service';
     RelService,
     AuthService,
     GdprService,
-    PasswordResetService,
     AdminService,
   ],
 })

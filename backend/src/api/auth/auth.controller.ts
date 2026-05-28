@@ -33,18 +33,14 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
-    const result = await this.authService.login(
-      loginDto.email,
-      loginDto.password,
-    );
+    const result = await this.authService.login(loginDto.email, loginDto.password);
     res.cookie('refresh_token', result.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
       maxAge: result.timeout.getTime() - Date.now(),
     });
-    const accessToken = result.accessToken;
-    return { accessToken };
+    return { accessToken: result.accessToken };
   }
 
   @UseGuards(AuthGuard)
@@ -99,4 +95,20 @@ export class AuthController {
     const user = req['user'] as JwtPayload;
     return this.authService.resendVerificationEmail(user.id);
   }
+
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() body: { email: string },
+  ): Promise<{ success: boolean; message: string }> {
+    return this.authService.executeForgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body() body: { token: string; newPassword: string },
+  ): Promise<{ success: boolean; message: string }> {
+    return this.authService.resetPassword(body.token, body.newPassword);
+  }
+
+  
 }

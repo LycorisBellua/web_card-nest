@@ -573,7 +573,7 @@ private async deleteUser(userId: string) {
     return found;
   }
 
-  async userExistsByEmail(toFind: string) {
+async userExistsByEmail(toFind: string) {
     return await this.prisma.user.findFirst({
       where: {
         OR: [{ email: toFind }, { email_unverified: toFind }],
@@ -589,6 +589,8 @@ private async deleteUser(userId: string) {
         verifyTimeout: true,
         refreshToken: true,
         refreshTimeout: true,
+        loginAttempts: true,
+        loginLockedUntil: true,
       },
     });
   }
@@ -638,5 +640,39 @@ private async deleteUser(userId: string) {
     return await this.prisma.user.findMany({
       where: { verifyTimeout: { lt: time }, email: { not: null } },
     });
+  }
+
+  async findUserByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } })
+  }
+
+  async saveResetToken(email: string, token: string, expiry: Date) {
+      await this.prisma.user.update({
+          where: { email },
+          data: { verifyToken: token, verifyTimeout: expiry }
+      })
+  }
+
+  async findUsersWithValidToken() {
+      return this.prisma.user.findMany({
+          where: {
+              verifyTimeout: { gt: new Date() },
+              verifyToken: { not: null }
+          }
+      })
+  }
+
+  async updatePasswordAndClearToken(userId: string, hashedPassword: string) {
+      await this.prisma.user.update({
+          where: { id: userId },
+          data: { password: hashedPassword, verifyToken: null, verifyTimeout: null }
+      })
+  }
+
+  async updateLoginAttempts(userId: string, attempts: number, lockedUntil: Date | null) {
+      await this.prisma.user.update({
+          where: { id: userId },
+          data: { loginAttempts: attempts, loginLockedUntil: lockedUntil }
+      })
   }
 }

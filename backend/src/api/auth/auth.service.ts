@@ -2,14 +2,17 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { compareHash, getCurrentTime } from '../user/utils/user.utils';
+import { createHash, compareHash, getCurrentTime } from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
+import { SendMailService } from '../sendMail/sendMail.service';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly mailer: SendMailService,
   ) {}
 
   async signup(createUserDto: CreateUserDto) {
@@ -21,13 +24,30 @@ export class AuthService {
     password: string,
   ): Promise<{ refreshToken: string; timeout: Date; accessToken: string }> {
     const found = await this.userService.userExistsByEmail(email);
+
+    if (found?.loginLockedUntil && found.loginLockedUntil > new Date()) {
+      const remaining = Math.ceil((found.loginLockedUntil.getTime() - Date.now()) / 60000)
+      throw new UnauthorizedException(`Too many attempts. Try again in ${remaining} minutes.`)
+    }
+
     if (
       !found ||
       (found.email && found.email !== email) ||
       !(await compareHash(password, found.password))
     ) {
-      throw new UnauthorizedException('Email address or password incorrect.');
+      if (found) {
+        const attempts = found.loginAttempts + 1
+        await this.userService.updateLoginAttempts(
+          found.id,
+          attempts,
+          attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null
+        )
+      }
+      throw new UnauthorizedException('Email address or password incorrect.')
     }
+
+    await this.userService.updateLoginAttempts(found.id, 0, null)
+
     const refresh = await this.userService.generateRefreshToken(found.id);
     const access = await this.generateJwtToken(found.id);
     return {
@@ -74,13 +94,57 @@ export class AuthService {
     return await this.userService.resendVerificationEmail(userId);
   }
 
-  // Generate JWT
+  async executeForgotPassword(email: string) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return { success: false, message: "Email invalide" }
+    }
+
+    const user = await this.userService.findUserByEmail(email)
+
+    if (!user) {
+      return { success: true, message: "Si cet email existe, un lien a été envoyé." }
+    }
+
+    const token = randomBytes(32).toString('hex')
+    const expiry = new Date(Date.now() + 30 * 60 * 1000)
+    await this.userService.saveResetToken(email, await createHash(token), expiry)
+
+    const link = `${process.env.HOME_URL}/reset-password?token=${token}`
+    await this.mailer.sendMail(
+      email,
+      "Réinitialisation de votre mot de passe",
+      `Cliquez sur ce lien pour réinitialiser votre mot de passe : ${link}\n\nCe lien expire dans 30 minutes.`
+    )
+
+    return { success: true, message: "Si cet email existe, un lien a été envoyé." }
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const users = await this.userService.findUsersWithValidToken()
+
+    const user = await Promise.all(
+      users.map(async (u) => ({
+        user: u,
+        match: await compareHash(token, u.verifyToken!)
+      }))
+    ).then(results => results.find(r => r.match)?.user)
+
+    if (!user) {
+      return { success: false, message: "Lien invalide ou expiré." }
+    }
+
+    const hashed = await createHash(newPassword)
+    await this.userService.updatePasswordAndClearToken(user.id, hashed)
+
+    return { success: true, message: "Mot de passe mis à jour." }
+  }
+
   async generateJwtToken(userId: string) {
     const user = await this.userService.userExistsOrThrow(userId);
-    const payload = {
-      id: userId,
-      rank: user.rank,
-    };
+    const payload = { id: userId, rank: user.rank };
     return await this.jwtService.signAsync(payload);
   }
+
+  
 }
