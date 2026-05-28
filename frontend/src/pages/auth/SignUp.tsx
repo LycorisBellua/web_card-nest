@@ -14,6 +14,12 @@ import {
 } from 'functions/UserValidation';
 import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
+import styled from 'styled-components';
+
+const Helper = styled.p`
+  font-size: 0.68rem;
+  color: #7a5c42;
+`;
 
 function SignUp() {
   const {
@@ -125,11 +131,12 @@ function SignUp() {
           label="Password"
           value={upassword}
           onChange={(e) => setUPassword(e.target.value)}
-          helpers={[
-            'The password needs between 8 and 64 characters, including one uppercase, one lowercase, one digit and one special character.',
-          ]}
           isError={!!errors.length}
         />
+        <Helper>
+          The password needs between 8 and 64 characters, including one
+          uppercase, one lowercase, one digit and one special character.
+        </Helper>
         <InputField
           id="u-pwd-cfm"
           type="password"
