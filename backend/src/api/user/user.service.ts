@@ -300,6 +300,21 @@ export class UserService {
     return result;
   }
 
+  async sendResetPasswordUnverifiedEmail(userId: string) {
+      const found = await this.userExistsOrThrow(userId);
+      if (!found.email_unverified) return;
+      const token = getToken();
+      const data: Record<string, unknown> = {};
+      data.verifyToken = await createHash(token);
+      data.verifyTimeout = getVerificationTimeout();
+      await this.modifyVerificationData(userId, data);
+      await this.userEmailsService.sendPasswordResetUnverifiedEmail(
+          userId,
+          found.email_unverified,
+          token,
+      );
+  }
+
   async generateRefreshToken(
     userId: string,
   ): Promise<{ token: string; timeout: Date }> {
@@ -646,9 +661,9 @@ async userExistsByEmail(toFind: string) {
     return this.prisma.user.findUnique({ where: { email } })
   }
 
-  async saveResetToken(email: string, token: string, expiry: Date) {
+  async saveResetToken(userId: string, token: string, expiry: Date) {
       await this.prisma.user.update({
-          where: { email },
+          where: { id: userId },
           data: { verifyToken: token, verifyTimeout: expiry }
       })
   }

@@ -94,26 +94,31 @@ export class AuthService {
     return await this.userService.resendVerificationEmail(userId);
   }
 
-  async executeForgotPassword(email: string) {
-      const user = await this.userService.findUserByEmail(email)
+ async executeForgotPassword(email: string) {
+    const user = await this.userService.userExistsByEmail(email)
 
-      if (!user) {
-          return { success: true, message: "If this email exists, a link has been sent." }
-      }
+    if (!user) {
+        return { success: true, message: "If this email exists, a link has been sent." }
+    }
 
-      const token = randomBytes(32).toString('hex')
-      const expiry = new Date(Date.now() + 30 * 60 * 1000)
-      await this.userService.saveResetToken(email, await createHash(token), expiry)
-
-      const link = `${process.env.HOME_URL}/reset-password?token=${token}`
-      await this.mailer.sendMail(
-          email,
-          "Password reset",
-          `Click on this link to reset your password: ${link}\n\nThis link expires in 30 minutes.`
-      )
-
+    if (!user.email) {
+      await this.userService.sendResetPasswordUnverifiedEmail(user.id)
       return { success: true, message: "If this email exists, a link has been sent." }
-  }
+    }
+
+    const token = randomBytes(32).toString('hex')
+    const expiry = new Date(Date.now() + 30 * 60 * 1000)
+    await this.userService.saveResetToken(user.id, await createHash(token), expiry)
+
+    const link = `${process.env.HOME_URL}/reset-password?token=${token}`
+    await this.mailer.sendMail(
+        email,
+        "Password reset",
+        `Click on this link to reset your password: ${link}\n\nThis link expires in 30 minutes.`
+    )
+
+    return { success: true, message: "If this email exists, a link has been sent." }
+}
 
   async resetPassword(token: string, newPassword: string) {
       const users = await this.userService.findUsersWithValidToken()

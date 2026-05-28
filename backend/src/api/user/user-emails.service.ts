@@ -23,6 +23,22 @@ export class UserEmailsService {
     );
   }
 
+  async sendPasswordResetUnverifiedEmail(userId: string, address: string, token: string) {
+    const url = process.env.HOME_URL;
+    if (url === undefined) {
+        throw new InternalServerErrorException('Unable to verify Card Nest URL');
+    }
+    const verify_url = url + '/api/auth/' + userId + '/' + token + '/verify';
+    const cancel_url = verify_url + '/cancel';
+    await this.sendMailService.sendMail(
+        address,
+        EmailContents.PWD_RESET_UNVERIFIED_OBJ,
+        EmailContents.PWD_RESET_UNVERIFIED_MSG
+            .replace('VERIFY_URL', verify_url)
+            .replace('CANCEL_URL', cancel_url),
+    );
+  }
+
   async sendVerificationSuccess(address: string) {
     const url = process.env.HOME_URL;
     if (url === undefined) {

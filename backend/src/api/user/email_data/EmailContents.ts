@@ -9,4 +9,6 @@ export enum EmailContents {
   EXP_DEL_MSG = 'The account linked to this email address has been deleted as it was not verified within the time limit.',
   EXP_MOD_OBJ = 'Email Address Change Request Cancelled',
   EXP_MOD_MSG = 'You recently requested to change your email address to EMAIL. This request has been cancelled as it was not verified with the time limit.',
+  PWD_RESET_UNVERIFIED_OBJ = 'Password Reset Request',
+  PWD_RESET_UNVERIFIED_MSG = `<p>You requested a password reset, but your email address has not been verified yet.</p><p>Please verify your email first by clicking the link below:</p><p><a title="Verify Email" href="VERIFY_URL">Click here to verify your email</a></p><p>If you did not create this request please click the link below:</p><p><a title="Cancel Request" href="CANCEL_URL">Click here to cancel</a></p>`,
 }
