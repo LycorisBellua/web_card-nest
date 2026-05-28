@@ -26,9 +26,9 @@ model User {
   receivedRequests Friend[]       @relation("addressee")
   blocked          Block[]        @relation("blocker")
   blockedBy        Block[]        @relation("blocked")
-  chatUserA        Chat[]         @relation("userA")
-  chatUserB        Chat[]         @relation("userB")
-  messageSender    Message[]      @relation("sender")
+  dmChatUserA      DMChat[]         @relation("userA")
+  dmChatUserB      DMChat[]         @relation("userB")
+  dMSender         DMMessage[]      @relation("sender")
   lobbyMessages    LobbyMessage[] @relation("sender")
   lobbyBan         LobbyBan[]     @relation("user")
 }
@@ -68,21 +68,21 @@ model Block {
   @@index([blockedId])
 }
 
-model Chat {
-  userA    User      @relation("userA", fields: [userAId], references: [id], onDelete: Cascade)
+model DMChat {
+  userA    User         @relation("userA", fields: [userAId], references: [id], onDelete: Cascade)
   userAId  String
-  userB    User      @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
+  userB    User         @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
   userBId  String
-  messages Message[] @relation("chat")
-  id       String    @id @default(uuid(7))
+  messages DMMessage[]  @relation("chat")
+  id       String       @id @default(uuid(7))
 
   @@unique([userAId, userBId])
   @@index([userBId])
 }
 
-model Message {
+model DMMessage {
   id       String @id @default(uuid(7))
-  chat     Chat   @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
+  chat     DMChat @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
   chatId   String
   message  String @db.VarChar(500)
   sender   User   @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
@@ -92,10 +92,11 @@ model Message {
 }
 
 model LobbyMessage {
-  id       String  @id @default(uuid(7))
-  sender   User?   @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
-  senderId String?
-  message  String  @db.VarChar(500)
+  id        String    @id @default(uuid(7))
+  sender    User?     @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
+  senderId  String?
+  message   String    @db.VarChar(500)
+  moderated Boolean   @default(false)
 }
 
 model LobbyBan {

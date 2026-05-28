@@ -23,16 +23,21 @@ import {
   NewDMMessage,
   NewLobbyMessage,
 } from './types/chat.types';
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma, Ranks } from 'src/generated/prisma/client';
 import { ChatError } from './errors/chat.errors';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
+  ) {}
 
   async getDMId(sender: string, receiver: string): Promise<DMChatId> {
     const sorted = this.sortUserIds(sender, receiver);
     try {
+      await this.rankChecks(sender, receiver);
       return await this.createDMChat(sorted);
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -104,6 +109,14 @@ export class ChatService {
     }
   }
 
+  private async rankChecks(userA: string, userB: string) {
+    const a = await this.userService.userExistsOrThrow(userA);
+    const b = await this.userService.userExistsOrThrow(userB);
+    if (a.rank === Ranks.PENDING || b.rank === Ranks.PENDING) {
+      throw new ForbiddenException(ChatError.WRONG_RANK);
+    }
+  }
+
   private async participantCheck(userId: string, chatId: string) {
     const chat = await this.participantLookup(userId, chatId);
     if (!chat) {
@@ -120,7 +133,7 @@ export class ChatService {
 
   // DB ACCESS
   private async createDMChat(users: DMParticipants): Promise<DMChatId> {
-    return await this.prisma.chat.upsert({
+    return await this.prisma.dMChat.upsert({
       where: { userAId_userBId: users },
       create: users,
       update: {},
@@ -129,14 +142,14 @@ export class ChatService {
   }
 
   private async createDMMessage(data: NewDMMessage): Promise<DMMessageId> {
-    return await this.prisma.message.create({
+    return await this.prisma.dMMessage.create({
       data: data,
       select: dmMessageIdSelect,
     });
   }
 
   private async findDMMessages(chatId: string): Promise<DMHistory> {
-    return await this.prisma.message.findMany({
+    return await this.prisma.dMMessage.findMany({
       where: { chatId },
       select: dMMessageSelect,
       orderBy: dMMessageOrderBy,
@@ -166,7 +179,7 @@ export class ChatService {
   }
 
   private async participantLookup(userId: string, chatId: string) {
-    return await this.prisma.chat.findFirst({
+    return await this.prisma.dMChat.findFirst({
       where: { id: chatId, OR: [{ userAId: userId }, { userBId: userId }] },
     });
   }

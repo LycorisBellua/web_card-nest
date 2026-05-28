@@ -8,9 +8,9 @@ export type DMParticipants = {
 // GET/CREATE CHAT
 export const dMChatIdSelect = {
   id: true,
-} satisfies Prisma.ChatSelect;
+} satisfies Prisma.DMChatSelect;
 
-export type DMChatId = Prisma.ChatGetPayload<{
+export type DMChatId = Prisma.DMChatGetPayload<{
   select: typeof dMChatIdSelect;
 }>;
 
@@ -23,9 +23,9 @@ export type NewDMMessage = {
 
 export const dmMessageIdSelect = {
   id: true,
-} satisfies Prisma.MessageSelect;
+} satisfies Prisma.DMMessageSelect;
 
-export type DMMessageId = Prisma.MessageGetPayload<{
+export type DMMessageId = Prisma.DMMessageGetPayload<{
   select: typeof dmMessageIdSelect;
 }>;
 
@@ -33,13 +33,14 @@ export type DMMessageId = Prisma.MessageGetPayload<{
 export const dMMessageSelect = {
   senderId: true,
   message: true,
-} satisfies Prisma.MessageSelect;
+  sender: { select: { username: true, avatar: true, rank: true } },
+} satisfies Prisma.DMMessageSelect;
 
 export const dMMessageOrderBy = {
   id: 'asc',
-} satisfies Prisma.MessageOrderByWithRelationInput;
+} satisfies Prisma.DMMessageOrderByWithRelationInput;
 
-export type DMHistory = Prisma.MessageGetPayload<{
+export type DMHistory = Prisma.DMMessageGetPayload<{
   select: typeof dMMessageSelect;
 }>[];
 
@@ -59,13 +60,20 @@ export type LobbyMessageId = Prisma.LobbyMessageGetPayload<{
 
 // GET LOBBY HISTORY
 export const lobbyMessageSelect = {
+  id: true,
   senderId: true,
   message: true,
+  moderated: true,
+  sender: { select: { username: true, avatar: true, rank: true } },
 } satisfies Prisma.LobbyMessageSelect;
 
 export const lobbyMessageOrderBy = {
   id: 'asc',
 } satisfies Prisma.LobbyMessageOrderByWithRelationInput;
+
+export type LobbyMessageSingle = Prisma.LobbyMessageGetPayload<{
+  select: typeof lobbyMessageSelect;
+}>;
 
 export type LobbyHistory = Prisma.LobbyMessageGetPayload<{
   select: typeof lobbyMessageSelect;

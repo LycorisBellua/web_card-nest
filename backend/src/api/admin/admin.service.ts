@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
@@ -9,14 +10,23 @@ import { Ranks } from 'src/generated/prisma/enums';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { AdmErrMsg } from './errors/admin-error-messages';
 import { UpdateRankDto } from './dto/update-rank.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
 import {
+  banCreateSelect,
+  banDeleteSelect,
   BanList,
+  banListInclude,
+  banListOrder,
   BanListRaw,
-  lobbyBanInclude,
-  lobbyBanOrder,
+  DeletedBan,
+  LobbyMessageModerated,
+  LobbyMessageSender,
+  lobbyModeratedData,
+  lobbyModeratedSelect,
+  NewBan,
 } from './types/admin.types';
+import { lobbyMessageSelect } from '../chat/types/chat.types';
 
 @Injectable()
 export class AdminService {
@@ -64,9 +74,13 @@ export class AdminService {
     return await this.userService.removeUser(targetId);
   }
 
-  async lobbyChatBan(userId: string, rank: Ranks, targetId: string) {
+  async lobbyChatBan(
+    userId: string,
+    rank: Ranks,
+    targetId: string,
+  ): Promise<NewBan> {
     await this.jwtRankIsValid(userId, rank);
-    this.selfCheck(userId, targetId, AdmErrMsg.SELF_BAN);
+    this.selfCheck(userId, targetId, AdmErrMsg.LOBBY_SELF);
     const target = await this.userService.userExistsOrThrow(targetId);
     this.modPermissionCheck(rank, target.rank);
     try {
@@ -82,9 +96,13 @@ export class AdminService {
     }
   }
 
-  async lobbyChatUnban(userId: string, rank: Ranks, targetId: string) {
+  async lobbyChatUnban(
+    userId: string,
+    rank: Ranks,
+    targetId: string,
+  ): Promise<DeletedBan> {
     await this.jwtRankIsValid(userId, rank);
-    this.selfCheck(userId, targetId, AdmErrMsg.SELF_BAN);
+    this.selfCheck(userId, targetId, AdmErrMsg.LOBBY_SELF);
     const target = await this.userService.userExistsOrThrow(targetId);
     this.modPermissionCheck(rank, target.rank);
     try {
@@ -98,6 +116,24 @@ export class AdminService {
       }
       throw err;
     }
+  }
+
+  async moderateLobbyMessage(
+    userId: string,
+    rank: Ranks,
+    messageId: string,
+  ): Promise<LobbyMessageModerated> {
+    await this.jwtRankIsValid(userId, rank);
+    const message = await this.findLobbyMessage(messageId);
+    if (!message) {
+      throw new NotFoundException(AdmErrMsg.MSG_NOT_FOUND);
+    }
+    if (message.senderId) {
+      this.selfCheck(userId, message.senderId, AdmErrMsg.LOBBY_SELF);
+      const target = await this.userService.userExistsOrThrow(message.senderId);
+      this.modPermissionCheck(rank, target.rank);
+    }
+    return this.updateLobbyMessageModerated(messageId);
   }
 
   async fetchBanList(userId: string, rank: Ranks): Promise<BanList> {
@@ -141,23 +177,45 @@ export class AdminService {
   }
 
   // LOBBY BAN DB ACCESS
-  private async createLobbyBan(userId: string) {
+  private async createLobbyBan(userId: string): Promise<NewBan> {
     return await this.prisma.lobbyBan.create({
       data: { userId },
+      select: banCreateSelect,
     });
   }
 
-  private async deleteLobbyBan(userId: string) {
+  private async deleteLobbyBan(userId: string): Promise<DeletedBan> {
     return await this.prisma.lobbyBan.delete({
       where: { userId },
+      select: banDeleteSelect,
     });
   }
 
   private async findAllLobbyBans(): Promise<BanListRaw> {
     return await this.prisma.lobbyBan.findMany({
       where: {},
-      include: lobbyBanInclude,
-      orderBy: lobbyBanOrder,
+      include: banListInclude,
+      orderBy: banListOrder,
+    });
+  }
+
+  // LOBBY MESSAGE DB ACCESS
+  private async findLobbyMessage(
+    id: string,
+  ): Promise<LobbyMessageSender | null> {
+    return await this.prisma.lobbyMessage.findUnique({
+      where: { id },
+      select: lobbyMessageSelect,
+    });
+  }
+
+  private async updateLobbyMessageModerated(
+    id: string,
+  ): Promise<LobbyMessageModerated> {
+    return await this.prisma.lobbyMessage.update({
+      where: { id },
+      data: lobbyModeratedData,
+      select: lobbyModeratedSelect,
     });
   }
 }

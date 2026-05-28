@@ -4,8 +4,9 @@ export enum AdmErrMsg {
   ADMIN_OTHER = 'Only the Admin account may change the rank of another user.',
   ADMIN_PROMOTE = 'Moderators may only change their own rank to USER',
   NO_PENDING = 'The rank may not be set to PENDING',
-  SELF_BAN = 'You may not ban/unban yourself from the lobby chat.',
+  LOBBY_SELF = 'You may not ban/unban yourself from the lobby chat, or moderate your own messages.',
   ALREADY_BAN = 'This user is already banned.',
   NOT_BAN = 'The user is not banned.',
   JWT_RANK_INVALID = 'The rank provided by the JWT no longer matches the user.',
+  MSG_NOT_FOUND = 'The requested lobby message can not be found.',
 }

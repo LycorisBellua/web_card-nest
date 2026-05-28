@@ -19,7 +19,8 @@ import { AdminService } from './admin.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RankGuard } from '../auth/guards/auth.rankguard';
 import { UpdateRankDto } from './dto/update-rank.dto';
-import { RelUuidDto } from '../relationships/dto/rel-uuid.dto';
+import { AdmUuidDto } from './dto/adm-uuid.dto';
+import { MessageUuidDto } from './dto/message.dto';
 
 @UseGuards(AuthGuard, RankGuard)
 @RequiredRank(Ranks.MODERATOR)
@@ -68,7 +69,7 @@ export class AdminController {
   }
 
   @Post('ban')
-  async lobbyChatBan(@Req() req: ExpressRequest, @Body() dto: RelUuidDto) {
+  async lobbyChatBan(@Req() req: ExpressRequest, @Body() dto: AdmUuidDto) {
     const user = req['user'] as JwtPayload;
     return await this.adminService.lobbyChatBan(
       user.id,
@@ -94,5 +95,18 @@ export class AdminController {
   async fetchBanList(@Req() req: ExpressRequest) {
     const user = req['user'] as JwtPayload;
     return await this.adminService.fetchBanList(user.id, user.rank as Ranks);
+  }
+
+  @Patch('moderate')
+  async moderateLobbyMessage(
+    @Req() req: ExpressRequest,
+    @Body() dto: MessageUuidDto,
+  ) {
+    const user = req['user'] as JwtPayload;
+    return this.adminService.moderateLobbyMessage(
+      user.id,
+      user.rank as Ranks,
+      dto.messageId,
+    );
   }
 }
