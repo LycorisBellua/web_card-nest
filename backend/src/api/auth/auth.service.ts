@@ -121,7 +121,7 @@ export class AuthService {
       return { success: true, message: "If this email exists, a link has been sent." }
     }
 
-    const token = randomBytes(32).toString('hex')
+    const token = getToken();
     const expiry = new Date(Date.now() + 30 * 60 * 1000)
     await this.userService.saveResetToken(user.id, await createHash(token), expiry)
 
@@ -141,7 +141,7 @@ export class AuthService {
       const user = await Promise.all(
           users.map(async (u) => ({
               user: u,
-              match: await compareHash(token, u.verifyToken!)
+              match: await compareHash(token, u.resetToken!)
           }))
       ).then(results => results.find(r => r.match)?.user)
 
