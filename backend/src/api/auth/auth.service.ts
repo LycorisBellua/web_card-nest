@@ -125,7 +125,8 @@ export class AuthService {
     const expiry = new Date(Date.now() + 30 * 60 * 1000)
     await this.userService.saveResetToken(user.id, await createHash(token), expiry)
 
-    const link = `${process.env.HOME_URL}/reset-password?token=${token}`
+    const emailInLink = user.email ?? user.email_unverified
+    const link = `${process.env.HOME_URL}/reset-pwd?email=${emailInLink}&token=${token}`
     await this.mailer.sendMail(
         email,
         "Password reset",
@@ -135,17 +136,26 @@ export class AuthService {
     return { success: true, message: "If this email exists, a link has been sent." }
 }
 
-  async resetPassword(token: string, newPassword: string) {
-      const users = await this.userService.findUsersWithValidToken()
+  async resetPassword(email: string, token: string, newPassword: string) {
+      const user = await this.userService.userExistsByEmail(email)
+    
+    console.log('user found:', !!user)
+    console.log('resetToken:', user?.resetToken)
+    console.log('resetTimeout:', user?.resetTimeout)
+    console.log('now:', new Date())
+    console.log('expired:', user?.resetTimeout ? user.resetTimeout < new Date() : 'null')
+    console.log('token received:', token)
+    const hashMatch = user?.resetToken ? await compareHash(token, user.resetToken) : false
+    console.log('hash match:', hashMatch)
 
-      const user = await Promise.all(
-          users.map(async (u) => ({
-              user: u,
-              match: await compareHash(token, u.resetToken!)
-          }))
-      ).then(results => results.find(r => r.match)?.user)
 
-      if (!user) {
+      if (
+          !user ||
+          !user.resetToken ||
+          !user.resetTimeout ||
+          user.resetTimeout < new Date() ||
+          !(await compareHash(token, user.resetToken))
+      ) {
           return { success: false, message: "Invalid or expired link." }
       }
 
@@ -153,5 +163,11 @@ export class AuthService {
       await this.userService.updatePasswordAndClearToken(user.id, hashed)
 
       return { success: true, message: "Password updated successfully." }
+  }
+
+  async generateJwtToken(userId: string) {
+    const user = await this.userService.userExistsOrThrow(userId);
+    const payload = { id: userId, rank: user.rank };
+    return await this.jwtService.signAsync(payload);
   }
 }
