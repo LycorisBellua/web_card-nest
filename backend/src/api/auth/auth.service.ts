@@ -10,6 +10,8 @@ import { compareHash, getCurrentTime } from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { ErrorMessages } from '../user/error_messages/ErrorMessages';
+import { JWT, RedirectURL, TokenSet } from './types/auth.types';
+import { OwnProfile, RefreshData, UserProfile } from '../user/types/user.types';
 
 @Injectable()
 export class AuthService {
@@ -18,14 +20,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async signup(createUserDto: CreateUserDto) {
+  async signup(createUserDto: CreateUserDto): Promise<OwnProfile> {
     return await this.userService.addUser(createUserDto);
   }
 
-  async login(
-    email: string,
-    password: string,
-  ): Promise<{ refreshToken: string; timeout: Date; accessToken: string }> {
+  async login(email: string, password: string): Promise<TokenSet> {
     const found = await this.userService.userExistsByEmail(email);
     if (
       !found ||
@@ -41,16 +40,16 @@ export class AuthService {
     const access = await this.generateJwtToken(found.id);
     return {
       refreshToken: refresh.refreshToken,
-      timeout: refresh.refreshTimeout,
-      accessToken: access,
+      refreshTimeout: refresh.refreshTimeout,
+      accessToken: access.accessToken,
     };
   }
 
-  async logout(userId: string) {
+  async logout(userId: string): Promise<RefreshData> {
     return await this.userService.removeRefreshToken(userId);
   }
 
-  async refresh(jwtToken: string, refreshToken: string) {
+  async refresh(jwtToken: string, refreshToken: string): Promise<JWT> {
     const payload: JwtPayload = this.jwtService.decode(jwtToken);
     if (!payload) {
       throw new UnauthorizedException();
@@ -71,7 +70,7 @@ export class AuthService {
     return await this.userService.updatePassword(userId, dto);
   }
 
-  async verifyEmail(userId: string, token: string) {
+  async verifyEmail(userId: string, token: string): Promise<RedirectURL> {
     const verified = await this.userService.verifyEmail(userId, token);
     if (!verified) {
       return { url: `${process.env.HOME_URL}/verify-error` };
@@ -79,21 +78,24 @@ export class AuthService {
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
-  async cancelVerification(userId: string, token: string) {
+  async cancelVerification(
+    userId: string,
+    token: string,
+  ): Promise<UserProfile> {
     return await this.userService.cancelVerification(userId, token);
   }
 
-  async resendVerificationEmail(userId: string) {
+  async resendVerificationEmail(userId: string): Promise<UserProfile> {
     return await this.userService.resendVerificationEmail(userId);
   }
 
   // Generate JWT
-  async generateJwtToken(userId: string) {
+  async generateJwtToken(userId: string): Promise<JWT> {
     const user = await this.userService.userExistsOrThrow(userId);
     const payload = {
       id: userId,
       rank: user.rank,
     };
-    return await this.jwtService.signAsync(payload);
+    return { accessToken: await this.jwtService.signAsync(payload) };
   }
 }

@@ -1,15 +1,5 @@
 import { Prisma, Ranks } from 'src/generated/prisma/client';
 
-// USERID
-export type UserId = Prisma.UserGetPayload<{
-  select: { id: true };
-}>;
-
-// USER EMAIL
-export type UserEmail = Prisma.UserGetPayload<{
-  select: { email: true };
-}>;
-
 // GET PROFILE
 export const userProfileSelect = {
   id: true,
@@ -45,16 +35,6 @@ export type OwnProfile = ConvertedAvatar<OwnProfileRaw>;
 export const noPendingUsers = {
   rank: { not: Ranks.PENDING },
 } satisfies Prisma.UserWhereInput;
-
-// RANK UPDATE
-export const rankUpdateSelect = {
-  id: true,
-  rank: true,
-} satisfies Prisma.UserSelect;
-
-export type RankUpdate = Prisma.UserGetPayload<{
-  select: typeof rankUpdateSelect;
-}>;
 
 // REFRESH TOKENS
 export const refreshDataSelect = {

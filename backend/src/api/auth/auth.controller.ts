@@ -20,6 +20,8 @@ import type { Request as ExpressRequest } from 'express';
 import type { Response as ExpressResponse } from 'express';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { LoginDto } from '../user/dto/login.dto';
+import { JWT, RedirectURL, ReturnMessage } from './types/auth.types';
+import { UserProfile } from '../user/types/user.types';
 
 @Controller('/api/auth')
 export class AuthController {
@@ -29,7 +31,7 @@ export class AuthController {
   async addUser(
     @Body() dto: CreateUserDto,
     @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
+  ): Promise<JWT> {
     await this.authService.signup(dto);
     const login = await this.authService.login(
       dto.email_unverified,
@@ -39,7 +41,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: login.timeout.getTime() - Date.now(),
+      maxAge: login.refreshTimeout.getTime() - Date.now(),
     });
     const accessToken = login.accessToken;
     return { accessToken };
@@ -49,7 +51,7 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
+  ): Promise<JWT> {
     const result = await this.authService.login(
       loginDto.email,
       loginDto.password,
@@ -58,7 +60,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: result.timeout.getTime() - Date.now(),
+      maxAge: result.refreshTimeout.getTime() - Date.now(),
     });
     const accessToken = result.accessToken;
     return { accessToken };
@@ -69,7 +71,7 @@ export class AuthController {
   async logout(
     @Req() req: ExpressRequest,
     @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
+  ): Promise<ReturnMessage> {
     const user = req['user'] as JwtPayload;
     await this.authService.logout(user.id);
     res.cookie('refresh_token', '', {
@@ -82,14 +84,13 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(@Req() req: ExpressRequest) {
+  async refresh(@Req() req: ExpressRequest): Promise<JWT> {
     const [type, jwtToken] = req.headers.authorization?.split(' ') ?? [];
     const refreshToken = req.cookies['refresh_token'] as string | undefined;
     if (type !== 'Bearer' || !refreshToken) {
       throw new UnauthorizedException();
     }
-    const accessToken = await this.authService.refresh(jwtToken, refreshToken);
-    return { accessToken };
+    return await this.authService.refresh(jwtToken, refreshToken);
   }
 
   @UseGuards(AuthGuard)
@@ -97,7 +98,7 @@ export class AuthController {
   async updatePassword(
     @Req() req: ExpressRequest,
     @Body() updatePasswordDto: UpdatePasswordDto,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.authService.updatePassword(user.id, updatePasswordDto);
   }
@@ -107,7 +108,7 @@ export class AuthController {
   async verifyEmail(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('token') token: string,
-  ) {
+  ): Promise<RedirectURL> {
     return await this.authService.verifyEmail(userId, token);
   }
 
@@ -116,13 +117,15 @@ export class AuthController {
   async cancelVerificationRequest(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('token') token: string,
-  ) {
+  ): Promise<UserProfile> {
     return await this.authService.cancelVerification(userId, token);
   }
 
   @UseGuards(AuthGuard)
   @Get('resend')
-  async resendVerificationEmail(@Req() req: ExpressRequest) {
+  async resendVerificationEmail(
+    @Req() req: ExpressRequest,
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return this.authService.resendVerificationEmail(user.id);
   }

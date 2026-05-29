@@ -18,6 +18,8 @@ import { RequiredRank } from '../auth/guards/auth.rank-decorator';
 import { Ranks } from 'src/generated/prisma/enums';
 import type { Request as ExpressRequest } from 'express';
 import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
+import { BlockRow, FriendRow } from './types/rel.types';
+import { UserProfile } from '../user/types/user.types';
 
 @UseGuards(AuthGuard, RankGuard)
 @RequiredRank(Ranks.USER)
@@ -27,7 +29,10 @@ export class RelController {
 
   // FRIEND MANAGEMENT
   @Post('/friend/')
-  async addFriend(@Req() req: ExpressRequest, @Body() relUuidDto: RelUuidDto) {
+  async addFriend(
+    @Req() req: ExpressRequest,
+    @Body() relUuidDto: RelUuidDto,
+  ): Promise<FriendRow> {
     const user = req['user'] as JwtPayload;
     return await this.relService.addFriend(user.id, relUuidDto.targetId);
   }
@@ -36,7 +41,7 @@ export class RelController {
   async removeFriend(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<FriendRow> {
     const user = req['user'] as JwtPayload;
     return await this.relService.removeFriend(user.id, targetId);
   }
@@ -45,7 +50,7 @@ export class RelController {
   async acceptRequest(
     @Req() req: ExpressRequest,
     @Body() relUuidDto: RelUuidDto,
-  ) {
+  ): Promise<FriendRow> {
     const user = req['user'] as JwtPayload;
     return await this.relService.acceptRequest(user.id, relUuidDto.targetId);
   }
@@ -54,7 +59,7 @@ export class RelController {
   async rejectRequest(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<FriendRow> {
     const user = req['user'] as JwtPayload;
     return await this.relService.rejectRequest(user.id, targetId);
   }
@@ -63,25 +68,27 @@ export class RelController {
   async cancelRequest(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<FriendRow> {
     const user = req['user'] as JwtPayload;
     return await this.relService.cancelRequest(user.id, targetId);
   }
 
   @Get('friend')
-  async fetchFriends(@Req() req: ExpressRequest) {
+  async fetchFriends(@Req() req: ExpressRequest): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
     return await this.relService.fetchFriends(user.id);
   }
 
   @Get('friend/sent')
-  async fetchSentRequests(@Req() req: ExpressRequest) {
+  async fetchSentRequests(@Req() req: ExpressRequest): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
     return await this.relService.fetchSentRequests(user.id);
   }
 
   @Get('friend/received')
-  async fetchReceivedRequests(@Req() req: ExpressRequest) {
+  async fetchReceivedRequests(
+    @Req() req: ExpressRequest,
+  ): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
     return await this.relService.fetchReceivedRequests(user.id);
   }
@@ -90,13 +97,16 @@ export class RelController {
   async fetchOtherUserFriends(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<UserProfile[]> {
     return await this.relService.fetchFriends(targetId);
   }
 
   // BLOCK MANAGEMENT
   @Post('block')
-  async blockUser(@Req() req: ExpressRequest, @Body() relUuidDto: RelUuidDto) {
+  async blockUser(
+    @Req() req: ExpressRequest,
+    @Body() relUuidDto: RelUuidDto,
+  ): Promise<BlockRow> {
     const user = req['user'] as JwtPayload;
     return await this.relService.blockUser(user.id, relUuidDto.targetId);
   }
@@ -105,13 +115,13 @@ export class RelController {
   async unblockUser(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<BlockRow> {
     const user = req['user'] as JwtPayload;
     return await this.relService.unblockUser(user.id, targetId);
   }
 
   @Get('block')
-  async fetchBlocked(@Req() req: ExpressRequest) {
+  async fetchBlocked(@Req() req: ExpressRequest): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
     return await this.relService.fetchBlocked(user.id);
   }

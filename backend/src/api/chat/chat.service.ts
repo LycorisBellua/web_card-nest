@@ -15,6 +15,8 @@ import {
   dMMessageOrderBy,
   dMMessageSelect,
   DMParticipants,
+  LobbyBan,
+  lobbyBanSelect,
   LobbyHistory,
   LobbyMessageId,
   lobbyMessageIdSelect,
@@ -72,7 +74,10 @@ export class ChatService {
     return await this.findDMMessages(chatId);
   }
 
-  async saveLobbyMessage(senderId: string, message: string) {
+  async saveLobbyMessage(
+    senderId: string,
+    message: string,
+  ): Promise<LobbyMessageId> {
     await this.banCheck(senderId);
     try {
       return this.createLobbyMessage({ senderId, message });
@@ -109,7 +114,7 @@ export class ChatService {
     }
   }
 
-  private async rankChecks(userA: string, userB: string) {
+  private async rankChecks(userA: string, userB: string): Promise<void> {
     const a = await this.userService.userExistsOrThrow(userA);
     const b = await this.userService.userExistsOrThrow(userB);
     if (a.rank === Ranks.PENDING || b.rank === Ranks.PENDING) {
@@ -117,14 +122,17 @@ export class ChatService {
     }
   }
 
-  private async participantCheck(userId: string, chatId: string) {
+  private async participantCheck(
+    userId: string,
+    chatId: string,
+  ): Promise<void> {
     const chat = await this.participantLookup(userId, chatId);
     if (!chat) {
       throw new ForbiddenException(ChatError.WRONG_CHAT);
     }
   }
 
-  private async banCheck(userId: string) {
+  private async banCheck(userId: string): Promise<void> {
     const ban = await this.findBan(userId);
     if (ban) {
       throw new ForbiddenException(ChatError.BANNED);
@@ -172,15 +180,20 @@ export class ChatService {
     });
   }
 
-  private async findBan(userId: string) {
+  private async findBan(userId: string): Promise<LobbyBan | null> {
     return await this.prisma.lobbyBan.findUnique({
       where: { userId },
+      select: lobbyBanSelect,
     });
   }
 
-  private async participantLookup(userId: string, chatId: string) {
+  private async participantLookup(
+    userId: string,
+    chatId: string,
+  ): Promise<DMChatId | null> {
     return await this.prisma.dMChat.findFirst({
       where: { id: chatId, OR: [{ userAId: userId }, { userBId: userId }] },
+      select: dMChatIdSelect,
     });
   }
 }

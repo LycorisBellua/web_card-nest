@@ -13,21 +13,20 @@ import { UpdateRankDto } from './dto/update-rank.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
-  banCreateSelect,
-  banDeleteSelect,
-  BanList,
-  banListInclude,
   banListOrder,
-  BanListRaw,
-  DeletedBan,
-  LobbyMessageModerated,
-  LobbyMessageSender,
+  BannedUser,
+  banSelect,
   lobbyModeratedData,
-  lobbyModeratedSelect,
-  NewBan,
 } from './types/admin.types';
-import { lobbyMessageSelect } from '../chat/types/chat.types';
-import { RankUpdate, UserId, UserProfile } from '../user/types/user.types';
+import {
+  lobbyMessageSelect,
+  LobbyMessageSingle,
+} from '../chat/types/chat.types';
+import { UserProfile } from '../user/types/user.types';
+import {
+  encodeMultipleAvatars,
+  encodeSingleAvatar,
+} from '../user/utils/user.utils';
 
 @Injectable()
 export class AdminService {
@@ -52,7 +51,7 @@ export class AdminService {
     userId: string,
     rank: Ranks,
     dto: UpdateRankDto,
-  ): Promise<RankUpdate> {
+  ): Promise<UserProfile> {
     await this.jwtRankIsValid(userId, rank);
     if (dto.rank === Ranks.PENDING) {
       throw new BadRequestException(AdmErrMsg.NO_PENDING);
@@ -81,7 +80,7 @@ export class AdminService {
     adminId: string,
     adminRank: Ranks,
     targetId: string,
-  ): Promise<UserId> {
+  ): Promise<UserProfile> {
     await this.jwtRankIsValid(adminId, adminRank);
     this.selfCheck(adminId, targetId, AdmErrMsg.OWN_PROFILE);
     return await this.userService.removeUser(targetId);
@@ -91,13 +90,14 @@ export class AdminService {
     userId: string,
     rank: Ranks,
     targetId: string,
-  ): Promise<NewBan> {
+  ): Promise<UserProfile> {
     await this.jwtRankIsValid(userId, rank);
     this.selfCheck(userId, targetId, AdmErrMsg.LOBBY_SELF);
     const target = await this.userService.userExistsOrThrow(targetId);
     this.modPermissionCheck(rank, target.rank);
     try {
-      return this.createLobbyBan(targetId);
+      const ban = await this.createLobbyBan(targetId);
+      return this.convertBan(ban);
     } catch (err) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&
@@ -113,13 +113,14 @@ export class AdminService {
     userId: string,
     rank: Ranks,
     targetId: string,
-  ): Promise<DeletedBan> {
+  ): Promise<UserProfile> {
     await this.jwtRankIsValid(userId, rank);
     this.selfCheck(userId, targetId, AdmErrMsg.LOBBY_SELF);
     const target = await this.userService.userExistsOrThrow(targetId);
     this.modPermissionCheck(rank, target.rank);
     try {
-      return this.deleteLobbyBan(targetId);
+      const deleted = await this.deleteLobbyBan(targetId);
+      return this.convertBan(deleted);
     } catch (err) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&
@@ -135,7 +136,7 @@ export class AdminService {
     userId: string,
     rank: Ranks,
     messageId: string,
-  ): Promise<LobbyMessageModerated> {
+  ): Promise<LobbyMessageSingle> {
     await this.jwtRankIsValid(userId, rank);
     const message = await this.findLobbyMessage(messageId);
     if (!message) {
@@ -149,10 +150,10 @@ export class AdminService {
     return this.updateLobbyMessageModerated(messageId);
   }
 
-  async fetchBanList(userId: string, rank: Ranks): Promise<BanList> {
+  async fetchBanList(userId: string, rank: Ranks): Promise<UserProfile[]> {
     await this.jwtRankIsValid(userId, rank);
     const users = await this.findAllLobbyBans();
-    return this.buildBanList(users);
+    return this.convertBanList(users);
   }
 
   // HELPER FUNCTIONS
@@ -179,35 +180,37 @@ export class AdminService {
     }
   }
 
-  private buildBanList(raw: BanListRaw): BanList {
-    return raw.map((ban) => {
-      return {
-        username: ban.user.username,
-        userId: ban.userId,
-        date: ban.date,
-      };
+  private convertBan(ban: BannedUser): UserProfile {
+    const raw = ban.user;
+    return encodeSingleAvatar(raw);
+  }
+
+  private convertBanList(bans: BannedUser[]): UserProfile[] {
+    const raw = bans.map((ban) => {
+      return ban.user;
     });
+    return encodeMultipleAvatars(raw);
   }
 
   // LOBBY BAN DB ACCESS
-  private async createLobbyBan(userId: string): Promise<NewBan> {
+  private async createLobbyBan(userId: string): Promise<BannedUser> {
     return await this.prisma.lobbyBan.create({
       data: { userId },
-      select: banCreateSelect,
+      select: banSelect,
     });
   }
 
-  private async deleteLobbyBan(userId: string): Promise<DeletedBan> {
+  private async deleteLobbyBan(userId: string): Promise<BannedUser> {
     return await this.prisma.lobbyBan.delete({
       where: { userId },
-      select: banDeleteSelect,
+      select: banSelect,
     });
   }
 
-  private async findAllLobbyBans(): Promise<BanListRaw> {
+  private async findAllLobbyBans(): Promise<BannedUser[]> {
     return await this.prisma.lobbyBan.findMany({
       where: {},
-      include: banListInclude,
+      select: banSelect,
       orderBy: banListOrder,
     });
   }
@@ -215,7 +218,7 @@ export class AdminService {
   // LOBBY MESSAGE DB ACCESS
   private async findLobbyMessage(
     id: string,
-  ): Promise<LobbyMessageSender | null> {
+  ): Promise<LobbyMessageSingle | null> {
     return await this.prisma.lobbyMessage.findUnique({
       where: { id },
       select: lobbyMessageSelect,
@@ -224,11 +227,11 @@ export class AdminService {
 
   private async updateLobbyMessageModerated(
     id: string,
-  ): Promise<LobbyMessageModerated> {
+  ): Promise<LobbyMessageSingle> {
     return await this.prisma.lobbyMessage.update({
       where: { id },
       data: lobbyModeratedData,
-      select: lobbyModeratedSelect,
+      select: lobbyMessageSelect,
     });
   }
 }

@@ -36,13 +36,9 @@ import {
   OwnProfile,
   OwnProfileRaw,
   ownProfileSelect,
-  RankUpdate,
-  rankUpdateSelect,
   RefreshData,
   refreshDataSelect,
   UpdateProfileData,
-  UserEmail,
-  UserId,
   UserProfile,
   UserProfileRaw,
   userProfileSelect,
@@ -58,14 +54,14 @@ export class UserService {
   ) {}
 
   // CALLED FROM USER CONTROLLER
-  async removeUser(userId: string): Promise<UserId> {
+  async removeUser(userId: string): Promise<UserProfile> {
     const found = await this.userExistsOrThrow(userId);
     const result = await this.deleteUser(userId);
     const address = found.email ? found.email : found.email_unverified;
     if (address) {
       await this.userEmailsService.sendDeletionEmail(address);
     }
-    return result;
+    return encodeSingleAvatar(result);
   }
 
   async updateUser(userId: string, dto: UpdateUserDto): Promise<OwnProfile> {
@@ -130,7 +126,7 @@ export class UserService {
   async updatePassword(
     userId: string,
     updatePasswordDto: UpdatePasswordDto,
-  ): Promise<UserId> {
+  ): Promise<UserProfile> {
     const user = await this.userExistsOrThrow(userId);
     const newPassword = updatePasswordDto.newPassword;
     const currentPassword = updatePasswordDto.oldPassword;
@@ -144,7 +140,11 @@ export class UserService {
     if (!(await compareHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
-    return await this.modifyPassword(userId, await createHash(newPassword));
+    const updated = await this.modifyPassword(
+      userId,
+      await createHash(newPassword),
+    );
+    return encodeSingleAvatar(updated);
   }
 
   async getOwnProfile(userId: string): Promise<OwnProfile> {
@@ -267,7 +267,10 @@ export class UserService {
     return verified;
   }
 
-  async cancelVerification(userId: string, token: string): Promise<UserId> {
+  async cancelVerification(
+    userId: string,
+    token: string,
+  ): Promise<UserProfile> {
     const found = await this.userExists(userId);
     if (
       !found ||
@@ -282,12 +285,14 @@ export class UserService {
       verifyTimeout: null,
     };
     if (found.email) {
-      return await this.modifyVerificationData(userId, data);
+      const modified = await this.modifyVerificationData(userId, data);
+      return encodeSingleAvatar(modified);
     }
-    return await this.deleteUser(userId);
+    const deleted = await this.deleteUser(userId);
+    return encodeSingleAvatar(deleted);
   }
 
-  async resendVerificationEmail(userId: string): Promise<UserId> {
+  async resendVerificationEmail(userId: string): Promise<UserProfile> {
     const found = await this.userExistsOrThrow(userId);
     if (!found.email_unverified) {
       throw new NotFoundException('User has no unverified email address.');
@@ -306,7 +311,7 @@ export class UserService {
         token,
       );
     }
-    return result;
+    return encodeSingleAvatar(result);
   }
 
   async generateRefreshToken(userId: string): Promise<RefreshData> {
@@ -360,24 +365,26 @@ export class UserService {
     return encodeSingleAvatar(updated);
   }
 
-  async updateRank(dto: UpdateRankDto): Promise<RankUpdate> {
+  async updateRank(dto: UpdateRankDto): Promise<UserProfile> {
     const found = await this.userExistsOrThrow(dto.targetId);
     if (found.rank === Ranks.PENDING) {
       throw new BadRequestException(ErrorMessages.PENDING_USER);
     }
-    return await this.modifyRank(dto);
+    const modified = await this.modifyRank(dto);
+    return encodeSingleAvatar(modified);
   }
 
   async updateSwapAdmins(
     currentAdmin: string,
     newAdmin: string,
-  ): Promise<RankUpdate> {
+  ): Promise<UserProfile> {
     await this.userExistsOrThrow(currentAdmin);
     const found = await this.userExistsOrThrow(newAdmin);
     if (found.rank === Ranks.PENDING) {
       throw new BadRequestException(ErrorMessages.PENDING_USER);
     }
-    return await this.modifyRankAdminSwap(currentAdmin, newAdmin);
+    const modified = await this.modifyRankAdminSwap(currentAdmin, newAdmin);
+    return encodeSingleAvatar(modified);
   }
 
   // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
@@ -400,10 +407,10 @@ export class UserService {
     });
   }
 
-  private async deleteUser(id: string): Promise<UserId> {
+  private async deleteUser(id: string): Promise<UserProfileRaw> {
     return await this.prisma.user.delete({
       where: { id },
-      select: { id: true },
+      select: userProfileSelect,
     });
   }
 
@@ -411,7 +418,7 @@ export class UserService {
     id: string,
     address: string,
     rank: Ranks,
-  ): Promise<UserEmail> {
+  ): Promise<OwnProfileRaw> {
     return await this.prisma.user.update({
       where: { id },
       data: {
@@ -421,18 +428,18 @@ export class UserService {
         verifyTimeout: null,
         verifyToken: null,
       },
-      select: { email: true },
+      select: ownProfileSelect,
     });
   }
 
   private async modifyVerificationData(
     id: string,
     newData: EmailVerData,
-  ): Promise<UserId> {
+  ): Promise<UserProfileRaw> {
     return await this.prisma.user.update({
       where: { id },
       data: newData,
-      select: { id: true },
+      select: userProfileSelect,
     });
   }
 
@@ -474,31 +481,31 @@ export class UserService {
   private async modifyPassword(
     id: string,
     newPassword: string,
-  ): Promise<UserId> {
+  ): Promise<UserProfileRaw> {
     return await this.prisma.user.update({
       where: { id },
       data: { password: newPassword },
-      select: { id: true },
+      select: userProfileSelect,
     });
   }
 
-  private async modifyRank(newData: UpdateRankDto): Promise<RankUpdate> {
+  private async modifyRank(newData: UpdateRankDto): Promise<UserProfileRaw> {
     return await this.prisma.user.update({
       where: { id: newData.targetId },
       data: { rank: newData.rank },
-      select: rankUpdateSelect,
+      select: userProfileSelect,
     });
   }
 
   private async modifyRankAdminSwap(
     currentAdmin: string,
     newAdmin: string,
-  ): Promise<RankUpdate> {
+  ): Promise<UserProfileRaw> {
     return await this.prisma.$transaction(async (tx) => {
       const result = await tx.user.update({
         where: { id: newAdmin },
         data: { rank: Ranks.ADMIN },
-        select: rankUpdateSelect,
+        select: userProfileSelect,
       });
       await tx.user.update({
         where: { id: currentAdmin },

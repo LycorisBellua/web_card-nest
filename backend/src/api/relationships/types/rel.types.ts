@@ -1,28 +1,43 @@
+import { userProfileSelect } from 'src/api/user/types/user.types';
 import { Prisma } from 'src/generated/prisma/client';
 
-export const friendUserSelect = {
-  id: true,
-  username: true,
-  avatar: true,
-} satisfies Prisma.UserSelect;
-
-export const friendshipInclude = {
-  requester: { select: friendUserSelect },
-  addressee: { select: friendUserSelect },
+// GET FRIENDSHIP / BLOCK LISTS
+export const friendListInclude = {
+  requester: { select: userProfileSelect },
+  addressee: { select: userProfileSelect },
 } satisfies Prisma.FriendInclude;
 
-export const blockInclude = {
-  blocked: { select: friendUserSelect },
+export type FriendListWithUserData = Prisma.FriendGetPayload<{
+  include: typeof friendListInclude;
+}>[];
+
+export const blockListInclude = {
+  blocked: { select: userProfileSelect },
 } satisfies Prisma.BlockInclude;
 
-export type FriendUser = Prisma.UserGetPayload<{
-  select: typeof friendUserSelect;
+export type BlockListWithUserData = Prisma.BlockGetPayload<{
+  include: typeof blockListInclude;
+}>[];
+
+// SINGLE BLOCk
+export const blockSelect = {
+  blockerId: true,
+  blockedId: true,
+  created: true,
+} satisfies Prisma.BlockSelect;
+
+export type BlockRow = Prisma.BlockGetPayload<{
+  select: typeof blockSelect;
 }>;
 
-export type FriendshipWithUsers = Prisma.FriendGetPayload<{
-  include: typeof friendshipInclude;
-}>[];
+// SINGLE FRIEND
+export const friendSelect = {
+  requesterId: true,
+  addresseeId: true,
+  created: true,
+  status: true,
+} satisfies Prisma.FriendSelect;
 
-export type BlockWithUsers = Prisma.BlockGetPayload<{
-  include: typeof blockInclude;
-}>[];
+export type FriendRow = Prisma.FriendGetPayload<{
+  select: typeof friendSelect;
+}>;

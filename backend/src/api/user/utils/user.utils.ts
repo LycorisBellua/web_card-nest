@@ -1,6 +1,5 @@
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { Ranks } from 'src/generated/prisma/enums';
 import {
   ConvertedAvatar,
   OwnProfileRaw,

@@ -21,6 +21,9 @@ import { RankGuard } from '../auth/guards/auth.rankguard';
 import { UpdateRankDto } from './dto/update-rank.dto';
 import { AdmUuidDto } from './dto/adm-uuid.dto';
 import { MessageUuidDto } from './dto/message.dto';
+import { UserProfile } from '../user/types/user.types';
+import {} from './types/admin.types';
+import { LobbyMessageSingle } from '../chat/types/chat.types';
 
 @UseGuards(AuthGuard, RankGuard)
 @RequiredRank(Ranks.MODERATOR)
@@ -32,7 +35,7 @@ export class AdminController {
   async adminModifyUser(
     @Req() req: ExpressRequest,
     @Body() adminUpdateUserDto: AdminUpdateUserDto,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.adminModifyUser(
       user.id,
@@ -45,7 +48,7 @@ export class AdminController {
   async adminModifyRank(
     @Req() req: ExpressRequest,
     @Body() dto: UpdateRankDto,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.adminModifyRank(
       user.id,
@@ -59,7 +62,7 @@ export class AdminController {
   async adminRemoveUser(
     @Req() req: ExpressRequest,
     @Param('userId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.adminRemoveUser(
       user.id,
@@ -69,7 +72,10 @@ export class AdminController {
   }
 
   @Post('ban')
-  async lobbyChatBan(@Req() req: ExpressRequest, @Body() dto: AdmUuidDto) {
+  async lobbyChatBan(
+    @Req() req: ExpressRequest,
+    @Body() dto: AdmUuidDto,
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.lobbyChatBan(
       user.id,
@@ -82,7 +88,7 @@ export class AdminController {
   async lobbyChatUnban(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.lobbyChatUnban(
       user.id,
@@ -92,7 +98,7 @@ export class AdminController {
   }
 
   @Get('ban')
-  async fetchBanList(@Req() req: ExpressRequest) {
+  async fetchBanList(@Req() req: ExpressRequest): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.fetchBanList(user.id, user.rank as Ranks);
   }
@@ -101,7 +107,7 @@ export class AdminController {
   async moderateLobbyMessage(
     @Req() req: ExpressRequest,
     @Body() dto: MessageUuidDto,
-  ) {
+  ): Promise<LobbyMessageSingle> {
     const user = req['user'] as JwtPayload;
     return this.adminService.moderateLobbyMessage(
       user.id,

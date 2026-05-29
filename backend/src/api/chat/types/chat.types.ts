@@ -79,12 +79,11 @@ export type LobbyHistory = Prisma.LobbyMessageGetPayload<{
   select: typeof lobbyMessageSelect;
 }>[];
 
-/*export const dMChatSelect = {
-  id: true,
-  userAId: true,
-  userBId: true,
-} satisfies Prisma.ChatSelect;
+// GET BAN ID
+export const lobbyBanSelect = {
+  userId: true,
+} satisfies Prisma.LobbyBanSelect;
 
-export type ChatList = Prisma.ChatGetPayload<{
-  select: typeof dMChatSelect;
-}>[];*/
+export type LobbyBan = Prisma.LobbyBanGetPayload<{
+  select: typeof lobbyBanSelect;
+}>;
