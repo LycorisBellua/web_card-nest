@@ -83,19 +83,31 @@ export class RelService {
     await this.userService.userExistsOrThrow(originId);
     const accepted: FriendshipWithUsers = await this.findAccepted(originId);
     const friends = this.buildFriendList(originId, accepted);
-    return friends.sort((a, b) => a.username.localeCompare(b.username));
+    const data = friends.sort((a, b) => a.username.localeCompare(b.username));
+    return data.map((u) => ({
+      ...u,
+      avatar: u.avatar ? Buffer.from(u.avatar).toString('base64') : null,
+    }));
   }
 
   async fetchSentRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
     const sent = await this.findSentPending(originId);
-    return this.buildFriendList(originId, sent);
+    const data = this.buildFriendList(originId, sent);
+    return data.map((u) => ({
+      ...u,
+      avatar: u.avatar ? Buffer.from(u.avatar).toString('base64') : null,
+    }));
   }
 
   async fetchReceivedRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
     const received = await this.findReceivedPending(originId);
-    return this.buildFriendList(originId, received);
+    const data = this.buildFriendList(originId, received);
+    return data.map((u) => ({
+      ...u,
+      avatar: u.avatar ? Buffer.from(u.avatar).toString('base64') : null,
+    }));
   }
 
   // FRIEND DB ACTIONS
@@ -230,7 +242,11 @@ export class RelService {
   async fetchBlocked(originId: string) {
     await this.userService.userExistsOrThrow(originId);
     const blocked = await this.findBlockedUsers(originId);
-    return this.buildBlockList(blocked);
+    const data = this.buildBlockList(blocked);
+    return data.map((u) => ({
+      ...u,
+      avatar: u.avatar ? Buffer.from(u.avatar).toString('base64') : null,
+    }));
   }
 
   // BLOCK DB ACTIONS

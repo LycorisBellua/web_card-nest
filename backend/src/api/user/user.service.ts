@@ -118,7 +118,10 @@ export class UserService {
     if (!(await comparePasswordHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
-    return await this.modifyPassword(userId, await createPasswordHash(newPassword));
+    return await this.modifyPassword(
+      userId,
+      await createPasswordHash(newPassword),
+    );
   }
 
   async getOwnProfile(userId: string) {
@@ -291,12 +294,16 @@ export class UserService {
     return result;
   }
 
-  async updateRefreshToken(userId: string, refreshToken: string, timeout: Date) {
+  async updateRefreshToken(
+    userId: string,
+    refreshToken: string,
+    timeout: Date,
+  ) {
     await this.userExistsOrThrow(userId);
     return await this.modifyRefreshToken(
       userId,
       createTokenHash(refreshToken),
-      timeout
+      timeout,
     );
   }
 
@@ -429,11 +436,22 @@ export class UserService {
     userId: string,
     newData: Record<string, unknown>,
   ) {
-    return await this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id: userId },
       data: newData,
-      select: { desc: true, email_unverified: true, username: true },
+      select: {
+        desc: true,
+        email_unverified: true,
+        username: true,
+        avatar: true,
+      },
     });
+    return {
+      ...updated,
+      avatar: updated.avatar
+        ? Buffer.from(updated.avatar).toString('base64')
+        : null,
+    };
   }
 
   private async modifyPassword(userID: string, newPassword: string) {
@@ -466,7 +484,11 @@ export class UserService {
     });
   }
 
-  private async modifyRefreshToken(userId: string, newToken: string, timeout: Date) {
+  private async modifyRefreshToken(
+    userId: string,
+    newToken: string,
+    timeout: Date,
+  ) {
     return await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: newToken, refreshTimeout: timeout },
@@ -490,6 +512,8 @@ export class UserService {
         username: true,
         avatar: true,
         rank: true,
+        date: true,
+        desc: true,
         email: true,
         email_unverified: true,
       },
@@ -499,21 +523,42 @@ export class UserService {
   private async findProfileById(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
     });
   }
 
   private async findProfileByUsername(toFind: string) {
     return await this.prisma.user.findFirst({
       where: { username: { equals: toFind, mode: 'insensitive' } },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
     });
   }
 
   private async listAllByUsername(incPending: boolean) {
     return await this.prisma.user.findMany({
       where: incPending ? {} : { rank: { not: Ranks.PENDING } },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
       orderBy: { username: 'asc' },
     });
   }
@@ -521,7 +566,14 @@ export class UserService {
   private async listAllByDate(incPending: boolean) {
     return await this.prisma.user.findMany({
       where: incPending ? {} : { rank: { not: Ranks.PENDING } },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
       orderBy: { date: 'asc' },
     });
   }
@@ -569,8 +621,8 @@ export class UserService {
   async userExistsByRefreshTokenHash(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { refreshToken: toFind },
-      select: { id: true, rank: true, refreshTimeout: true }
-    })
+      select: { id: true, rank: true, refreshTimeout: true },
+    });
   }
 
   private async userExists(toFind: string) {

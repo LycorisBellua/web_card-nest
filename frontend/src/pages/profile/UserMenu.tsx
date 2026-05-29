@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from 'context/useUser';
+import { LogoutRequest } from 'functions/Requests';
 import { BtnAccent } from 'components/btn/Btn';
 import UserBtnBase from 'components/btn/UserBtnBase';
 import { Wrapper, Menu, Option } from 'components/btn/UserMenuStyle';
@@ -35,15 +36,14 @@ function UserMenu() {
   };
 
   const handleLogout = async () => {
-    const res = await fetch('/api/auth/logout', { method: 'POST' }).catch(
-      () => null,
-    );
-    if (!res?.ok) {
-      return;
+    try {
+      await LogoutRequest(user.accessToken);
+      setOpen(false);
+      setUser(null);
+      window.location.href = '/';
+    } catch {
+      setOpen(false);
     }
-    setOpen(false);
-    setUser(null);
-    window.location.href = '/';
   };
 
   return (

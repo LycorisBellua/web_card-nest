@@ -2,7 +2,6 @@ import Layout from 'App';
 import Lobby from 'pages/chat/Lobby';
 import Auth from 'pages/auth/Auth';
 import ResetPassword from 'pages/auth/ResetPassword';
-import ResetPasswordSecond from 'pages/auth/ResetPassword2';
 import VerifySuccess from 'pages/auth/VerifySuccess';
 import VerifyError from 'pages/auth/VerifyError';
 import VerifyCancel from 'pages/auth/VerifyCancel';
@@ -25,7 +24,6 @@ const routes = [
       { index: true, element: <Lobby /> },
       { path: 'auth', element: <Auth /> },
       { path: 'reset-pwd', element: <ResetPassword /> },
-      { path: 'reset-pwd2', element: <ResetPasswordSecond /> },
       { path: 'verify-success', element: <VerifySuccess /> },
       { path: 'verify-error', element: <VerifyError /> },
       { path: 'verify-cancel', element: <VerifyCancel /> },

@@ -1,41 +1,149 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import type { User, UserLimitedOrGuest } from 'context/Types';
+import { useState, useEffect, useRef } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import type { User, OtherUserOrGuest, LimitedUser } from 'context/Types';
 import { useUser } from 'context/useUser';
-import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
+import {
+  RefreshTokenRequest,
+  FetchSelfBlockedListRequest,
+  FetchSelfFriendListRequest,
+  FetchSelfSentListRequest,
+  FetchSelfReceivedListRequest,
+  RemoveFriendshipRequest,
+  AskFriendshipRequest,
+  CancelFriendshipRequest,
+  AcceptFriendshipRequest,
+  RejectFriendshipRequest,
+  UnblockingRequest,
+  BlockingRequest,
+  FetchOtherFriendListRequest,
+} from 'functions/Requests';
+import { addAvatarPrefix } from 'functions/UserValidation';
 import ToggleChatTimeout from 'pages/profile/ToggleChatTimeout';
 import GuestProfile from 'pages/profile/GuestProfile';
 import EditProfileMod from 'pages/profile/EditProfileMod';
 import DangerZoneAdmin from 'pages/profile/DangerZoneAdmin';
 import NotFound from 'pages/NotFound';
 import { DisplayPublicUserInfo } from 'pages/profile/DisplayUserInfo';
+import { DisplayPublicFriendList } from 'pages/profile/DisplayRelationships';
 import { ScrollablePage } from 'components/general/Scrollable';
 import { BtnDefault, BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
 function PublicProfile() {
   const { username } = useParams<{ username: string }>();
-  const { friends, users } = useUser();
+  const {
+    user,
+    setUser,
+    blocked,
+    setBlocked,
+    friends,
+    setFriends,
+    sentFriends,
+    setSentFriends,
+    receivedFriends,
+    setReceivedFriends,
+  } = useUser();
+  const [otherUser, setOtherUser] = useState<OtherUserOrGuest>(null);
+  const fetchedUsernameRef = useRef<string | null>(null);
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  if (!IsLoggedIn() || IsPendingUser()) return <NotFound />;
+  const noAccess = !user || user.rank.toLowerCase() == 'pending';
+  const isGuest = !username || username.toLowerCase() == 'guest';
 
-  if (!username || username.toLowerCase() == 'guest') return <GuestProfile />;
+  useEffect(() => {
+    const controller = new AbortController();
 
-  // TODO: Fetch user data using `username`. In the meantime, use the context.
-  const user = users.find(
-    (u) => u.username.toLowerCase() === username?.toLowerCase(),
-  );
-  //
-  if (!user) return <NotFound />;
+    const fetchUser = async () => {
+      try {
+        if (noAccess || isGuest) return;
+        if (
+          fetchedUsernameRef.current?.toLowerCase() === username?.toLowerCase()
+        )
+          return;
+        let res = await fetch(`/api/user/username/${username}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${user.accessToken}`,
+          },
+          signal: controller.signal,
+        });
+        let accessToken = user.accessToken;
+        if (!res.ok) {
+          if (res.status != 401) return;
+          accessToken = await RefreshTokenRequest(accessToken);
+          if (!accessToken.length) return;
+          res = await fetch(`/api/user/username/${username}`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            signal: controller.signal,
+          });
+          if (!res.ok) return;
+        }
+        const data = (await res.json()) as {
+          id: string;
+          username: string;
+          avatar: string;
+          rank: string;
+          date: Date;
+          desc: string;
+          email: string;
+          email_unverified: string;
+        };
+        const tmpUser = {
+          id: data.id,
+          username: data.username,
+          avatar: addAvatarPrefix(data.avatar),
+          rank: data.rank,
+          registered: new Date(data.date),
+          desc: data.desc,
+          isOnline: false,
+          friends: [],
+        } as OtherUserOrGuest;
+        const friendData = (await FetchOtherFriendListRequest(
+          accessToken,
+          tmpUser!.id,
+        )) as {
+          accessToken: string;
+          users: LimitedUser[];
+        };
+        accessToken = friendData.accessToken;
+        if (!accessToken.length) return;
+        tmpUser!.friends = friendData.users;
+        fetchedUsernameRef.current = username ?? null;
+        setOtherUser(tmpUser);
+        setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
+        if (e instanceof Error && e.message.includes('abort')) return;
+        setOtherUser(null);
+      }
+    };
+
+    void fetchUser();
+    return () => controller.abort();
+  }, [user, setUser, isGuest, noAccess, username, otherUser, navigate]);
+
+  if (noAccess) return <NotFound />;
+  else if (isGuest) return <GuestProfile />;
+  else if (!otherUser) return <NotFound />;
 
   const is_friend = friends.find(
     (u) => u.username.toLowerCase() === username?.toLowerCase(),
   );
-  const is_blocked = false;
-  const friend_request_sent = false;
+  const is_blocked = blocked.find(
+    (u) => u.username.toLowerCase() === username?.toLowerCase(),
+  );
+  const friend_request_sent = sentFriends.find(
+    (u) => u.username.toLowerCase() === username?.toLowerCase(),
+  );
+  const friend_request_received = receivedFriends.find(
+    (u) => u.username.toLowerCase() === username?.toLowerCase(),
+  );
 
   function closeModals() {
     setIsFriendModalOpen(false);
@@ -45,70 +153,257 @@ function PublicProfile() {
 
   function clickFriend() {
     if (is_friend) {
-      removeFriendship();
+      void removeFriendship();
     } else if (friend_request_sent) {
-      cancelFriendRequest();
+      void cancelFriendRequest();
+    } else if (friend_request_received) {
+      void rejectFriendRequest();
     } else if (is_blocked) {
       setIsFriendModalOpen(true);
     } else {
-      sendFriendRequest();
+      void sendFriendRequest();
     }
   }
 
   function clickBlock() {
     if (is_blocked) {
-      unblockUser();
+      void unblockUser();
     } else if (is_friend) {
       setIsBlockModalOpen(true);
     } else {
-      blockUser();
+      void blockUser();
     }
   }
 
-  function removeFriendship() {
-    // TODO: Request to remove friendship.
+  async function removeFriendship() {
+    try {
+      let accessToken = await RemoveFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data = await FetchSelfBlockedListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setFriends(data.users);
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Remove Friendship"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Remove Friendship"');
+    }
   }
 
-  function cancelFriendRequest() {
-    // TODO: Request to cancel friend request.
+  async function sendFriendRequest() {
+    try {
+      let accessToken = await AskFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data = await FetchSelfSentListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setSentFriends(data.users);
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Send Friend Request"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Send Friend Request"');
+    }
   }
 
-  function sendFriendRequest() {
-    // TODO: Request to send friend request.
+  async function cancelFriendRequest() {
+    try {
+      let accessToken = await CancelFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data = await FetchSelfSentListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setSentFriends(data.users);
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Cancel Friend Request"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Cancel Friend Request"');
+    }
   }
 
-  function unblockUser() {
-    // TODO: Request to unblock user.
+  async function acceptFriendRequest() {
+    try {
+      let accessToken = await AcceptFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data1 = await FetchSelfReceivedListRequest(accessToken);
+        accessToken = data1.accessToken;
+        if (accessToken.length) {
+          setReceivedFriends(data1.users);
+          const data2 = await FetchSelfFriendListRequest(accessToken);
+          accessToken = data2.accessToken;
+          if (accessToken.length) {
+            setFriends(data2.users);
+          }
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Accept Friend Request"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Accept Friend Request"');
+    }
   }
 
-  function blockUser() {
-    // TODO: Request to block user.
+  async function rejectFriendRequest() {
+    try {
+      let accessToken = await RejectFriendshipRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        let data = await FetchSelfReceivedListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setReceivedFriends(data.users);
+          data = await FetchSelfFriendListRequest(accessToken);
+          accessToken = data.accessToken;
+          if (accessToken.length) {
+            setFriends(data.users);
+          }
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Reject Friend Request"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Reject Friend Request"');
+    }
+  }
+
+  async function unblockUser() {
+    try {
+      let accessToken = await UnblockingRequest(
+        user!.accessToken,
+        otherUser!.id,
+      );
+      if (accessToken.length) {
+        const data = await FetchSelfBlockedListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setBlocked(data.users);
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Unblock User"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Unblock User"');
+    }
+  }
+
+  async function blockUser() {
+    setIsBlockModalOpen(false);
+    try {
+      let accessToken = await BlockingRequest(user!.accessToken, otherUser!.id);
+      if (accessToken.length) {
+        let data = await FetchSelfBlockedListRequest(accessToken);
+        accessToken = data.accessToken;
+        if (accessToken.length) {
+          setBlocked(data.users);
+          data = await FetchSelfFriendListRequest(accessToken);
+          accessToken = data.accessToken;
+          if (accessToken.length) {
+            setFriends(data.users);
+            data = await FetchSelfSentListRequest(accessToken);
+            accessToken = data.accessToken;
+            if (accessToken.length) {
+              setSentFriends(data.users);
+              data = await FetchSelfReceivedListRequest(accessToken);
+              accessToken = data.accessToken;
+              if (accessToken.length) {
+                setReceivedFriends(data.users);
+              }
+            }
+          }
+        }
+      }
+      if (!accessToken.length) {
+        setError('Error occurred with "Block User"');
+        return;
+      }
+      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+    } catch {
+      setError('Error occurred with "Block User"');
+    }
   }
 
   return (
     <ScrollablePage>
-      <DisplayPublicUserInfo user={user as NonNullable<User>} />
-      <div>
-        {is_friend && (
-          <Link to={`/chat/${username}`}>
-            <BtnDefault>DM</BtnDefault>
-          </Link>
-        )}
-        <BtnDefault onClick={() => clickFriend()}>
-          {is_friend
-            ? 'Remove Friendship'
-            : friend_request_sent
-              ? 'Cancel Friend Request'
-              : 'Send Friend Request'}
-        </BtnDefault>
-        <BtnDanger onClick={() => clickBlock()}>
-          {is_blocked ? 'Unblock' : 'Block'}
-        </BtnDanger>
-        <ToggleChatTimeout user={user as UserLimitedOrGuest} />
-        {error && <p>{error}</p>}
-        <EditProfileMod user={user as NonNullable<User>} />
-        <DangerZoneAdmin user={user as NonNullable<User>} />
-      </div>
+      <DisplayPublicUserInfo user={otherUser} />
+      <DisplayPublicFriendList user={otherUser} />
+      {user.id != otherUser.id && (
+        <div>
+          <h2>Actions</h2>
+          {otherUser.rank.toLowerCase() != 'pending' && (
+            <>
+              {is_friend && (
+                <Link to={`/chat/${username}`}>
+                  <BtnDefault>DM</BtnDefault>
+                </Link>
+              )}
+              <BtnDefault onClick={() => clickFriend()}>
+                {is_friend
+                  ? 'Remove Friendship'
+                  : friend_request_sent
+                    ? 'Cancel Friend Request'
+                    : friend_request_received
+                      ? 'Reject Friend Request'
+                      : 'Send Friend Request'}
+              </BtnDefault>
+              {friend_request_received && (
+                <BtnDefault onClick={() => void acceptFriendRequest()}>
+                  Accept Friend Request
+                </BtnDefault>
+              )}
+              <BtnDanger onClick={() => clickBlock()}>
+                {is_blocked ? 'Unblock' : 'Block'}
+              </BtnDanger>
+            </>
+          )}
+          <ToggleChatTimeout otherUser={otherUser as OtherUserOrGuest} />
+          {error && <p>{error}</p>}
+          <EditProfileMod
+            otherUser={otherUser}
+            setOtherUser={(e) => setOtherUser(e)}
+          />
+          <DangerZoneAdmin
+            otherUser={otherUser}
+            setOtherUser={(e) => setOtherUser(e)}
+          />
+        </div>
+      )}
       <Modal
         isOpen={isFriendModalOpen}
         onCancel={() => closeModals()}
