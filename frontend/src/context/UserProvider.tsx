@@ -3,6 +3,13 @@ import { UserContext } from 'context/UserContext';
 import type { User, LimitedUser, Thread } from 'context/Types';
 import { RefreshTokenRequest, FetchSelfRequest } from 'functions/Requests';
 
+function getCookie(name: string): string | undefined {
+  return document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(`${name}=`))
+    ?.split('=')[1];
+}
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [blocked, setBlocked] = useState<LimitedUser[]>([]);
@@ -13,6 +20,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const automaticLogin = async () => {
       try {
+        const dummyCookie = getCookie('dummy_refresh');
+        if (!dummyCookie) return;
         const accessToken = await RefreshTokenRequest('');
         if (!accessToken.length) return;
         const data = await FetchSelfRequest(accessToken);

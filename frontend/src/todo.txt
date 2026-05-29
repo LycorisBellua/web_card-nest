@@ -1,20 +1,7 @@
-CONSOLE ERRORS
-- There must not be any error in the console, actually. So, the 401 one must be 
-gone. For the automatic login, this means receiving a non HttpOnly cookie just 
-to indicate the presence of the refresh token cookie, which is hidden from JS.
-- As for the other 401 errors, refresh the access token cookie yourself every 4 
-minutes instead of waiting for it to expire.
-- As for the fact that after 30 days the refresh token expires, which might 
-lead to a 401 error as well, it's okay, as it wouldn't show during the defense. 
-While these API responses are not errors, and are part of the ordinary function 
-of a web app, an evaluator might see them as errors so I'd rather save us the 
-headache.
-- Before looking into WebSockets, test the app and check the console on all 
-three browsers to fix any potential issue.
-
---------------------------------------------------------------------------------
-
 CONNECTION TO THE BACKEND
+- The backend has harmonized its return types, so you gotta check that you 
+still receive what you need. Since you modified these return types as well to 
+match your needs, you might have to modify them once more.
 - WebSockets (without the game).
 - Lobby & DMs: The frontend has been created in isolation. Make use of the 
 backend and remove the placeholder content.
