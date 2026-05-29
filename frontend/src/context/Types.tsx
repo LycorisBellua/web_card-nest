@@ -1,22 +1,26 @@
-export type UserLimited = {
+export type LimitedUser = {
   id: string;
   username: string;
   avatar: string;
   rank: string;
+};
+
+export type OtherUser = LimitedUser & {
   registered: Date;
-  description: string;
+  desc: string;
   isOnline: boolean;
+  friends: LimitedUser[];
 };
 
 export type User =
-  | (UserLimited & {
+  | (OtherUser & {
       email: string;
-      unverifiedEmail: string;
+      email_unverified: string;
       accessToken: string;
     })
   | null;
 
-export type UserLimitedOrGuest = UserLimited | null;
+export type OtherUserOrGuest = OtherUser | null;
 
 export type Msg = {
   id: string;

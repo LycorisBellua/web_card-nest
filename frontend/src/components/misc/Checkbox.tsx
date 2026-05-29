@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 /*
-  const [done, setDone] = useState(true);
+  const [done, setDone] = useState<boolean>(true);
 
   <Checkbox
     label="Finish the game setup"
@@ -11,6 +11,7 @@ import styled from 'styled-components';
 */
 
 const Item = styled.div`
+  margin: 4px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -46,7 +47,6 @@ const Label = styled.span<{ $checked: boolean }>`
   font-size: 0.84rem;
   font-weight: 700;
   color: ${({ $checked }) => ($checked ? '#7a5c42' : '#e0c498')};
-  text-decoration: ${({ $checked }) => ($checked ? 'line-through' : 'none')};
 `;
 
 function Checkbox({

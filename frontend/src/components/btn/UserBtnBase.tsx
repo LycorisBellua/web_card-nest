@@ -1,4 +1,4 @@
-import type { UserLimitedOrGuest } from 'context/Types';
+import type { OtherUserOrGuest } from 'context/Types';
 import { Avatar } from 'components/btn/Avatar';
 import { Username } from 'components/btn/Username';
 import { RankBadge } from 'components/btn/RankBadge';
@@ -23,7 +23,7 @@ function UserBtnBase({
   user,
   onClick,
 }: {
-  user: UserLimitedOrGuest;
+  user: OtherUserOrGuest;
   onClick?: () => void;
 }) {
   if (!user) {

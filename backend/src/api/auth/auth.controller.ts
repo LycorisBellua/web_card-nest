@@ -35,11 +35,18 @@ export class AuthController {
       dto.email_unverified,
       dto.password,
     );
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
     res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
+      maxAge: timeout,
+    });
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
     });
     return { accessToken: tokens.accessToken };
   }
@@ -53,11 +60,18 @@ export class AuthController {
       loginDto.email,
       loginDto.password,
     );
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
     res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
+      maxAge: timeout,
+    });
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
     });
     return { accessToken: tokens.accessToken };
   }
@@ -72,6 +86,12 @@ export class AuthController {
     await this.authService.logout(user.id);
     res.cookie('refresh_token', '', {
       httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 0,
+    });
+    res.cookie('dummy_refresh', '', {
+      httpOnly: false,
       secure: true,
       sameSite: 'strict',
       maxAge: 0,
@@ -101,11 +121,18 @@ export class AuthController {
       user.id,
       updatePasswordDto,
     );
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
     res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
+      maxAge: timeout,
+    });
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
     });
     return { accessToken: tokens.accessToken };
   }
