@@ -57,11 +57,7 @@ export class UserController {
     @Param('userId', ParseUUIDPipe) toFind: string,
   ) {
     const user = req['user'] as JwtPayload;
-    return await this.userService.getUserById(
-      user.rank as Ranks,
-      user.id,
-      toFind,
-    );
+    return await this.userService.getUserById(user.rank as Ranks, toFind);
   }
 
   @UseGuards(AuthGuard, RankGuard)
@@ -72,11 +68,7 @@ export class UserController {
     @Param('username') toFind: string,
   ) {
     const user = req['user'] as JwtPayload;
-    return await this.userService.getUserByUsername(
-      user.rank as Ranks,
-      user.id,
-      toFind,
-    );
+    return await this.userService.getUserByUsername(user.rank as Ranks, toFind);
   }
 
   @UseGuards(AuthGuard, RankGuard)

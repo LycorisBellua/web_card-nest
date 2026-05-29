@@ -1,10 +1,15 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { compareHash, getCurrentTime } from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
+import { ErrorMessages } from '../user/error_messages/ErrorMessages';
 
 @Injectable()
 export class AuthService {
@@ -30,10 +35,13 @@ export class AuthService {
       throw new UnauthorizedException('Email address or password incorrect.');
     }
     const refresh = await this.userService.generateRefreshToken(found.id);
+    if (!refresh || !refresh.refreshToken || !refresh.refreshTimeout) {
+      throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
+    }
     const access = await this.generateJwtToken(found.id);
     return {
-      refreshToken: refresh.token,
-      timeout: refresh.timeout,
+      refreshToken: refresh.refreshToken,
+      timeout: refresh.refreshTimeout,
       accessToken: access,
     };
   }

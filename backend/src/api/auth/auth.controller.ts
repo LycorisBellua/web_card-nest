@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  InternalServerErrorException,
   Param,
   ParseUUIDPipe,
   Patch,

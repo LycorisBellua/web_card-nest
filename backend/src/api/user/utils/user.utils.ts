@@ -1,6 +1,12 @@
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { Ranks } from 'src/generated/prisma/enums';
+import {
+  ConvertedAvatar,
+  OwnProfileRaw,
+  UserProfile,
+  UserProfileRaw,
+} from '../types/user.types';
 
 export function getToken(): string {
   return randomBytes(32).toString('hex');
@@ -29,28 +35,22 @@ export async function compareHash(
   return await bcrypt.compare(plain, hashed);
 }
 
-export function encodeSingleAvatar(found: {
-  id: string;
-  username: string;
-  rank: Ranks;
-  avatar: Uint8Array<ArrayBuffer> | null;
-  email?: string | null;
-  email_unverified?: string | null;
-}) {
+export function decodeAvatar(value: string): Uint8Array<ArrayBuffer> {
+  const raw = value.includes(',') ? value.split(',')[1] : value;
+  const buf = Buffer.from(raw, 'base64');
+  return Uint8Array.from(buf);
+}
+
+export function encodeSingleAvatar<T extends UserProfileRaw | OwnProfileRaw>(
+  found: T,
+): ConvertedAvatar<T> {
   return {
     ...found,
     avatar: found.avatar ? Buffer.from(found.avatar).toString('base64') : null,
   };
 }
 
-export function encodeMultipleAvatars(
-  users: {
-    id: string;
-    username: string;
-    rank: Ranks;
-    avatar: Uint8Array<ArrayBuffer> | null;
-  }[],
-) {
+export function encodeMultipleAvatars(users: UserProfileRaw[]): UserProfile[] {
   return users.map(encodeSingleAvatar);
 }
 

@@ -27,6 +27,7 @@ import {
   NewBan,
 } from './types/admin.types';
 import { lobbyMessageSelect } from '../chat/types/chat.types';
+import { RankUpdate, UserId, UserProfile } from '../user/types/user.types';
 
 @Injectable()
 export class AdminService {
@@ -35,7 +36,11 @@ export class AdminService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async adminModifyUser(userId: string, rank: Ranks, dto: AdminUpdateUserDto) {
+  async adminModifyUser(
+    userId: string,
+    rank: Ranks,
+    dto: AdminUpdateUserDto,
+  ): Promise<UserProfile> {
     await this.jwtRankIsValid(userId, rank);
     this.selfCheck(userId, dto.targetId, AdmErrMsg.OWN_PROFILE);
     const target = await this.userService.userExistsOrThrow(dto.targetId);
@@ -43,7 +48,11 @@ export class AdminService {
     return this.userService.adminUpdateUser(dto);
   }
 
-  async adminModifyRank(userId: string, rank: Ranks, dto: UpdateRankDto) {
+  async adminModifyRank(
+    userId: string,
+    rank: Ranks,
+    dto: UpdateRankDto,
+  ): Promise<RankUpdate> {
     await this.jwtRankIsValid(userId, rank);
     if (dto.rank === Ranks.PENDING) {
       throw new BadRequestException(AdmErrMsg.NO_PENDING);
@@ -68,7 +77,11 @@ export class AdminService {
     }
   }
 
-  async adminRemoveUser(adminId: string, adminRank: Ranks, targetId: string) {
+  async adminRemoveUser(
+    adminId: string,
+    adminRank: Ranks,
+    targetId: string,
+  ): Promise<UserId> {
     await this.jwtRankIsValid(adminId, adminRank);
     this.selfCheck(adminId, targetId, AdmErrMsg.OWN_PROFILE);
     return await this.userService.removeUser(targetId);
@@ -143,20 +156,20 @@ export class AdminService {
   }
 
   // HELPER FUNCTIONS
-  private async jwtRankIsValid(userId: string, rank: Ranks) {
+  private async jwtRankIsValid(userId: string, rank: Ranks): Promise<void> {
     const found = await this.userService.userExistsOrThrow(userId);
     if (rank !== found.rank) {
       throw new UnauthorizedException(AdmErrMsg.JWT_RANK_INVALID);
     }
   }
 
-  private selfCheck(userId: string, targetId: string, errorMsg: string) {
+  private selfCheck(userId: string, targetId: string, errorMsg: string): void {
     if (userId === targetId) {
       throw new UnauthorizedException(errorMsg);
     }
   }
 
-  private modPermissionCheck(user: Ranks, target: Ranks) {
+  private modPermissionCheck(user: Ranks, target: Ranks): void {
     if (
       user === Ranks.MODERATOR &&
       target !== Ranks.USER &&
