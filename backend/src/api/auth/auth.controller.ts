@@ -21,6 +21,8 @@ import type { Response as ExpressResponse } from 'express';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { LoginDto } from '../user/dto/login.dto';
 import { ForgotPasswordDto } from '../user/dto/forgot-password.dto';
+import { ResetPasswordDto } from '../user/dto/reset-password.dto';
+
 
 @Controller('/api/auth')
 export class AuthController {
@@ -172,9 +174,13 @@ export class AuthController {
 
   @Post('reset-password')
   async resetPassword(
-      @Body() body: { email: string; token: string; newPassword: string },
+      @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<{ success: boolean; message: string }> {
-      return this.authService.resetPassword(body.email, body.token, body.newPassword);
+      return this.authService.resetPassword(
+          resetPasswordDto.email,
+          resetPasswordDto.token,
+          resetPasswordDto.newPassword,
+      );
   }
 
   
