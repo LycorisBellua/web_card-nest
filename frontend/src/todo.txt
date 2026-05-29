@@ -1,14 +1,3 @@
-DATA EXTRACTION PAGE
-- To extract their data, the user has a menu with different checkboxes they can 
-choose from, or all of them: their user profile, and any chat they participated 
-in (DMs and the lobby). DMs are available even if the user hasn't posted 
-anything in there yet, as it might be relevant to show the thread is empty, or 
-to show what heinous things the so called friend has said. For the lobby 
-though, they need to have posted at least one message.
-- Let the user choose between JSON and CSV. Both are also possible.
-- The user downloads the data from the website directly.
-- Spinner for data extraction.
-
 CONSOLE ERRORS
 - There must not be any error in the console, actually. So, the 401 one must be 
 gone. For the automatic login, this means receiving a non HttpOnly cookie just 
@@ -25,14 +14,20 @@ three browsers to fix any potential issue.
 
 --------------------------------------------------------------------------------
 
-PASSWORD RESET
-- pages/auth/ResetPassword.tsx: I don't have the backend yet.
-
 CONNECTION TO THE BACKEND
 - WebSockets (without the game).
 - Lobby & DMs: The frontend has been created in isolation. Make use of the 
 backend and remove the placeholder content.
+
+- pages/auth/ResetPassword.tsx: I don't have the backend yet.
 - Chat timeout toggle.
+- Request to extract lobby in JSON format (for msg sender, omit the avatar), 
+but only if the user has posted at least one msg (even if this msg is 
+moderated, and even if the user is currently timed out from writing to chat).
+- Same lobby request, but in CSV.
+- Request to extract an individual DM thread in JSON. Omit the avatars from msg 
+senders. Do extract even if the thread is empty.
+- Same DM request, but in CSV.
 - Finish whatever TODOs are present in the frontend.
 
 GAME

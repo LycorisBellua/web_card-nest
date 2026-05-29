@@ -366,28 +366,32 @@ function PublicProfile() {
       {user.id != otherUser.id && (
         <div>
           <h2>Actions</h2>
-          {is_friend && (
-            <Link to={`/chat/${username}`}>
-              <BtnDefault>DM</BtnDefault>
-            </Link>
+          {otherUser.rank.toLowerCase() != 'pending' && (
+            <>
+              {is_friend && (
+                <Link to={`/chat/${username}`}>
+                  <BtnDefault>DM</BtnDefault>
+                </Link>
+              )}
+              <BtnDefault onClick={() => clickFriend()}>
+                {is_friend
+                  ? 'Remove Friendship'
+                  : friend_request_sent
+                    ? 'Cancel Friend Request'
+                    : friend_request_received
+                      ? 'Reject Friend Request'
+                      : 'Send Friend Request'}
+              </BtnDefault>
+              {friend_request_received && (
+                <BtnDefault onClick={() => void acceptFriendRequest()}>
+                  Accept Friend Request
+                </BtnDefault>
+              )}
+              <BtnDanger onClick={() => clickBlock()}>
+                {is_blocked ? 'Unblock' : 'Block'}
+              </BtnDanger>
+            </>
           )}
-          <BtnDefault onClick={() => clickFriend()}>
-            {is_friend
-              ? 'Remove Friendship'
-              : friend_request_sent
-                ? 'Cancel Friend Request'
-                : friend_request_received
-                  ? 'Reject Friend Request'
-                  : 'Send Friend Request'}
-          </BtnDefault>
-          {friend_request_received && (
-            <BtnDefault onClick={() => void acceptFriendRequest()}>
-              Accept Friend Request
-            </BtnDefault>
-          )}
-          <BtnDanger onClick={() => clickBlock()}>
-            {is_blocked ? 'Unblock' : 'Block'}
-          </BtnDanger>
           <ToggleChatTimeout otherUser={otherUser as OtherUserOrGuest} />
           {error && <p>{error}</p>}
           <EditProfileMod

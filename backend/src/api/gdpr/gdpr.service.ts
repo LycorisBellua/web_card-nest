@@ -24,11 +24,19 @@ export class GdprService {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
 
+    const omitAvatar = <T extends { avatar?: unknown }>(
+      obj: T,
+    ): Omit<T, 'avatar'> => {
+      const { avatar, ...rest } = obj;
+      return rest;
+    };
+
     return {
-      user_setting_info,
-      userFriendSentRequest_info,
-      userFriendReceivedRequest_info,
-      userFriendship,
+      user_setting_info: omitAvatar(user_setting_info),
+      userFriendSentRequest_info: userFriendSentRequest_info.map(omitAvatar),
+      userFriendReceivedRequest_info:
+        userFriendReceivedRequest_info.map(omitAvatar),
+      userFriendship: userFriendship.map(omitAvatar),
     };
   }
 

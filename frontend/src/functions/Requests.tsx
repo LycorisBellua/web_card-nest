@@ -588,3 +588,60 @@ export async function FetchOtherFriendListRequest(
   }));
   return { accessToken: accessToken, users: prefixed };
 }
+
+export async function ExtractProfileDataJSON(
+  accessToken: string,
+): Promise<{ accessToken: string; data: object }> {
+  let res = await fetch('/api/gdpr/exportJSON', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', data: {} };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', data: {} };
+    res = await fetch('/api/gdpr/exportJSON', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', data: {} };
+  }
+  const data = (await res.json()) as object;
+  return { accessToken: accessToken, data: data };
+}
+
+export async function ExtractProfileDataCSV(
+  accessToken: string,
+): Promise<{ accessToken: string; data: string }> {
+  let res = await fetch('/api/gdpr/exportCSV', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', data: '' };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', data: '' };
+    res = await fetch('/api/gdpr/exportCSV', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', data: '' };
+  }
+  const data = (await res.json()) as unknown;
+  const objectsToCsv = (data: Record<string, unknown>[]): string => {
+    const headers = Object.keys(data[0]);
+    const rows = data.map((row) =>
+      headers.map((h) => JSON.stringify(row[h] ?? '')).join(','),
+    );
+    return [headers.join(','), ...rows].join('\n');
+  };
+  return { accessToken, data: objectsToCsv(data as Record<string, unknown>[]) };
+}
