@@ -11,13 +11,16 @@ import { RelController } from './relationships/rel.controller';
 import { RelService } from './relationships/rel.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
-import { WebsocketServer } from './websocketHandling/server/WebsocketServer.gateway';
+import { WebsocketServer } from './websocketGateway/websocket.gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './auth/jwt/auth.jwt-secret';
 import { GdprController } from './gdpr/gdpr.controller';
 import { GdprService } from './gdpr/gdpr.service';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ChatController } from './chat/chat.controller';
+import { ChatService } from './chat/chat.service';
 
 @Module({
   imports: [
@@ -26,6 +29,7 @@ import { AdminService } from './admin/admin.service';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '5m' },
     }),
+     EventEmitterModule.forRoot(),
   ],
   controllers: [
     HelloController,
@@ -35,6 +39,7 @@ import { AdminService } from './admin/admin.service';
     AuthController,
     GdprController,
     AdminController,
+    ChatController,
   ],
   providers: [
     HelloService,
@@ -46,6 +51,8 @@ import { AdminService } from './admin/admin.service';
     AuthService,
     GdprService,
     AdminService,
+    WebsocketServer,
+    ChatService,
   ],
 })
 export class ApiModule {}

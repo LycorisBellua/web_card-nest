@@ -13,6 +13,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1",
+    "socket.io-client": "^4.8.3",
     "styled-components": "^6.3.11"
   },
   "devDependencies": {
@@ -20,6 +21,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/socket.io-client": "^1.4.36",
     "@vitejs/plugin-react": "^5.1.1",
     "babel-plugin-styled-components": "^2.1.4",
     "eslint": "^9.39.1",

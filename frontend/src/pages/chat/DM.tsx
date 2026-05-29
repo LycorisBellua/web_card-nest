@@ -37,6 +37,7 @@ function DM() {
 
   useEffect(() => {
     msgsEndRef.current?.scrollIntoView({ behavior: 'instant' });
+  
   }, []);
 
   useEffect(() => {
