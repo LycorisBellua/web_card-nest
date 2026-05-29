@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { createHash, compareHash, getCurrentTime } from '../user/utils/user.utils';
+import { createHash, compareHash, getCurrentTime, getToken} from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { SendMailService } from '../sendMail/sendMail.service';
 import { randomBytes } from 'crypto';
@@ -106,7 +106,7 @@ export class AuthService {
       return { success: true, message: "If this email exists, a link has been sent." }
     }
 
-    const token = randomBytes(32).toString('hex')
+    const token = getToken();
     const expiry = new Date(Date.now() + 30 * 60 * 1000)
     await this.userService.saveResetToken(user.id, await createHash(token), expiry)
 
@@ -126,7 +126,7 @@ export class AuthService {
       const user = await Promise.all(
           users.map(async (u) => ({
               user: u,
-              match: await compareHash(token, u.verifyToken!)
+              match: await compareHash(token, u.resetToken!)
           }))
       ).then(results => results.find(r => r.match)?.user)
 

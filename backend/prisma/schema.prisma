@@ -28,6 +28,8 @@ model User {
   blockedBy        Block[]    @relation("blocked")
   loginAttempts    Int       @default(0)
   loginLockedUntil DateTime?
+  resetToken    String?   @unique
+  resetTimeout  DateTime?
 }
 
 enum Ranks {

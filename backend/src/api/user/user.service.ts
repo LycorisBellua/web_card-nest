@@ -664,23 +664,23 @@ async userExistsByEmail(toFind: string) {
   async saveResetToken(userId: string, token: string, expiry: Date) {
       await this.prisma.user.update({
           where: { id: userId },
-          data: { verifyToken: token, verifyTimeout: expiry }
+          data: { resetToken: token, resetTimeout: expiry }
       })
   }
 
   async findUsersWithValidToken() {
-      return this.prisma.user.findMany({
-          where: {
-              verifyTimeout: { gt: new Date() },
-              verifyToken: { not: null }
-          }
-      })
+    return this.prisma.user.findMany({
+        where: {
+            resetTimeout: { gt: new Date() },
+            resetToken: { not: null }
+        }
+    })
   }
 
   async updatePasswordAndClearToken(userId: string, hashedPassword: string) {
       await this.prisma.user.update({
           where: { id: userId },
-          data: { password: hashedPassword, verifyToken: null, verifyTimeout: null }
+          data: { password: hashedPassword, resetToken: null, resetTimeout: null }
       })
   }
 
