@@ -18,8 +18,8 @@ import { RequiredRank } from '../auth/guards/auth.rank-decorator';
 import { Ranks } from 'src/generated/prisma/enums';
 import type { Request as ExpressRequest } from 'express';
 import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
-import { BlockRow, FriendRow } from './types/rel.types';
 import { UserProfile } from '../user/types/user.types';
+import { Block, Friend } from 'src/generated/prisma/client';
 
 @UseGuards(AuthGuard, RankGuard)
 @RequiredRank(Ranks.USER)
@@ -32,7 +32,7 @@ export class RelController {
   async addFriend(
     @Req() req: ExpressRequest,
     @Body() relUuidDto: RelUuidDto,
-  ): Promise<FriendRow> {
+  ): Promise<Friend> {
     const user = req['user'] as JwtPayload;
     return await this.relService.addFriend(user.id, relUuidDto.targetId);
   }
@@ -41,7 +41,7 @@ export class RelController {
   async removeFriend(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ): Promise<FriendRow> {
+  ): Promise<Friend> {
     const user = req['user'] as JwtPayload;
     return await this.relService.removeFriend(user.id, targetId);
   }
@@ -50,7 +50,7 @@ export class RelController {
   async acceptRequest(
     @Req() req: ExpressRequest,
     @Body() relUuidDto: RelUuidDto,
-  ): Promise<FriendRow> {
+  ): Promise<Friend> {
     const user = req['user'] as JwtPayload;
     return await this.relService.acceptRequest(user.id, relUuidDto.targetId);
   }
@@ -59,7 +59,7 @@ export class RelController {
   async rejectRequest(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ): Promise<FriendRow> {
+  ): Promise<Friend> {
     const user = req['user'] as JwtPayload;
     return await this.relService.rejectRequest(user.id, targetId);
   }
@@ -68,7 +68,7 @@ export class RelController {
   async cancelRequest(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ): Promise<FriendRow> {
+  ): Promise<Friend> {
     const user = req['user'] as JwtPayload;
     return await this.relService.cancelRequest(user.id, targetId);
   }
@@ -106,7 +106,7 @@ export class RelController {
   async blockUser(
     @Req() req: ExpressRequest,
     @Body() relUuidDto: RelUuidDto,
-  ): Promise<BlockRow> {
+  ): Promise<Block> {
     const user = req['user'] as JwtPayload;
     return await this.relService.blockUser(user.id, relUuidDto.targetId);
   }
@@ -115,7 +115,7 @@ export class RelController {
   async unblockUser(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ): Promise<BlockRow> {
+  ): Promise<Block> {
     const user = req['user'] as JwtPayload;
     return await this.relService.unblockUser(user.id, targetId);
   }

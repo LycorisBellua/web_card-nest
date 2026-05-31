@@ -1,19 +1,18 @@
 import { userProfileSelect } from 'src/api/user/types/user.types';
 import { Prisma } from 'src/generated/prisma/client';
 
-// LOBBY BAN
-export const banSelect = {
+// GET BAN LIST
+export const banListSelect = {
   user: { select: userProfileSelect },
 } satisfies Prisma.LobbyBanSelect;
 
-export type BannedUser = Prisma.LobbyBanGetPayload<{
-  select: typeof banSelect;
-}>;
-
-// GET BAN LIST
 export const banListOrder = {
   user: { username: 'asc' },
 } satisfies Prisma.LobbyBanOrderByWithRelationInput;
+
+export type BannedUsers = Prisma.LobbyBanGetPayload<{
+  select: typeof banListSelect;
+}>[];
 
 // MODERATE LOBBY MESSAGE
 export const lobbyModeratedData = {

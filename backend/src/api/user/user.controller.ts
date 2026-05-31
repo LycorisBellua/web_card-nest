@@ -17,6 +17,7 @@ import { Ranks } from 'src/generated/prisma/enums';
 import { RequiredRank } from '../auth/guards/auth.rank-decorator';
 import type { Request as ExpressRequest } from 'express';
 import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
+import { OwnProfile, UserProfile } from './types/user.types';
 
 @Controller('api/user')
 export class UserController {
@@ -24,7 +25,7 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Delete()
-  async removeUser(@Req() req: ExpressRequest) {
+  async removeUser(@Req() req: ExpressRequest): Promise<void> {
     const user = req['user'] as JwtPayload;
     return await this.userService.removeUser(user.id);
   }
@@ -36,7 +37,7 @@ export class UserController {
   async updateUser(
     @Req() req: ExpressRequest,
     @Body() updateUserDto: UpdateUserDto,
-  ) {
+  ): Promise<OwnProfile> {
     const user = req['user'] as JwtPayload;
     return await this.userService.updateUser(user.id, updateUserDto);
   }
@@ -55,7 +56,7 @@ export class UserController {
   async getUserById(
     @Req() req: ExpressRequest,
     @Param('userId', ParseUUIDPipe) toFind: string,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.userService.getUserById(user.rank as Ranks, toFind);
   }
@@ -66,7 +67,7 @@ export class UserController {
   async getUserByUsername(
     @Req() req: ExpressRequest,
     @Param('username') toFind: string,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.userService.getUserByUsername(user.rank as Ranks, toFind);
   }

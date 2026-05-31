@@ -52,17 +52,17 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
   ): Promise<JWT> {
-    const result = await this.authService.login(
+    const tokens = await this.authService.login(
       loginDto.email,
       loginDto.password,
     );
-    res.cookie('refresh_token', result.refreshToken, {
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: result.refreshTimeout.getTime() - Date.now(),
+      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
     });
-    const accessToken = result.accessToken;
+    const accessToken = tokens.accessToken;
     return { accessToken };
   }
 
@@ -117,16 +117,18 @@ export class AuthController {
   async cancelVerificationRequest(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('token') token: string,
-  ): Promise<UserProfile> {
-    return await this.authService.cancelVerification(userId, token);
+  ): Promise<ReturnMessage> {
+    await this.authService.cancelVerification(userId, token);
+    return { message: 'Success' };
   }
 
   @UseGuards(AuthGuard)
   @Get('resend')
   async resendVerificationEmail(
     @Req() req: ExpressRequest,
-  ): Promise<UserProfile> {
+  ): Promise<ReturnMessage> {
     const user = req['user'] as JwtPayload;
-    return this.authService.resendVerificationEmail(user.id);
+    await this.authService.resendVerificationEmail(user.id);
+    return { message: 'Success' };
   }
 }

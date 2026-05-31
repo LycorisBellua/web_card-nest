@@ -13,6 +13,14 @@ export type UserProfileRaw = Prisma.UserGetPayload<{
   select: typeof userProfileSelect;
 }>;
 
+export type UserProfile = {
+  id: string;
+  username: string;
+  desc: string | null;
+  avatar: string | null;
+  rank: Ranks;
+};
+
 export const ownProfileSelect = {
   ...userProfileSelect,
   email: true,
@@ -23,13 +31,15 @@ export type OwnProfileRaw = Prisma.UserGetPayload<{
   select: typeof ownProfileSelect;
 }>;
 
-export type ConvertedAvatar<T extends { avatar: Uint8Array | null }> = Omit<
-  T,
-  'avatar'
-> & { avatar: string | null };
-
-export type UserProfile = ConvertedAvatar<UserProfileRaw>;
-export type OwnProfile = ConvertedAvatar<OwnProfileRaw>;
+export type OwnProfile = {
+  id: string;
+  username: string;
+  email: string | null;
+  email_unverified: string | null;
+  desc: string | null;
+  avatar: string | null;
+  rank: Ranks;
+};
 
 // GET ALL PROFILES
 export const noPendingUsers = {

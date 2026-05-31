@@ -1,11 +1,6 @@
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import {
-  ConvertedAvatar,
-  OwnProfileRaw,
-  UserProfile,
-  UserProfileRaw,
-} from '../types/user.types';
+import { UserProfile, UserProfileRaw } from '../types/user.types';
 
 export function getToken(): string {
   return randomBytes(32).toString('hex');
@@ -40,12 +35,12 @@ export function decodeAvatar(value: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(buf);
 }
 
-export function encodeSingleAvatar<T extends UserProfileRaw | OwnProfileRaw>(
-  found: T,
-): ConvertedAvatar<T> {
+export function encodeSingleAvatar(profile: UserProfileRaw): UserProfile {
   return {
-    ...found,
-    avatar: found.avatar ? Buffer.from(found.avatar).toString('base64') : null,
+    ...profile,
+    avatar: profile.avatar
+      ? Buffer.from(profile.avatar).toString('base64')
+      : null,
   };
 }
 

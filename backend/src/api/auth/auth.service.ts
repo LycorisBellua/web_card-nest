@@ -11,7 +11,6 @@ import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { ErrorMessages } from '../user/error_messages/ErrorMessages';
 import { JWT, RedirectURL, TokenSet } from './types/auth.types';
-import { OwnProfile, RefreshData, UserProfile } from '../user/types/user.types';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +19,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async signup(createUserDto: CreateUserDto): Promise<OwnProfile> {
+  async signup(createUserDto: CreateUserDto): Promise<void> {
     return await this.userService.addUser(createUserDto);
   }
 
@@ -45,8 +44,9 @@ export class AuthService {
     };
   }
 
-  async logout(userId: string): Promise<RefreshData> {
-    return await this.userService.removeRefreshToken(userId);
+  async logout(userId: string): Promise<void> {
+    await this.userService.userExistsOrThrow(userId);
+    await this.userService.removeRefreshToken(userId);
   }
 
   async refresh(jwtToken: string, refreshToken: string): Promise<JWT> {
@@ -78,15 +78,12 @@ export class AuthService {
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
-  async cancelVerification(
-    userId: string,
-    token: string,
-  ): Promise<UserProfile> {
-    return await this.userService.cancelVerification(userId, token);
+  async cancelVerification(userId: string, token: string): Promise<void> {
+    await this.userService.cancelVerification(userId, token);
   }
 
-  async resendVerificationEmail(userId: string): Promise<UserProfile> {
-    return await this.userService.resendVerificationEmail(userId);
+  async resendVerificationEmail(userId: string): Promise<void> {
+    await this.userService.resendVerificationEmail(userId);
   }
 
   // Generate JWT

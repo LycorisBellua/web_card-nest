@@ -23,7 +23,7 @@ export class UserEmailsService {
     );
   }
 
-  async sendVerificationSuccess(address: string) {
+  async sendVerificationSuccess(address: string): Promise<void> {
     const url = process.env.HOME_URL;
     if (url === undefined) {
       return;

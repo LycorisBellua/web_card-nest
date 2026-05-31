@@ -18,26 +18,3 @@ export const blockListInclude = {
 export type BlockListWithUserData = Prisma.BlockGetPayload<{
   include: typeof blockListInclude;
 }>[];
-
-// SINGLE BLOCk
-export const blockSelect = {
-  blockerId: true,
-  blockedId: true,
-  created: true,
-} satisfies Prisma.BlockSelect;
-
-export type BlockRow = Prisma.BlockGetPayload<{
-  select: typeof blockSelect;
-}>;
-
-// SINGLE FRIEND
-export const friendSelect = {
-  requesterId: true,
-  addresseeId: true,
-  created: true,
-  status: true,
-} satisfies Prisma.FriendSelect;
-
-export type FriendRow = Prisma.FriendGetPayload<{
-  select: typeof friendSelect;
-}>;

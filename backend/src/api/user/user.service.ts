@@ -54,14 +54,13 @@ export class UserService {
   ) {}
 
   // CALLED FROM USER CONTROLLER
-  async removeUser(userId: string): Promise<UserProfile> {
+  async removeUser(userId: string): Promise<void> {
     const found = await this.userExistsOrThrow(userId);
-    const result = await this.deleteUser(userId);
+    await this.deleteUser(userId);
     const address = found.email ? found.email : found.email_unverified;
     if (address) {
       await this.userEmailsService.sendDeletionEmail(address);
     }
-    return encodeSingleAvatar(result);
   }
 
   async updateUser(userId: string, dto: UpdateUserDto): Promise<OwnProfile> {
@@ -120,7 +119,12 @@ export class UserService {
         );
       }
     }
-    return encodeSingleAvatar(updated);
+    return {
+      ...updated,
+      avatar: updated.avatar
+        ? Buffer.from(updated.avatar).toString('base64')
+        : null,
+    };
   }
 
   async updatePassword(
@@ -152,7 +156,12 @@ export class UserService {
     if (!found) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
-    return encodeSingleAvatar(found);
+    return {
+      ...found,
+      avatar: found.avatar
+        ? Buffer.from(found.avatar).toString('base64')
+        : null,
+    };
   }
 
   async getUserById(rank: Ranks, toFind: string): Promise<UserProfile> {
@@ -216,7 +225,7 @@ export class UserService {
   }
 
   // CALLED FROM AUTH SERVICE
-  async addUser(newUser: CreateUserDto): Promise<OwnProfile> {
+  async addUser(newUser: CreateUserDto): Promise<void> {
     await this.throwIfUsernameOrEmailIsTaken(
       newUser.username,
       newUser.email_unverified,
@@ -234,10 +243,9 @@ export class UserService {
       newUser.email_unverified,
       token,
     );
-    return encodeSingleAvatar(created);
   }
 
-  async verifyEmail(userId: string, token: string): Promise<UserEmail | null> {
+  async verifyEmail(userId: string, token: string): Promise<boolean> {
     const found = await this.userExists(userId);
     if (
       !found ||
@@ -247,7 +255,7 @@ export class UserService {
       !found.verifyTimeout ||
       found.verifyTimeout < new Date()
     ) {
-      return null;
+      return false;
     }
     let newRank: Ranks;
     if (found.rank === Ranks.PENDING) {
@@ -255,22 +263,14 @@ export class UserService {
     } else {
       newRank = found.rank;
     }
-    const verified = await this.modifyVerifyEmail(
-      userId,
+    await this.modifyVerifyEmail(userId, found.email_unverified, newRank);
+    await this.userEmailsService.sendVerificationSuccess(
       found.email_unverified,
-      newRank,
     );
-    if (!verified || !verified.email) {
-      return null;
-    }
-    await this.userEmailsService.sendVerificationSuccess(verified.email);
-    return verified;
+    return true;
   }
 
-  async cancelVerification(
-    userId: string,
-    token: string,
-  ): Promise<UserProfile> {
+  async cancelVerification(userId: string, token: string): Promise<void> {
     const found = await this.userExists(userId);
     if (
       !found ||
@@ -285,14 +285,12 @@ export class UserService {
       verifyTimeout: null,
     };
     if (found.email) {
-      const modified = await this.modifyVerificationData(userId, data);
-      return encodeSingleAvatar(modified);
+      return await this.modifyVerificationData(userId, data);
     }
-    const deleted = await this.deleteUser(userId);
-    return encodeSingleAvatar(deleted);
+    return await this.deleteUser(userId);
   }
 
-  async resendVerificationEmail(userId: string): Promise<UserProfile> {
+  async resendVerificationEmail(userId: string): Promise<void> {
     const found = await this.userExistsOrThrow(userId);
     if (!found.email_unverified) {
       throw new NotFoundException('User has no unverified email address.');
@@ -302,16 +300,12 @@ export class UserService {
       verifyToken: await createHash(token),
       verifyTimeout: getVerificationTimeout(),
     };
-    const result = await this.modifyVerificationData(userId, data);
-    const updated = await this.userExistsOrThrow(userId);
-    if (updated.email_unverified && updated.verifyToken) {
-      await this.userEmailsService.sendVerificationEmail(
-        userId,
-        updated.email_unverified,
-        token,
-      );
-    }
-    return encodeSingleAvatar(result);
+    await this.modifyVerificationData(userId, data);
+    await this.userEmailsService.sendVerificationEmail(
+      userId,
+      found.email_unverified,
+      token,
+    );
   }
 
   async generateRefreshToken(userId: string): Promise<RefreshData> {
@@ -325,8 +319,7 @@ export class UserService {
     );
   }
 
-  async removeRefreshToken(userId: string): Promise<RefreshData> {
-    await this.userExistsOrThrow(userId);
+  async removeRefreshToken(userId: string): Promise<void> {
     return await this.deleteRefreshToken(userId);
   }
 
@@ -407,10 +400,9 @@ export class UserService {
     });
   }
 
-  private async deleteUser(id: string): Promise<UserProfileRaw> {
-    return await this.prisma.user.delete({
+  private async deleteUser(id: string): Promise<void> {
+    await this.prisma.user.delete({
       where: { id },
-      select: userProfileSelect,
     });
   }
 
@@ -418,8 +410,8 @@ export class UserService {
     id: string,
     address: string,
     rank: Ranks,
-  ): Promise<OwnProfileRaw> {
-    return await this.prisma.user.update({
+  ): Promise<void> {
+    await this.prisma.user.update({
       where: { id },
       data: {
         email: address,
@@ -428,18 +420,16 @@ export class UserService {
         verifyTimeout: null,
         verifyToken: null,
       },
-      select: ownProfileSelect,
     });
   }
 
   private async modifyVerificationData(
     id: string,
     newData: EmailVerData,
-  ): Promise<UserProfileRaw> {
-    return await this.prisma.user.update({
+  ): Promise<void> {
+    await this.prisma.user.update({
       where: { id },
       data: newData,
-      select: userProfileSelect,
     });
   }
 
@@ -527,11 +517,10 @@ export class UserService {
     });
   }
 
-  private async deleteRefreshToken(id: string): Promise<RefreshData> {
-    return await this.prisma.user.update({
+  private async deleteRefreshToken(id: string): Promise<void> {
+    await this.prisma.user.update({
       where: { id },
       data: { refreshToken: null, refreshTimeout: null },
-      select: refreshDataSelect,
     });
   }
 
