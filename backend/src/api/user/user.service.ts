@@ -310,11 +310,8 @@ export class UserService {
     await this.userExistsOrThrow(userId);
     const token = getToken();
     const timeout = getRefreshTimeout();
-    return await this.modifyRefreshToken(
-      userId,
-      createTokenHash(token),
-      timeout,
-    );
+    await this.modifyRefreshToken(userId, createTokenHash(token), timeout);
+    return { refreshToken: token, refreshTimeout: timeout };
   }
 
   async removeRefreshToken(userId: string): Promise<void> {

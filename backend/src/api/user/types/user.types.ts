@@ -7,6 +7,7 @@ export const userProfileSelect = {
   avatar: true,
   rank: true,
   desc: true,
+  date: true,
 } satisfies Prisma.UserSelect;
 
 export type UserProfileRaw = Prisma.UserGetPayload<{
@@ -19,6 +20,7 @@ export type UserProfile = {
   desc: string | null;
   avatar: string | null;
   rank: Ranks;
+  date: Date;
 };
 
 export const ownProfileSelect = {
@@ -39,6 +41,7 @@ export type OwnProfile = {
   desc: string | null;
   avatar: string | null;
   rank: Ranks;
+  date: Date;
 };
 
 // GET ALL PROFILES

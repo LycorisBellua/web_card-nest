@@ -77,7 +77,9 @@ export class UserController {
   @UseGuards(AuthGuard, RankGuard)
   @RequiredRank(Ranks.USER)
   @Get('all/username')
-  async getAllSortByUsername(@Req() req: ExpressRequest) {
+  async getAllSortByUsername(
+    @Req() req: ExpressRequest,
+  ): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
     return await this.userService.getAllSortByUsername(user.rank as Ranks);
   }
@@ -85,7 +87,7 @@ export class UserController {
   @UseGuards(AuthGuard, RankGuard)
   @RequiredRank(Ranks.USER)
   @Get('all/date')
-  async getAllSortByDate(@Req() req: ExpressRequest) {
+  async getAllSortByDate(@Req() req: ExpressRequest): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
     return await this.userService.getAllSortByDate(user.rank as Ranks);
   }
