@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import type { User, OtherUser } from 'context/Types';
-import { useUser } from 'context/useUser';
+import type { User } from 'context/Types';
 import {
   sanitizeUsername,
   sanitizeDescription,
@@ -9,15 +8,7 @@ import {
   validateUsername,
   validateDescription,
   validateAvatar,
-  addAvatarPrefix,
 } from 'functions/UserValidation';
-import {
-  RefreshTokenRequest,
-  FetchSelfBlockedListRequest,
-  FetchSelfFriendListRequest,
-  FetchSelfSentListRequest,
-  FetchSelfReceivedListRequest,
-} from 'functions/Requests';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
 import { AvatarBig } from 'components/btn/Avatar';
@@ -29,35 +20,18 @@ import styled from 'styled-components';
 type FieldErrors = {
   avatar: string[];
   username: string[];
-  desc: string[];
+  description: string[];
   server: string[];
 };
 
 const emptyFieldErrors = (): FieldErrors => ({
   avatar: [],
   username: [],
-  desc: [],
+  description: [],
   server: [],
 });
 
-interface Props {
-  otherUser: OtherUser;
-  setOtherUser: (e: OtherUser) => void;
-}
-
-function EditProfileMod({ otherUser, setOtherUser }: Props) {
-  const {
-    user,
-    setUser,
-    blocked,
-    setBlocked,
-    friends,
-    setFriends,
-    sentFriends,
-    setSentFriends,
-    receivedFriends,
-    setReceivedFriends,
-  } = useUser();
+function EditProfileMod({ user }: { user: NonNullable<User> }) {
   const [displaySpinner, setDisplaySpinner] = useState(false);
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>(emptyFieldErrors());
@@ -67,44 +41,12 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
 
   const [avatar, setAvatar] = useState<File | '' | undefined>(undefined);
   const [username, setUsername] = useState('');
-  const [desc, setDesc] = useState('');
+  const [description, setDescription] = useState('');
 
-  if (!user || !otherUser || !CanDisciplineThisUser(user, otherUser))
-    return <></>;
+  if (!CanDisciplineThisUser(user)) return <></>;
 
   const hasPendingChanges =
-    avatar !== undefined || username !== '' || desc !== '';
-
-  async function updateRelationships(accessToken: string): Promise<string> {
-    const inBlocked = blocked.some((u) => u.id === otherUser.id);
-    const inFriends = friends.some((u) => u.id === otherUser.id);
-    const inSentFriends = sentFriends.some((u) => u.id === otherUser.id);
-    const inReceivedFriends = receivedFriends.some(
-      (u) => u.id === otherUser.id,
-    );
-    if (inBlocked) {
-      const data = await FetchSelfBlockedListRequest(accessToken);
-      if (!data.accessToken.length) return '';
-      accessToken = data.accessToken;
-      setBlocked(data.users);
-    } else if (inFriends) {
-      const data = await FetchSelfFriendListRequest(accessToken);
-      if (!data.accessToken.length) return '';
-      accessToken = data.accessToken;
-      setFriends(data.users);
-    } else if (inSentFriends) {
-      const data = await FetchSelfSentListRequest(accessToken);
-      if (!data.accessToken.length) return '';
-      accessToken = data.accessToken;
-      setSentFriends(data.users);
-    } else if (inReceivedFriends) {
-      const data = await FetchSelfReceivedListRequest(accessToken);
-      if (!data.accessToken.length) return '';
-      accessToken = data.accessToken;
-      setReceivedFriends(data.users);
-    }
-    return accessToken;
-  }
+    avatar !== undefined || username !== '' || description !== '';
 
   async function handleSave() {
     if (!hasPendingChanges || isSaving) return;
@@ -115,7 +57,8 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
     setIsSaving(true);
 
     const sanitizedUsername = username !== '' ? sanitizeUsername(username) : '';
-    const sanitizedDescription = desc !== '' ? sanitizeDescription(desc) : '';
+    const sanitizedDescription =
+      description !== '' ? sanitizeDescription(description) : '';
 
     const nextErrors: FieldErrors = emptyFieldErrors();
     if (avatar instanceof File)
@@ -123,15 +66,16 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
     if (sanitizedUsername !== '')
       nextErrors.username.push(...validateUsername(sanitizedUsername));
     if (sanitizedDescription !== '')
-      nextErrors.desc.push(...validateDescription(sanitizedDescription));
+      nextErrors.description.push(...validateDescription(sanitizedDescription));
 
     const hasFieldErrors = Object.values(nextErrors).some((e) => e.length > 0);
     if (hasFieldErrors) {
-      setDisplaySpinner(false);
       setFieldErrors(nextErrors);
       setIsSaving(false);
       return;
     }
+
+    const requests: Promise<Response>[] = [];
 
     const body: Record<string, unknown> = {};
     if (avatar !== undefined) {
@@ -148,84 +92,40 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
         });
       }
     }
+    if (sanitizedUsername !== '') body.username = sanitizedUsername;
+    if (sanitizedDescription !== '') body.description = sanitizedDescription;
 
-    if (sanitizedUsername !== '' && sanitizedUsername != otherUser.username) {
-      body.username = sanitizedUsername;
-    }
-    if (sanitizedDescription !== '' && sanitizedDescription != otherUser.desc) {
-      body.desc = sanitizedDescription;
-    }
-
-    try {
-      const tmpOtherUser = { ...otherUser };
-      let token = user!.accessToken;
-
-      if (Object.keys(body).length > 0) {
-        body.targetId = otherUser.id;
-        let res = await fetch('/api/admin/modify', {
+    if (Object.keys(body).length > 0) {
+      requests.push(
+        fetch(`/api/users/${user.id}`, {
           method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-type': 'application/json' },
           body: JSON.stringify(body),
-        });
+        }),
+      );
+    }
 
-        if (res.status === 401) {
-          token = await RefreshTokenRequest(token);
-          if (token.length) {
-            res = await fetch('/api/admin/modify', {
-              method: 'PATCH',
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(body),
-            });
-          }
-        }
-
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as {
-            message: string;
-          } | null;
-          setFieldErrors((prev) => ({
-            ...prev,
-            server: [
-              ...prev.server,
-              data?.message ?? `Error ${res.status}: ${res.statusText}`,
-            ],
-          }));
-          setIsSaving(false);
-          setDisplaySpinner(false);
-          return;
-        }
-
-        const updated = (await res.json()) as Partial<NonNullable<OtherUser>>;
-        if (updated.username) tmpOtherUser.username = updated.username;
-        if (updated.desc) tmpOtherUser.desc = updated.desc;
-        tmpOtherUser.avatar = addAvatarPrefix(updated.avatar ?? '');
-      }
-
-      if (token.length) {
-        setOtherUser(tmpOtherUser);
-        token = await updateRelationships(token);
-        if (token.length) {
-          setUser((prev) => ({ ...prev, accessToken: token }) as User);
-        }
-        if (sanitizedUsername) {
-          window.history.replaceState(null, '', `/user/${sanitizedUsername}`);
-        }
-      }
-    } catch {
+    const responses = await Promise.all(requests);
+    const failed = responses.filter((r) => !r.ok);
+    if (failed.length > 0) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        server: failed.map((r) => `Error ${r.status}: ${r.statusText}`),
+      }));
       setIsSaving(false);
       setDisplaySpinner(false);
       return;
     }
 
+    if (Object.keys(body).length > 0) {
+      //const updated = (await responses[0].json()) as Partial<NonNullable<User>>;
+      //setUser((old) => (old ? { ...old, ...updated } : null));
+      //TODO: This other user is modified. Is the change immediate on the front?
+    }
+
     setAvatar(undefined);
     setUsername('');
-    setDesc('');
+    setDescription('');
     setResetKey((k) => k + 1);
     setSuccessMessage('Changes saved successfully.');
     setIsSaving(false);
@@ -239,7 +139,7 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
       <h2>Edit Profile As A Mod</h2>
       <UpdateAvatar
         key={`avatar-${resetKey}`}
-        otherUser={otherUser}
+        user={user}
         pendingAvatar={avatar}
         onChange={setAvatar}
         errors={fieldErrors.avatar}
@@ -247,15 +147,15 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
       <div className="main">
         <UpdateUsername
           key={`username-${resetKey}`}
-          otherUser={otherUser}
+          user={user}
           onChange={setUsername}
           errors={fieldErrors.username}
         />
         <UpdateDescription
-          key={`desc-${resetKey}`}
-          otherUser={otherUser}
-          onChange={setDesc}
-          errors={fieldErrors.desc}
+          key={`description-${resetKey}`}
+          user={user}
+          onChange={setDescription}
+          errors={fieldErrors.description}
         />
         {fieldErrors.server.map((err, i) => (
           <div key={i}>{err}</div>
@@ -273,12 +173,12 @@ const HiddenAvatarInput = styled.input`
 `;
 
 function UpdateAvatar({
-  otherUser,
+  user,
   pendingAvatar,
   onChange,
   errors,
 }: {
-  otherUser: OtherUser;
+  user: NonNullable<User>;
   pendingAvatar: File | '' | undefined;
   onChange: (f: File | '') => void;
   errors: string[];
@@ -299,14 +199,14 @@ function UpdateAvatar({
       ? undefined
       : pendingAvatar instanceof File
         ? previewUrl
-        : otherUser.avatar;
+        : user.avatar;
 
   return (
     <div>
       <AvatarBig
         src={avatarSrc ?? ''}
-        rank={otherUser.rank}
-        isOnline={otherUser.isOnline}
+        rank={user.rank}
+        isOnline={user.isOnline}
       />
       <div className="btn">
         <BtnDefault onClick={() => imgInputRef.current?.click()}>
@@ -336,11 +236,11 @@ function UpdateAvatar({
 }
 
 function UpdateUsername({
-  otherUser,
+  user,
   onChange,
   errors,
 }: {
-  otherUser: OtherUser;
+  user: NonNullable<User>;
   onChange: (v: string) => void;
   errors: string[];
 }) {
@@ -357,7 +257,7 @@ function UpdateUsername({
       id="username"
       name="username"
       label="New username"
-      placeholder={otherUser.username}
+      placeholder={user.username}
       value={value}
       onChange={(e) => updateValue(e)}
       autoComplete="off"
@@ -368,11 +268,11 @@ function UpdateUsername({
 }
 
 function UpdateDescription({
-  otherUser,
+  user,
   onChange,
   errors,
 }: {
-  otherUser: OtherUser;
+  user: NonNullable<User>;
   onChange: (v: string) => void;
   errors: string[];
 }) {
@@ -386,10 +286,10 @@ function UpdateDescription({
   return (
     <div>
       <TextareaField
-        id="user-desc"
-        name="user-desc"
+        id="user-description"
+        name="user-description"
         label="New description"
-        placeholder={otherUser.desc}
+        placeholder={user.description}
         rows={4}
         wrap="soft"
         value={value ?? ''}

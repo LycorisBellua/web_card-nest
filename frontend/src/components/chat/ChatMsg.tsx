@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom';
-import type { /*OtherUserOrGuest,*/ Msg } from 'context/Types';
+import type { Msg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
-import { CanDisciplineThisUser } from 'functions/Ranks';
+import {
+  IsLoggedIn,
+  IsPendingUser,
+  CanDisciplineThisUser,
+} from 'functions/Ranks';
 import styled, { css } from 'styled-components';
 import { Avatar } from 'components/btn/Avatar';
 import { Username } from 'components/btn/Username';
@@ -34,7 +38,7 @@ const Row = styled.div<{ $rank: string }>`
             background: rgba(240, 192, 64, 0.07);
           }
         `;
-      case 'moderator':
+      case 'mod':
         return css`
           background: rgba(212, 160, 112, 0.04);
           box-shadow: inset 2px 0 0 rgba(212, 160, 112, 0.4);
@@ -76,7 +80,7 @@ const NameWrap = styled.div<{ $rank: string }>`
   ${({ $rank }) => {
     switch ($rank) {
       case 'admin':
-      case 'moderator':
+      case 'mod':
         return css`
           display: flex;
           align-items: center;
@@ -112,16 +116,15 @@ const TextModerated = styled(Text)`
 `;
 
 function ChatMsg({ msg }: { msg: Msg }) {
-  const { user } = useUser();
-  //TODO
-  //const author = users.find((u) => u.id === msg.authorId) ?? null;
-  const can_discipline = CanDisciplineThisUser(user, null); //author);
+  const { users } = useUser();
+  const author = users.find((u) => u.id === msg.authorId) ?? null;
+  const can_discipline = CanDisciplineThisUser(author);
 
-  const avatar = /*author?.avatar ??*/ '';
-  const isOnline = /*author?.isOnline ??*/ false;
-  const rank = /*author?.rank ??*/ 'guest';
-  const username = /*author?.username ??*/ 'Guest';
-  const is_logged_in = !!user && user.rank.toLowerCase() != 'pending';
+  const avatar = author?.avatar ?? '';
+  const isOnline = author?.isOnline ?? false;
+  const rank = author?.rank ?? 'guest';
+  const username = author?.username ?? 'Guest';
+  const is_logged_in = IsLoggedIn() && !IsPendingUser();
 
   // TODO: When clicking on Moderate, make the msg content empty, and switch
   // the `moderated` field to true

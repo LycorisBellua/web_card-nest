@@ -1,18 +1,15 @@
-import type { OtherUserOrGuest } from 'context/Types';
-import { useUser } from 'context/useUser';
+import type { UserLimitedOrGuest } from 'context/Types';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import { BtnDefault } from 'components/btn/Btn';
 
-function ToggleChatTimeout({ otherUser }: { otherUser: OtherUserOrGuest }) {
-  const { user } = useUser();
-
-  if (!CanDisciplineThisUser(user, otherUser)) {
+function ToggleChatTimeout({ user }: { user: UserLimitedOrGuest }) {
+  if (!CanDisciplineThisUser(user)) {
     return <></>;
   }
 
   // TODO: Ideally, the button says "Enable" or "Disable" so that we know
   // what state we are in before pressing the button, but it's not necessary.
-  if (!otherUser) {
+  if (!user) {
     // TODO: All guests
   } else {
     // TODO: This specific user.

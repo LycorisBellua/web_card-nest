@@ -46,10 +46,9 @@ const Field = styled.input`
 
 function ChatInput({ onSend }: { onSend: (content: string) => void }) {
   const [value, setValue] = useState('');
-  const maxLen = 500;
 
   function handleSubmit() {
-    const sanitized = sanitizeMessage(value, maxLen);
+    const sanitized = sanitizeMessage(value);
     if (!sanitized) return;
     onSend(sanitized);
     setValue('');
@@ -64,7 +63,6 @@ function ChatInput({ onSend }: { onSend: (content: string) => void }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          maxLength={maxLen}
         />
         <BtnIcon title="Send" onClick={handleSubmit}>
           ➤

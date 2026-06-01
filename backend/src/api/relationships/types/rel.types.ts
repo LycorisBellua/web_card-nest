@@ -4,7 +4,6 @@ export const friendUserSelect = {
   id: true,
   username: true,
   avatar: true,
-  rank: true,
 } satisfies Prisma.UserSelect;
 
 export const friendshipInclude = {

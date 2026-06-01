@@ -2,17 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import {
-  comparePasswordHash,
-  createTokenHash,
-  getCurrentTime,
-  getRefreshTimeout,
-  getToken,
-} from '../user/utils/user.utils';
+import { createHash, compareHash, getCurrentTime, getToken} from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
+import { SendMailService } from '../sendMail/sendMail.service';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
-import { TokenPair } from './jwt/auth.token-pair';
-import { Ranks } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +19,10 @@ export class AuthService {
     return await this.userService.addUser(createUserDto);
   }
 
-  async login(email: string, password: string): Promise<TokenPair> {
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ refreshToken: string; timeout: Date; accessToken: string }> {
     const found = await this.userService.userExistsByEmail(email);
 
     if (found?.loginLockedUntil && found.loginLockedUntil > new Date()) {
@@ -37,7 +33,7 @@ export class AuthService {
     if (
       !found ||
       (found.email && found.email !== email) ||
-      !(await comparePasswordHash(password, found.password))
+      !(await compareHash(password, found.password))
     ) {
       if (found) {
         const attempts = found.loginAttempts + 1
@@ -65,22 +61,21 @@ export class AuthService {
     return await this.userService.removeRefreshToken(userId);
   }
 
-  async refresh(refreshToken: string): Promise<string> {
-    const hash = createTokenHash(refreshToken);
-    const user = await this.userService.userExistsByRefreshTokenHash(hash);
+  async refresh(jwtToken: string, refreshToken: string) {
+    const payload: JwtPayload = this.jwtService.decode(jwtToken);
+    if (!payload) {
+      throw new UnauthorizedException();
+    }
+    const found = await this.userService.userExistsOrThrow(payload.id);
     if (
-      !user ||
-      !user.refreshTimeout ||
-      user.refreshTimeout < getCurrentTime()
+      !found.refreshToken ||
+      !found.refreshTimeout ||
+      found.refreshTimeout < getCurrentTime() ||
+      !(await compareHash(refreshToken, found.refreshToken))
     ) {
       throw new UnauthorizedException();
     }
-    return await this.generateJwtToken(user.id, user.rank);
-  }
-
-  async updatePassword(userId: string, dto: UpdatePasswordDto) {
-    const result = await this.userService.updatePassword(userId, dto);
-    return await this.generateTokenPair(userId, result.rank);
+    return await this.generateJwtToken(payload.id);
   }
 
   async updatePassword(userId: string, dto: UpdatePasswordDto) {
@@ -92,7 +87,6 @@ export class AuthService {
     if (!verified) {
       return { url: `${process.env.HOME_URL}/verify-error` };
     }
-    this.userService.removeRefreshToken(userId);
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 

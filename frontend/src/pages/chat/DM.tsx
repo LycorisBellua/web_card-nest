@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUser } from 'context/useUser';
 import type { Msg } from 'context/Types';
+import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
 import NotFound from 'pages/NotFound';
 import ChatPage from 'components/chat/ChatPage';
 import ChatHead from 'components/chat/ChatHead';
@@ -21,9 +22,7 @@ function DM() {
   //
   const thread_name = `thread_dm_${friend?.username?.toLowerCase()}`;
   const thread = threads.find((t) => thread_name === t.id);
-  // TODO: `isOnline` doesn't exist on type LimitedUser (relationships would
-  // need to return OtherUser isntead of LimitedUser)
-  const nbr_online = 0; //friend?.isOnline ? 2 : 1;
+  const nbr_online = friend?.isOnline ? 2 : 1;
   const lastMsg = thread?.messages.at(-1);
   const grouped =
     thread?.messages.reduce<Record<string, Msg[]>>((acc, msg) => {
@@ -45,9 +44,8 @@ function DM() {
     }
   }, [user?.id, lastMsg]);
 
-  if (!user || user.rank.toLowerCase() == 'pending' || !friend || !thread) {
+  if (!IsLoggedIn() || IsPendingUser() || !friend || !thread)
     return <NotFound />;
-  }
 
   return (
     <ChatPage>

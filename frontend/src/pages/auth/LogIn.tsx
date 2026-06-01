@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useUser } from 'context/useUser';
-import { FetchSelfRequest } from 'functions/Requests';
 import { sanitizeEmail, sanitizePassword } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
 
+type LoginResponse = {
+  accessToken: string;
+  user: {
+    id: string;
+    username: string;
+  };
+  message: string;
+};
+
 function LogIn() {
-  const {
-    setUser,
-    setBlocked,
-    setFriends,
-    setSentFriends,
-    setReceivedFriends,
-  } = useUser();
   const [logMail, setLogMail] = useState('');
   const [logPwd, setLogPwd] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -43,35 +43,22 @@ function LogIn() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: loginEmail,
-          password: loginPwd,
+          uemail: loginEmail,
+          upassword: loginPwd,
         }),
       });
+      const data = (await res.json()) as LoginResponse;
       if (!res.ok) {
-        const data = (await res.json()) as {
-          message: string;
-          error: string;
-          statusCode: number;
-        };
         setErrors([data.message]);
         return;
       }
-      const dataLogin = (await res.json()) as { accessToken: string };
-      const dataSelf = await FetchSelfRequest(dataLogin.accessToken);
-      setUser(dataSelf.user);
-      setBlocked(dataSelf.blocked);
-      setFriends(dataSelf.friends);
-      setSentFriends(dataSelf.sentFriends);
-      setReceivedFriends(dataSelf.receivedFriends);
-      if (!dataSelf.user) {
-        setErrors(['Internal error']);
-      } else {
-        setMessage('Login success! Redirecting to your profile...');
-        setLogMail('');
-        setLogPwd('');
-        setErrors([]);
-        await navigate('/profile');
-      }
+      //localStorage.setItem('accessToken', data.accessToken);
+      //localStorage.setItem('user', JSON.stringify(data.user));
+      setMessage('Login success! Redirecting to your profile...');
+      setLogMail('');
+      setLogPwd('');
+      setErrors([]);
+      setTimeout(() => navigate('/profile'), 3000);
     } catch {
       setErrors(['Internal error']);
     }

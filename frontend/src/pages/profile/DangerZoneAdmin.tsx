@@ -1,177 +1,58 @@
 import { useState } from 'react';
-import type { User, OtherUserOrGuest } from 'context/Types';
-import { useUser } from 'context/useUser';
-import { CanDisciplineThisUser } from 'functions/Ranks';
-import {
-  ChangeRankRequest,
-  DeleteUserRequest,
-  FetchSelfBlockedListRequest,
-  FetchSelfFriendListRequest,
-  FetchSelfSentListRequest,
-  FetchSelfReceivedListRequest,
-} from 'functions/Requests';
-import { BtnDanger, BtnAccent } from 'components/btn/Btn';
+import type { User } from 'context/Types';
+import { CanDisciplineThisUser, IsAdmin } from 'functions/Ranks';
+import { BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
-interface Props {
-  otherUser: OtherUserOrGuest;
-  setOtherUser: (e: OtherUserOrGuest) => void;
-}
-
-function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
-  const {
-    user,
-    setUser,
-    blocked,
-    setBlocked,
-    friends,
-    setFriends,
-    sentFriends,
-    setSentFriends,
-    receivedFriends,
-    setReceivedFriends,
-  } = useUser();
+function DangerZoneAdmin({ user }: { user: NonNullable<User> }) {
   const [isDownrankModalOpen, setIsDownrankModalOpen] = useState(false);
-  const [isUprankModalOpen, setIsUprankModalOpen] = useState(false);
   const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
   const [error, setError] = useState('');
 
-  if (
-    !user ||
-    !otherUser ||
-    user.rank.toLowerCase() != 'admin' ||
-    !CanDisciplineThisUser(user, otherUser)
-  )
-    return <></>;
+  if (!CanDisciplineThisUser(user) || !IsAdmin()) return <></>;
 
   function closeModals() {
     setIsDownrankModalOpen(false);
-    setIsUprankModalOpen(false);
     setIsDeletionModalOpen(false);
     setError('');
-  }
-
-  async function updateRelationships(accessToken: string): Promise<string> {
-    const inBlocked = blocked.some((u) => u.id === otherUser!.id);
-    const inFriends = friends.some((u) => u.id === otherUser!.id);
-    const inSentFriends = sentFriends.some((u) => u.id === otherUser!.id);
-    const inReceivedFriends = receivedFriends.some(
-      (u) => u.id === otherUser!.id,
-    );
-    if (inBlocked) {
-      const data = await FetchSelfBlockedListRequest(accessToken);
-      if (!data.accessToken.length) return '';
-      accessToken = data.accessToken;
-      setBlocked(data.users);
-    } else if (inFriends) {
-      const data = await FetchSelfFriendListRequest(accessToken);
-      if (!data.accessToken.length) return '';
-      accessToken = data.accessToken;
-      setFriends(data.users);
-    } else if (inSentFriends) {
-      const data = await FetchSelfSentListRequest(accessToken);
-      if (!data.accessToken.length) return '';
-      accessToken = data.accessToken;
-      setSentFriends(data.users);
-    } else if (inReceivedFriends) {
-      const data = await FetchSelfReceivedListRequest(accessToken);
-      if (!data.accessToken.length) return '';
-      accessToken = data.accessToken;
-      setReceivedFriends(data.users);
-    }
-    return accessToken;
   }
 
   async function handleDownrank() {
     closeModals();
     try {
-      const newRank = 'user';
-      let accessToken = await ChangeRankRequest(
-        user!.accessToken,
-        otherUser!.id,
-        newRank,
-      );
-      if (!accessToken.length) {
-        setError('Error occurred');
+      const res = await fetch(`/api/users/${user.id}/rank`, {
+        method: 'PATCH',
+      });
+      if (!res.ok) {
+        setError(`Error ${res.status}: ${res.statusText}`);
         return;
       }
-      otherUser!.rank = newRank;
-      setOtherUser(otherUser);
-      accessToken = await updateRelationships(accessToken);
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
-      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
+      // TODO: Other user is modified. Is the change immediate on the front?
     } catch {
-      setError('Error occurred');
-    }
-  }
-
-  async function handleUprank() {
-    closeModals();
-    try {
-      const newRank = 'moderator';
-      let accessToken = await ChangeRankRequest(
-        user!.accessToken,
-        otherUser!.id,
-        newRank,
-      );
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
-      otherUser!.rank = newRank;
-      setOtherUser(otherUser);
-      accessToken = await updateRelationships(accessToken);
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
-      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
-    } catch {
-      setError('Error occurred');
+      setError('An error occurred. Please try again.');
     }
   }
 
   async function handleDelete() {
     closeModals();
     try {
-      let accessToken = await DeleteUserRequest(
-        user!.accessToken,
-        otherUser!.id,
-      );
-      if (!accessToken.length) {
-        setError('Error occurred');
+      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        setError(`Error ${res.status}: ${res.statusText}`);
         return;
       }
-      setOtherUser(null);
-      accessToken = await updateRelationships(accessToken);
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
-      setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
-      window.location.href = '/users';
+      // TODO: Other user is deleted. Is the change immediate on the front?
     } catch {
-      setError('Error occurred');
+      setError('An error occurred. Please try again.');
     }
   }
 
   return (
     <div>
       <h2>Danger zone</h2>
-      {otherUser.rank.toLowerCase() == 'moderator' ? (
-        <BtnDanger onClick={() => setIsDownrankModalOpen(true)}>
-          Remove Mod Rank
-        </BtnDanger>
-      ) : otherUser.rank.toLowerCase() == 'user' ? (
-        <BtnAccent onClick={() => setIsUprankModalOpen(true)}>
-          Give Mod Rank
-        </BtnAccent>
-      ) : (
-        <></>
-      )}
+      <BtnDanger onClick={() => setIsDownrankModalOpen(true)}>
+        Remove Mod Rank
+      </BtnDanger>
       <BtnDanger onClick={() => setIsDeletionModalOpen(true)}>
         Delete Account
       </BtnDanger>
@@ -182,15 +63,6 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
         onConfirm={() => void handleDownrank()}
         title="Remove Mod Rank"
         textMain="Are you sure you don't want this user to be a mod anymore?"
-        textCancel="Cancel"
-        textConfirm="Confirm"
-      />
-      <Modal
-        isOpen={isUprankModalOpen}
-        onCancel={() => closeModals()}
-        onConfirm={() => void handleUprank()}
-        title="Give Mod Rank"
-        textMain="Are you sure you want this user to be a mod?"
         textCancel="Cancel"
         textConfirm="Confirm"
       />

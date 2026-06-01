@@ -1,7 +1,6 @@
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { Ranks } from 'src/generated/prisma/enums';
-import { createHash as sha } from 'crypto';
 
 export function getToken(): string {
 
@@ -20,23 +19,15 @@ export function getCurrentTime(): Date {
   return new Date();
 }
 
-export async function createPasswordHash(plain: string): Promise<string> {
+export async function createHash(plain: string): Promise<string> {
   return await bcrypt.hash(plain, 12);
 }
 
-export async function comparePasswordHash(
+export async function compareHash(
   plain: string,
   hashed: string,
 ): Promise<boolean> {
   return await bcrypt.compare(plain, hashed);
-}
-
-export function createTokenHash(token: string): string {
-  return sha('sha256').update(token).digest('hex');
-}
-
-export function compareTokenHash(token: string, stored: string): boolean {
-  return createTokenHash(token) === stored;
 }
 
 export function encodeSingleAvatar(found: {
