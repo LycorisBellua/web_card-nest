@@ -595,6 +595,13 @@ export class UserService {
     });
   }
 
+  private async userExistsByEmailTokenHash(hash: string) {
+    return await this.prisma.onModuleDestroy.findUnique({
+      where: { refreshToken: hash },
+      select: userVerificationSelect,
+    });
+  }
+
   private async usernameIsTaken(username: string): Promise<boolean> {
     const found = await this.prisma.user.findUnique({
       where: { username },
