@@ -47,7 +47,7 @@ export class UserController {
   // FETCH USERS
   @UseGuards(AuthGuard)
   @Get('me')
-  async getOwnProfile(@Req() req: ExpressRequest) {
+  async getOwnProfile(@Req() req: ExpressRequest): Promise<OwnProfile> {
     const user = req['user'] as JwtPayload;
     return this.userService.getOwnProfile(user.id);
   }

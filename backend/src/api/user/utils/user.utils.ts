@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { UserProfile, UserProfileRaw } from '../types/user.types';
+import { createHash as sha } from 'crypto';
 
 export function getToken(): string {
   return randomBytes(32).toString('hex');
@@ -43,14 +44,7 @@ export function compareTokenHash(token: string, stored: string): boolean {
   return createTokenHash(token) === stored;
 }
 
-export function encodeSingleAvatar(found: {
-  id: string;
-  username: string;
-  rank: Ranks;
-  avatar: Uint8Array<ArrayBuffer> | null;
-  email?: string | null;
-  email_unverified?: string | null;
-}) {
+export function encodeSingleAvatar(profile: UserProfileRaw): UserProfile {
   return {
     ...profile,
     avatar: profile.avatar

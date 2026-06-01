@@ -5,6 +5,7 @@ import { ErrorMessages } from '../user/error_messages/ErrorMessages';
 import { SendMailService } from '../sendMail/sendMail.service';
 import { ChatService } from '../chat/chat.service';
 import { GDPR } from './types/gdpr.type';
+import { UserProfile } from '../user/types/user.types';
 
 @Injectable()
 export class GdprService {
@@ -17,27 +18,29 @@ export class GdprService {
 
   async GetAllUserData(userid: string): Promise<GDPR> {
     const profile = await this.userService.getOwnProfile(userid);
+    profile.avatar = null;
     const sentReq = await this.relService.fetchSentRequests(userid);
     const receivedReq = await this.relService.fetchReceivedRequests(userid);
     const friends = await this.relService.fetchFriends(userid);
     const dm = await this.chatService.fetchDMHistoryGDPR(userid);
     const lobby = await this.chatService.fetchLobbyHistoryGDPR(userid);
 
-    const omitAvatar = <T extends { avatar?: unknown }>(
-      obj: T,
-    ): Omit<T, 'avatar'> => {
-      const { avatar, ...rest } = obj;
-      return rest;
-    };
-
     return {
       userProfile: profile,
-      sentFriendRequests: sentReq,
-      receivedFriendRequests: receivedReq,
-      friends,
+      sentFriendRequests: this.setAvatarToNull(sentReq),
+      receivedFriendRequests: this.setAvatarToNull(receivedReq),
+      friends: this.setAvatarToNull(friends),
       directMessages: dm,
       lobbyChatMessages: lobby,
     };
+  }
+
+  private setAvatarToNull(original: UserProfile[]): UserProfile[] {
+    const users = original;
+    for (const user of users) {
+      user.avatar = null;
+    }
+    return users;
   }
 
   async SendExtractDataConfirmationEmail(userid: string) {

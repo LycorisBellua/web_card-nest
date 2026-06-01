@@ -13,7 +13,6 @@ import {
   getRefreshTimeout,
   getToken,
 } from '../user/utils/user.utils';
-import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { ErrorMessages } from '../user/error_messages/ErrorMessages';
 import { JWT, RedirectURL, TokenSet } from './types/auth.types';
@@ -56,7 +55,7 @@ export class AuthService {
     await this.userService.removeRefreshToken(userId);
   }
 
-  async refresh(jwtToken: string, refreshToken: string): Promise<JWT> {
+  async refresh(refreshToken: string): Promise<JWT> {
     const hash = createTokenHash(refreshToken);
     const user = await this.userService.userExistsByRefreshTokenHash(hash);
     if (
@@ -66,12 +65,24 @@ export class AuthService {
     ) {
       throw new UnauthorizedException();
     }
-    return await this.generateJwtToken(user.id, user.rank);
+    return await this.generateJwtToken(user.id);
   }
 
-  async updatePassword(userId: string, dto: UpdatePasswordDto) {
-    const result = await this.userService.updatePassword(userId, dto);
-    return await this.generateTokenPair(userId, result.rank);
+  async updatePassword(
+    userId: string,
+    dto: UpdatePasswordDto,
+  ): Promise<TokenSet> {
+    const refresh = await this.generateRefreshToken(userId);
+    if (!refresh || !refresh.refreshToken || !refresh.refreshTimeout) {
+      throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
+    }
+    const access = await this.generateJwtToken(userId);
+    await this.userService.updatePassword(userId, dto);
+    return {
+      accessToken: access.accessToken,
+      refreshToken: refresh.refreshToken,
+      refreshTimeout: refresh.refreshTimeout,
+    };
   }
 
   async verifyEmail(userId: string, token: string): Promise<RedirectURL> {
@@ -79,7 +90,7 @@ export class AuthService {
     if (!verified) {
       return { url: `${process.env.HOME_URL}/verify-error` };
     }
-    this.userService.removeRefreshToken(userId);
+    await this.userService.removeRefreshToken(userId);
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
@@ -96,15 +107,15 @@ export class AuthService {
     const user = await this.userService.userExistsOrThrow(userId);
     const payload = {
       id: userId,
-      rank: rank,
+      rank: user.rank,
     };
     return { accessToken: await this.jwtService.signAsync(payload) };
   }
 
   async generateRefreshToken(userId: string): Promise<RefreshData> {
-    const token = getToken();
-    const timeout = getRefreshTimeout();
+    const refreshToken = getToken();
+    const refreshTimeout = getRefreshTimeout();
     await this.userService.generateRefreshToken(userId);
-    return { token, timeout };
+    return { refreshToken, refreshTimeout };
   }
 }

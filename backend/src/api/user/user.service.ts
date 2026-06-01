@@ -132,7 +132,7 @@ export class UserService {
   async updatePassword(
     userId: string,
     updatePasswordDto: UpdatePasswordDto,
-  ): Promise<UserProfile> {
+  ): Promise<void> {
     const user = await this.userExistsOrThrow(userId);
     const newPassword = updatePasswordDto.newPassword;
     const currentPassword = updatePasswordDto.oldPassword;
@@ -146,11 +146,7 @@ export class UserService {
     if (!(await comparePasswordHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
-    const updated = await this.modifyPassword(
-      userId,
-      await createPasswordHash(newPassword),
-    );
-    return encodeSingleAvatar(updated);
+    await this.modifyPassword(userId, await createPasswordHash(newPassword));
   }
 
   async getOwnProfile(userId: string): Promise<OwnProfile> {
@@ -299,7 +295,7 @@ export class UserService {
     }
     const token = getToken();
     const data: EmailVerData = {
-      verifyToken: await createTokenHash(token),
+      verifyToken: createTokenHash(token),
       verifyTimeout: getVerificationTimeout(),
     };
     await this.modifyVerificationData(userId, data);
@@ -470,14 +466,10 @@ export class UserService {
     });
   }
 
-  private async modifyPassword(
-    id: string,
-    newPassword: string,
-  ): Promise<UserProfileRaw> {
-    return await this.prisma.user.update({
+  private async modifyPassword(id: string, newPassword: string): Promise<void> {
+    await this.prisma.user.update({
       where: { id },
       data: { password: newPassword },
-      select: userProfileSelect,
     });
   }
 
@@ -595,8 +587,10 @@ export class UserService {
     });
   }
 
-  private async userExistsByEmailTokenHash(hash: string) {
-    return await this.prisma.onModuleDestroy.findUnique({
+  async userExistsByRefreshTokenHash(
+    hash: string,
+  ): Promise<VerificationData | null> {
+    return await this.prisma.user.findUnique({
       where: { refreshToken: hash },
       select: userVerificationSelect,
     });

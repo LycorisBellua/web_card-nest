@@ -21,7 +21,6 @@ import type { Response as ExpressResponse } from 'express';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { LoginDto } from '../user/dto/login.dto';
 import { JWT, RedirectURL, ReturnMessage } from './types/auth.types';
-import { UserProfile } from '../user/types/user.types';
 
 @Controller('/api/auth')
 export class AuthController {
@@ -103,12 +102,11 @@ export class AuthController {
 
   @Post('refresh')
   async refresh(@Req() req: ExpressRequest): Promise<JWT> {
-    const [type, jwtToken] = req.headers.authorization?.split(' ') ?? [];
     const refreshToken = req.cookies['refresh_token'] as string | undefined;
     if (!refreshToken) {
       throw new UnauthorizedException();
     }
-    return await this.authService.refresh(jwtToken, refreshToken);
+    return await this.authService.refresh(refreshToken);
   }
 
   @UseGuards(AuthGuard)
@@ -117,7 +115,7 @@ export class AuthController {
     @Req() req: ExpressRequest,
     @Res({ passthrough: true }) res: ExpressResponse,
     @Body() updatePasswordDto: UpdatePasswordDto,
-  ): Promise<UserProfile> {
+  ): Promise<JWT> {
     const user = req['user'] as JwtPayload;
     const tokens = await this.authService.updatePassword(
       user.id,
