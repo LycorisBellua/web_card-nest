@@ -41,15 +41,17 @@ enum Ranks {
 }
 
 model Friend {
+  id          String       @id @default(uuid(7))
   requester   User         @relation("requester", fields: [requesterId], references: [id], onDelete: Cascade)
   requesterId String
   addressee   User         @relation("addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
   addresseeId String
   status      FriendStatus @default(PENDING)
   created     DateTime     @default(now())
+  dmChat      DMChat?      @relation("friend")
 
-  @@id([requesterId, addresseeId])
-  @@index([addresseeId])
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, requesterId])
 }
 
 enum FriendStatus {
@@ -73,6 +75,8 @@ model DMChat {
   userAId  String
   userB    User        @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
   userBId  String
+  friend   Friend      @relation("friend", fields: [friendshipId], references: [id], onDelete: Cascade)
+  friendshipId  String @unique
   messages DMMessage[] @relation("chat")
   id       String      @id @default(uuid(7))
 

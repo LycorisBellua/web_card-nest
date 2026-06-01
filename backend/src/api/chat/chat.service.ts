@@ -12,16 +12,23 @@ import {
   dMMessageOrderBy,
   DMMessageRaw,
   DMParticipants,
+  GDPRDMHistory,
+  GDPRDMMessage,
+  gDPRLobbyMessageSelect,
+  gDPRDMessageSelect,
   LobbyHistory,
   LobbyHistoryRaw,
   lobbyMessageInclude,
   lobbyMessageOrderBy,
   NewDMMessage,
   NewLobbyMessage,
+  GDPRLobbyMessage,
 } from './types/chat.types';
 import {
   DMChat,
   DMMessage,
+  Friend,
+  FriendStatus,
   LobbyBan,
   LobbyMessage,
   Prisma,
@@ -29,18 +36,19 @@ import {
 } from 'src/generated/prisma/client';
 import { ChatError } from './errors/chat.errors';
 import { UserService } from '../user/user.service';
+import { RelService } from '../relationships/rel.service';
 
 @Injectable()
 export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
+    private readonly relService: RelService,
   ) {}
 
   async getDMId(sender: string, receiver: string): Promise<DMChat> {
-    const sorted = this.sortUserIds(sender, receiver);
+    const sorted = await this.sortAndCheckUserIds(sender, receiver);
     try {
-      await this.rankChecks(sender, receiver);
       return await this.createDMChat(sorted);
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -115,11 +123,27 @@ export class ChatService {
   }
 
   // HELPER FUNCTIONS
-  private sortUserIds(sender: string, receiver: string): DMParticipants {
-    if (sender < receiver) {
-      return { userAId: sender, userBId: receiver };
+  private async sortAndCheckUserIds(
+    sender: string,
+    receiver: string,
+  ): Promise<DMParticipants> {
+    const a = await this.userService.userExistsOrThrow(sender);
+    const b = await this.userService.userExistsOrThrow(receiver);
+    if (a.rank === Ranks.PENDING || b.rank === Ranks.PENDING) {
+      throw new ForbiddenException(ChatError.WRONG_RANK);
     }
-    return { userAId: receiver, userBId: sender };
+    const friendship = await this.findFriendship(sender, receiver);
+    if (!friendship || !friendship.id) {
+      throw new ForbiddenException(ChatError.NOT_FRIENDS);
+    }
+    if (sender < receiver) {
+      return {
+        userAId: sender,
+        userBId: receiver,
+        friendshipId: friendship.id,
+      };
+    }
+    return { userAId: receiver, userBId: sender, friendshipId: friendship.id };
   }
 
   private handleErrors(err: Prisma.PrismaClientKnownRequestError): never {
@@ -132,14 +156,6 @@ export class ChatService {
         throw new BadRequestException(ChatError.TOO_LONG);
       default:
         throw new InternalServerErrorException();
-    }
-  }
-
-  private async rankChecks(userA: string, userB: string): Promise<void> {
-    const a = await this.userService.userExistsOrThrow(userA);
-    const b = await this.userService.userExistsOrThrow(userB);
-    if (a.rank === Ranks.PENDING || b.rank === Ranks.PENDING) {
-      throw new ForbiddenException(ChatError.WRONG_RANK);
     }
   }
 
@@ -160,7 +176,40 @@ export class ChatService {
     }
   }
 
+  // GDPR MESSAGE HISTORY
+  async fetchDMHistoryGDPR(id: string): Promise<GDPRDMHistory> {
+    const dms = await this.findAllDMChats(id);
+    return Promise.all(
+      dms.map(async (dm) => {
+        return {
+          chatId: dm.id,
+          userId: id === dm.userAId ? dm.userBId : dm.userAId,
+          messages: await this.gDPRDMMessages(dm.id),
+        };
+      }),
+    );
+  }
+
+  async fetchLobbyHistoryGDPR(id: string): Promise<GDPRLobbyMessage[]> {
+    return this.gDPRLobbyMessages(id);
+  }
+
   // DB ACCESS
+  private async findFriendship(
+    sender: string,
+    receiver: string,
+  ): Promise<Friend | null> {
+    return await this.prisma.friend.findFirst({
+      where: {
+        OR: [
+          { requesterId: sender, addresseeId: receiver },
+          { requesterId: receiver, addresseeId: sender },
+        ],
+        status: FriendStatus.ACCEPTED,
+      },
+    });
+  }
+
   private async createDMChat(users: DMParticipants): Promise<DMChat> {
     return await this.prisma.dMChat.upsert({
       where: { userAId_userBId: users },
@@ -172,6 +221,12 @@ export class ChatService {
   private async createDMMessage(data: NewDMMessage): Promise<DMMessage> {
     return await this.prisma.dMMessage.create({
       data: data,
+    });
+  }
+
+  private async findAllDMChats(id: string): Promise<DMChat[]> {
+    return this.prisma.dMChat.findMany({
+      where: { id },
     });
   }
 
@@ -210,6 +265,20 @@ export class ChatService {
   ): Promise<DMChat | null> {
     return await this.prisma.dMChat.findFirst({
       where: { id: chatId, OR: [{ userAId: userId }, { userBId: userId }] },
+    });
+  }
+
+  private async gDPRDMMessages(id: string): Promise<GDPRDMMessage[]> {
+    return await this.prisma.dMMessage.findMany({
+      where: { id },
+      select: gDPRDMessageSelect,
+    });
+  }
+
+  private async gDPRLobbyMessages(id: string): Promise<GDPRLobbyMessage[]> {
+    return await this.prisma.lobbyMessage.findMany({
+      where: { senderId: id },
+      select: gDPRLobbyMessageSelect,
     });
   }
 }

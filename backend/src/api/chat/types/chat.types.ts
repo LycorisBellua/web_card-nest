@@ -4,6 +4,7 @@ import { Prisma, Ranks } from 'src/generated/prisma/client';
 export type DMParticipants = {
   userAId: string;
   userBId: string;
+  friendshipId: string;
 };
 
 // CREATE DM MESSAGE
@@ -72,3 +73,30 @@ export type LobbyHistory = {
     rank: Ranks;
   } | null;
 }[];
+
+// GDPR MESSAGE HISTORY
+export const gDPRDMessageSelect = {
+  senderId: true,
+  message: true,
+} satisfies Prisma.DMMessageSelect;
+
+export type GDPRDMMessage = Prisma.DMMessageGetPayload<{
+  select: typeof gDPRDMessageSelect;
+}>;
+
+export type GDPRDMChat = {
+  chatId: string;
+  userId: string;
+  messages: GDPRDMMessage[];
+};
+
+export type GDPRDMHistory = GDPRDMChat[];
+
+export const gDPRLobbyMessageSelect = {
+  senderId: true,
+  message: true,
+} satisfies Prisma.LobbyMessageSelect;
+
+export type GDPRLobbyMessage = Prisma.LobbyMessageGetPayload<{
+  select: typeof gDPRLobbyMessageSelect;
+}>;

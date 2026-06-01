@@ -18,6 +18,7 @@ import { RequiredRank } from '../auth/guards/auth.rank-decorator';
 import type { Request as ExpressRequest } from 'express';
 import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 import { OwnProfile, UserProfile } from './types/user.types';
+import { ReturnMessage } from '../auth/types/auth.types';
 
 @Controller('api/user')
 export class UserController {
@@ -25,9 +26,10 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Delete()
-  async removeUser(@Req() req: ExpressRequest): Promise<void> {
+  async removeUser(@Req() req: ExpressRequest): Promise<ReturnMessage> {
     const user = req['user'] as JwtPayload;
-    return await this.userService.removeUser(user.id);
+    await this.userService.removeUser(user.id);
+    return { message: 'User Account Deleted' };
   }
 
   // UPDATE ENTRIES
