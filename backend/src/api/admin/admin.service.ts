@@ -101,6 +101,20 @@ export class AdminService {
     }
   }
 
+  async guestLobbyChatBan() {
+    try {
+      return await this.createLobbyBan('Guest');
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException(AdmErrMsg.ALREADY_BAN);
+      }
+      throw err;
+    }
+  }
+
   async lobbyChatUnban(
     userId: string,
     rank: Ranks,
@@ -112,6 +126,20 @@ export class AdminService {
     this.modPermissionCheck(rank, target.rank);
     try {
       return await this.deleteLobbyBan(targetId);
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2025'
+      ) {
+        throw new ConflictException(AdmErrMsg.NOT_BAN);
+      }
+      throw err;
+    }
+  }
+
+  async guestLobbyChatUnban() {
+    try {
+      return await this.deleteLobbyBan('Guest');
     } catch (err) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&

@@ -72,7 +72,7 @@ export class AdminController {
     return { message: 'User Account Deleted' };
   }
 
-  @Post('ban')
+  @Post('ban/user')
   async lobbyChatBan(
     @Req() req: ExpressRequest,
     @Body() dto: AdmUuidDto,
@@ -85,7 +85,12 @@ export class AdminController {
     );
   }
 
-  @Delete('ban/:targetId')
+  @Post('ban/guest')
+  async guestLobbyChatBan(): Promise<LobbyBan> {
+    return await this.adminService.guestLobbyChatBan();
+  }
+
+  @Delete('ban/user/:targetId')
   async lobbyChatUnban(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
@@ -96,6 +101,11 @@ export class AdminController {
       user.rank as Ranks,
       targetId,
     );
+  }
+
+  @Delete('ban/guest')
+  async guestLobbyChatUnban(): Promise<LobbyBan> {
+    return await this.adminService.guestLobbyChatUnban();
   }
 
   @Get('ban')

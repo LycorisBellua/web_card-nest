@@ -40,6 +40,13 @@ export class ChatController {
     return await this.chatService.saveLobbyMessage(senderId, message);
   }
 
+  @Post('lobby/guest')
+  async guestSaveLobbyMessage(
+    @Body('message') message: string,
+  ): Promise<LobbyMessage> {
+    return await this.chatService.guestSaveLobbyMessage(message);
+  }
+
   @Get('lobby')
   async getLobbyHistory(): Promise<LobbyHistory> {
     return await this.chatService.getLobbyHistory();

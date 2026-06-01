@@ -107,6 +107,10 @@ export class ChatService {
     }
   }
 
+  async guestSaveLobbyMessage(message: string): Promise<LobbyMessage> {
+    return this.saveLobbyMessage('Guest', message);
+  }
+
   async getLobbyHistory(): Promise<LobbyHistory> {
     const raw = await this.findLobbyMessages();
     return raw.map((message) => ({
@@ -177,13 +181,13 @@ export class ChatService {
   }
 
   // GDPR MESSAGE HISTORY
-  async fetchDMHistoryGDPR(id: string): Promise<GDPRDMHistory> {
-    const dms = await this.findAllDMChats(id);
+  async fetchDMHistoryGDPR(userId: string): Promise<GDPRDMHistory> {
+    const dms = await this.findAllDMChats(userId);
     return Promise.all(
       dms.map(async (dm) => {
         return {
           chatId: dm.id,
-          userId: id === dm.userAId ? dm.userBId : dm.userAId,
+          userId: userId === dm.userAId ? dm.userBId : dm.userAId,
           messages: await this.gDPRDMMessages(dm.id),
         };
       }),
@@ -211,11 +215,15 @@ export class ChatService {
   }
 
   private async createDMChat(users: DMParticipants): Promise<DMChat> {
-    return await this.prisma.dMChat.upsert({
-      where: { userAId_userBId: users },
-      create: users,
-      update: {},
+    let chat = await this.prisma.dMChat.findFirst({
+      where: { userAId: users.userAId, userBId: users.userBId },
     });
+    if (!chat) {
+      chat = await this.prisma.dMChat.create({
+        data: users,
+      });
+    }
+    return chat;
   }
 
   private async createDMMessage(data: NewDMMessage): Promise<DMMessage> {
@@ -226,7 +234,7 @@ export class ChatService {
 
   private async findAllDMChats(id: string): Promise<DMChat[]> {
     return this.prisma.dMChat.findMany({
-      where: { id },
+      where: { OR: [{ userAId: id }, { userBId: id }] },
     });
   }
 
@@ -263,21 +271,23 @@ export class ChatService {
     userId: string,
     chatId: string,
   ): Promise<DMChat | null> {
-    return await this.prisma.dMChat.findFirst({
+    return await this.prisma.dMChat.findUnique({
       where: { id: chatId, OR: [{ userAId: userId }, { userBId: userId }] },
     });
   }
 
-  private async gDPRDMMessages(id: string): Promise<GDPRDMMessage[]> {
+  private async gDPRDMMessages(chatId: string): Promise<GDPRDMMessage[]> {
     return await this.prisma.dMMessage.findMany({
-      where: { id },
+      where: { chatId },
       select: gDPRDMessageSelect,
     });
   }
 
-  private async gDPRLobbyMessages(id: string): Promise<GDPRLobbyMessage[]> {
+  private async gDPRLobbyMessages(
+    senderId: string,
+  ): Promise<GDPRLobbyMessage[]> {
     return await this.prisma.lobbyMessage.findMany({
-      where: { senderId: id },
+      where: { senderId },
       select: gDPRLobbyMessageSelect,
     });
   }
