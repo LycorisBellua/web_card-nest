@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
+import { useUser } from 'context/useUser';
 import styled from 'styled-components';
 import { BtnDefault } from 'components/btn/Btn';
 import UserMenu from 'pages/profile/UserMenu';
@@ -96,7 +96,9 @@ const SubNav = styled.nav`
 `;
 
 function Nav({ onDMsClick }: { onDMsClick: () => void }) {
-  const is_logged_in = IsLoggedIn() && !IsPendingUser();
+  const { user } = useUser();
+
+  const is_logged_in = !!user && user.rank.toLowerCase() != 'pending';
 
   return (
     <>

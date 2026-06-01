@@ -9,7 +9,11 @@ const UsernameText = styled.div<{ $rank: string }>`
   overflow: hidden;
   text-overflow: ellipsis;
   color: ${({ $rank }) =>
-    $rank == 'admin' ? '#f0d060' : $rank == 'mod' ? '#d8b060' : '#e0c498'};
+    $rank == 'admin'
+      ? '#f0d060'
+      : $rank == 'moderator'
+        ? '#d8b060'
+        : '#e0c498'};
 `;
 
 const UsernameTextBig = styled.div<{ $rank: string }>`
@@ -21,7 +25,11 @@ const UsernameTextBig = styled.div<{ $rank: string }>`
   overflow: hidden;
   text-overflow: ellipsis;
   color: ${({ $rank }) =>
-    $rank == 'admin' ? '#f0d060' : $rank == 'mod' ? '#d8b060' : '#e0c498'};
+    $rank == 'admin'
+      ? '#f0d060'
+      : $rank == 'moderator'
+        ? '#d8b060'
+        : '#e0c498'};
 `;
 
 export function Username({ rank, value }: { rank: string; value: string }) {

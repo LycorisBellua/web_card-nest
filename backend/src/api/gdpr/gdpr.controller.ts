@@ -19,7 +19,7 @@ export class GdprController {
       `attachment; filename="GRPD_compliance_personal_data.json"`,
     );
     res.send(JSON.stringify(data, null, 2));
-    await this.GdprService.SendExctractDataConfirmationEmail(user.id);
+    await this.GdprService.SendExtractDataConfirmationEmail(user.id);
   }
 
   @UseGuards(AuthGuard)
@@ -42,6 +42,6 @@ export class GdprController {
       `attachment; filename="GRPD_compliance_personal_data.csv"`,
     );
     res.send(data);
-    await this.GdprService.SendExctractDataConfirmationEmail(user.id);
+    await this.GdprService.SendExtractDataConfirmationEmail(user.id);
   }
 }

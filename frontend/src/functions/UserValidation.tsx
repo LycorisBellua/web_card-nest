@@ -59,22 +59,24 @@ export function validatePassword(
   const passwordLower: string = upassword.toLowerCase();
   if (uname.length && passwordLower.includes(uname.toLowerCase()))
     errors.push('The password cannot contain the username.');
-  const atIndex: number = uemail.indexOf('@');
-  if (atIndex !== -1) {
-    const localPart: string = uemail.substring(0, atIndex);
-    const domainPart: string = uemail.substring(atIndex + 1);
-    if (
-      (localPart && passwordLower.includes(localPart.toLowerCase())) ||
-      (domainPart && passwordLower.includes(domainPart.toLowerCase()))
-    ) {
-      errors.push('The password cannot contain the email address.');
+  if (uemail) {
+    const atIndex: number = uemail.indexOf('@');
+    if (atIndex !== -1) {
+      const localPart: string = uemail.substring(0, atIndex);
+      const domainPart: string = uemail.substring(atIndex + 1);
+      if (
+        (localPart && passwordLower.includes(localPart.toLowerCase())) ||
+        (domainPart && passwordLower.includes(domainPart.toLowerCase()))
+      ) {
+        errors.push('The password cannot contain the email address.');
+      }
     }
   }
   if (/\p{Cc}/gu.test(upassword)) {
     errors.push('The password cannot have non-printable characters.');
   }
-  if (upassword.length > 128) {
-    errors.push('The password cannot be longer than 128 characters.');
+  if (upassword.length > 64) {
+    errors.push('The password cannot be longer than 64 characters.');
   }
   return errors;
 }
@@ -116,4 +118,11 @@ export async function validateAvatar(uavatar: File): Promise<string[]> {
   if (!dimensions || dimensions.width > 400 || dimensions.height > 400)
     errors.push('The avatar must be under 400x400 pixels.');
   return errors;
+}
+
+export function addAvatarPrefix(avatar: string): string {
+  if (avatar && !avatar.startsWith('data:image/png;base64,')) {
+    avatar = `data:image/png;base64,${avatar}`;
+  }
+  return avatar;
 }
