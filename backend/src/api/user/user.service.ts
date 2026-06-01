@@ -299,7 +299,7 @@ export class UserService {
       if (!found.email_unverified) return;
       const token = getToken();
       const data: Record<string, unknown> = {};
-      data.verifyToken = await createHash(token);
+      data.verifyToken = await createTokenHash(token);
       data.verifyTimeout = getVerificationTimeout();
       await this.modifyVerificationData(userId, data);
       await this.userEmailsService.sendPasswordResetUnverifiedEmail(
@@ -309,7 +309,7 @@ export class UserService {
       );
   }
 
-  async generateRefreshToken(
+  async updateRefreshToken(
     userId: string,
     refreshToken: string,
     timeout: Date,

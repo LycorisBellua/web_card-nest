@@ -4,10 +4,11 @@ import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import {
   comparePasswordHash,
+  compareTokenHash,
+  createPasswordHash,
   createTokenHash,
   getCurrentTime,
   getRefreshTimeout,
-  compareHash,
   getToken,
 } from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
@@ -30,30 +31,15 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<TokenPair> {
     const found = await this.userService.userExistsByEmail(email);
-
-    if (found?.loginLockedUntil && found.loginLockedUntil > new Date()) {
-      const remaining = Math.ceil((found.loginLockedUntil.getTime() - Date.now()) / 60000)
-      throw new UnauthorizedException(`Too many attempts. Try again in ${remaining} minutes.`)
-    }
-
     if (
       !found ||
       (found.email && found.email !== email) ||
       !(await comparePasswordHash(password, found.password))
     ) {
-      if (found) {
-        const attempts = found.loginAttempts + 1
-        await this.userService.updateLoginAttempts(
-          found.id,
-          attempts,
-          attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null
-        )
-      }
-      throw new UnauthorizedException('Email address or password incorrect.')
+      throw new UnauthorizedException('Email address or password incorrect.');
     }
-    return await this.generateJwtToken(user.id, user.rank);
+    return this.generateTokenPair(found.id, found.rank);
   }
-
   async logout(userId: string) {
     return await this.userService.removeRefreshToken(userId);
   }
@@ -93,6 +79,17 @@ export class AuthService {
     return await this.userService.resendVerificationEmail(userId);
   }
 
+  // Generate JWT / Refresh Token
+  async generateTokenPair(userId: string, rank: Ranks): Promise<TokenPair> {
+    const access = await this.generateJwtToken(userId, rank);
+    const refresh = await this.generateRefreshToken(userId);
+    return {
+      accessToken: access,
+      refreshToken: refresh.token,
+      refreshTimeout: refresh.timeout,
+    };
+  }
+
   async generateJwtToken(userId: string, rank: Ranks) {
       const payload: JwtPayload = {
         id: userId,
@@ -109,6 +106,7 @@ export class AuthService {
     await this.userService.updateRefreshToken(userId, token, timeout);
     return { token, timeout };
   }
+  
   async executeForgotPassword(email: string) {
     const user = await this.userService.userExistsByEmail(email)
 
@@ -123,7 +121,7 @@ export class AuthService {
 
     const token = getToken();
     const expiry = new Date(Date.now() + 30 * 60 * 1000)
-    await this.userService.saveResetToken(user.id, await createHash(token), expiry)
+    await this.userService.saveResetToken(user.id, await createTokenHash(token), expiry)
 
     const emailInLink = user.email ?? user.email_unverified
     const link = `${process.env.HOME_URL}/reset-pwd?email=${emailInLink}&token=${token}`
@@ -145,7 +143,7 @@ export class AuthService {
     console.log('now:', new Date())
     console.log('expired:', user?.resetTimeout ? user.resetTimeout < new Date() : 'null')
     console.log('token received:', token)
-    const hashMatch = user?.resetToken ? await compareHash(token, user.resetToken) : false
+    const hashMatch = user?.resetToken ? await compareTokenHash(token, user.resetToken) : false
     console.log('hash match:', hashMatch)
 
 
@@ -154,20 +152,14 @@ export class AuthService {
           !user.resetToken ||
           !user.resetTimeout ||
           user.resetTimeout < new Date() ||
-          !(await compareHash(token, user.resetToken))
+          !(await compareTokenHash(token, user.resetToken))
       ) {
           return { success: false, message: "Invalid or expired link." }
       }
 
-      const hashed = await createHash(newPassword)
+      const hashed = await createPasswordHash(newPassword)
       await this.userService.updatePasswordAndClearToken(user.id, hashed)
 
       return { success: true, message: "Password updated successfully." }
-  }
-
-  async generateJwtToken(userId: string) {
-    const user = await this.userService.userExistsOrThrow(userId);
-    const payload = { id: userId, rank: user.rank };
-    return await this.jwtService.signAsync(payload);
   }
 }
