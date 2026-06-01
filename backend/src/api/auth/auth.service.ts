@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { createHash, compareHash, getCurrentTime, getToken} from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { SendMailService } from '../sendMail/sendMail.service';
+import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -75,6 +76,10 @@ export class AuthService {
       throw new UnauthorizedException();
     }
     return await this.generateJwtToken(payload.id);
+  }
+
+  async updatePassword(userId: string, dto: UpdatePasswordDto) {
+    return await this.userService.updatePassword(userId, dto);
   }
 
   async verifyEmail(userId: string, token: string) {

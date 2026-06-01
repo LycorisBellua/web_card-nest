@@ -45,6 +45,25 @@ export function IsUsernameNotTooLong(validationOptions?: ValidationOptions) {
   );
 }
 
+export function IsUsernameGuest(validationOptions?: ValidationOptions) {
+  return ValidateBy(
+    {
+      name: 'usernameIsNotGuest',
+      validator: {
+        validate(value: string): boolean {
+          return !value || value.toLowerCase() !== 'guest';
+        },
+        defaultMessage: buildMessage(
+          (eachPrefix) =>
+            eachPrefix + `The username may not be any variation of 'guest'.`,
+          validationOptions,
+        ),
+      },
+    },
+    validationOptions,
+  );
+}
+
 /* EMAIL VALIDATORS --------------------------------------------------------- */
 
 export function IsEmailNotEmpty(validationOptions?: ValidationOptions) {

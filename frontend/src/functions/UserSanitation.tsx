@@ -22,4 +22,9 @@ export function sanitizeDescription(udesc: string): string {
   return udesc.normalize('NFC');
 }
 
+export function sanitizeMessage(msg: string): string {
+  if (!msg) return '';
+  return msg.normalize('NFC').trim();
+}
+
 // No sanitation for the avatar

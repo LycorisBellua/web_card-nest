@@ -14,6 +14,7 @@ import {
   IsUsernameNotEmpty,
   IsUsernameNotTooLong,
   IsDescriptionNotTooLong,
+  IsUsernameGuest,
 } from '../utils/user.validator';
 
 export class UpdateUserDto {
@@ -21,6 +22,7 @@ export class UpdateUserDto {
   @Transform(({ value }) => sanitizeUsername(value as string))
   @IsUsernameNotEmpty()
   @IsUsernameNotTooLong()
+  @IsUsernameGuest()
   username: string;
 
   @IsOptional()

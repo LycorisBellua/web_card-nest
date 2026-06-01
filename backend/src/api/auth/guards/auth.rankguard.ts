@@ -21,10 +21,10 @@ export class RankGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRank = this.reflector.get<Ranks>(
-      'rank',
+    const requiredRank = this.reflector.getAllAndOverride<Ranks>('rank', [
       context.getHandler(),
-    );
+      context.getClass(),
+    ]);
     if (!requiredRank) {
       return true;
     }
