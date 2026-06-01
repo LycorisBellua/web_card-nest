@@ -6,10 +6,415 @@ function PrivacyPolicy() {
   return (
     <ScrollablePage>
       <h1>Privacy Policy</h1>
-      <p>Lorem ipsum dolor sit amet...</p>
-      <Link to="/data-extraction">
-        <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
-      </Link>
+      <p>Last updated: June 1, 2026</p>
+      <section>
+        <h2>1. Who We Are</h2>
+        <p>
+          Card Nest ("we", "us", "our") is operated by{' '}
+          <em className="placeholder">[Your Name / Company Name]</em>, based in
+          the European Union / European Economic Area. We are the{' '}
+          <strong>data controller</strong> for all personal data processed
+          through this website.
+        </p>
+        <p>
+          Contact: <em className="placeholder">[your-email@example.com]</em>
+        </p>
+      </section>
+
+      <section>
+        <h2>2. What Data We Collect and Why</h2>
+
+        <h3>2.1 Registered users (account holders)</h3>
+        <p>When you create an account, we collect:</p>
+        <ul>
+          <li>
+            <strong>Email address</strong> - used to authenticate your account
+            and send transactional emails (e.g. password resets).
+          </li>
+          <li>
+            <strong>Username</strong> - displayed publicly in the lobby chat, in
+            multiplayer games, and on your profile.
+          </li>
+          <li>
+            <strong>Avatar image</strong> - displayed publicly alongside your
+            username. You provide this voluntarily.
+          </li>
+          <li>
+            <strong>Password</strong> - stored as a one-way cryptographic hash.
+            We never store or transmit your plain-text password.
+          </li>
+          <li>
+            <strong>Friend relationships</strong> - the list of users you have
+            added as friends, stored to enable private messaging.
+          </li>
+          <li>
+            <strong>Direct messages (DMs)</strong> - messages exchanged
+            privately between you and friends you have added.
+          </li>
+        </ul>
+        <p>
+          <strong>Legal basis:</strong> Performance of a contract (Article
+          6(1)(b) GDPR) - this data is necessary to provide you with the
+          services you signed up for.
+        </p>
+
+        <h3>2.2 Guests (non-registered visitors)</h3>
+        <p>
+          Guests may participate in the lobby chat and play Black Crown in local
+          mode. No account is required and no personal data is collected from
+          guests beyond what is inherent in any internet connection.
+        </p>
+
+        <h3>2.3 Lobby chat messages</h3>
+        <p>
+          Lobby messages are <strong>publicly visible</strong> to all users,
+          including guests. If you are logged in, your username is attached to
+          your messages. Please do not share personal information in the public
+          lobby.
+        </p>
+        <p>
+          <strong>Legal basis:</strong> Legitimate interests (Article 6(1)(f)
+          GDPR) - operating a functional public chat space.
+        </p>
+
+        <h3>2.4 Technical data</h3>
+        <p>
+          We do not maintain server-side logs of IP addresses or other technical
+          metadata. No browser fingerprints, analytics cookies, or tracking
+          technologies are used.
+        </p>
+
+        <h3>
+          2.5 Data we do <em>not</em> collect
+        </h3>
+        <ul>
+          <li>
+            Game results, scores, or statistics - Black Crown sessions are
+            entirely ephemeral and nothing is persisted after a session ends.
+          </li>
+          <li>Date of birth or any demographic information.</li>
+          <li>Payment information - Card Nest has no paid features.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. How We Use Your Data</h2>
+        <p>We use the data described above solely to:</p>
+        <ul>
+          <li>Create and maintain your account.</li>
+          <li>
+            Display your username and avatar in the lobby and in multiplayer
+            games.
+          </li>
+          <li>Enable friend connections and private messaging (DMs).</li>
+          <li>
+            Send transactional emails (e.g. password reset requests) that you
+            initiate.
+          </li>
+          <li>
+            Allow moderators to maintain a safe environment (see Section 6).
+          </li>
+        </ul>
+        <p>
+          We do <strong>not</strong> use your data for advertising, profiling,
+          or automated decision-making.
+        </p>
+      </section>
+
+      <section>
+        <h2>4. Data Sharing and Third Parties</h2>
+        <p>We share your data with as few parties as possible.</p>
+
+        <h3>4.1 Email delivery (Google / Gmail)</h3>
+        <p>
+          Transactional emails (such as password resets) are sent from a Gmail
+          account via Nodemailer. When an email is sent to you, your email
+          address is processed by <strong>Google LLC</strong> acting as a data
+          processor on our behalf. Google's privacy policy is available at{' '}
+          <a
+            href="https://policies.google.com/privacy"
+            target="_blank"
+            rel="noopener"
+          >
+            policies.google.com/privacy
+          </a>
+          .
+        </p>
+        <p>
+          We do not share your data with any other third parties. We do not sell
+          your data. We do not use advertising networks or analytics services.
+        </p>
+
+        <h3>4.2 Visibility to other users</h3>
+        <p>By using Card Nest, you acknowledge that:</p>
+        <ul>
+          <li>
+            <strong>Your username and avatar</strong> are visible to all users
+            and guests.
+          </li>
+          <li>
+            <strong>Your lobby messages</strong> are visible to all users and
+            guests, and are permanently associated with your username while your
+            account exists.
+          </li>
+          <li>
+            <strong>Other registered users may request a data export</strong>{' '}
+            that includes lobby and DM messages they themselves participated in
+            (see Section 7). This means messages you sent in a shared
+            conversation may appear in another user's data export. Please be
+            mindful of the information you choose to share publicly or in
+            private messages.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>5. Cookies</h2>
+        <p>
+          We use one cookie, described below. No third-party cookies,
+          advertising cookies, or analytics cookies are set by Card Nest.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Purpose</th>
+              <th>Type</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>refresh_token</td>
+              <td>
+                Keeps you logged in between sessions by storing a secure token
+                used to renew your authentication. This cookie is strictly
+                necessary for the login functionality to work.
+              </td>
+              <td>Strictly necessary (HTTP-only, secure)</td>
+              <td>Until you log out or the token expires</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div>
+          <p>
+            Because this cookie is strictly necessary for authentication, it
+            does not require your consent under the ePrivacy Directive. It is
+            set only when you log in and is deleted when you log out or delete
+            your account.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>6. Moderation and Account Actions</h2>
+        <p>
+          Card Nest moderators may take the following actions to maintain a safe
+          and respectful environment:
+        </p>
+        <ul>
+          <li>
+            <strong>Chat timeout</strong> - temporarily restricting your ability
+            to write in the lobby.
+          </li>
+          <li>
+            <strong>Message editing</strong> - overwriting a lobby message that
+            violates our rules.
+          </li>
+          <li>
+            <strong>Username or description modification</strong> - changing a
+            username or profile description that is offensive, harmful, or in
+            violation of our Terms of Service. You may not reverse a moderator's
+            change to your username or description.
+          </li>
+          <li>
+            <strong>Avatar removal</strong> - removing an avatar that violates
+            our rules.
+          </li>
+        </ul>
+        <p>
+          These actions are taken under our legitimate interest in operating a
+          safe platform (Article 6(1)(f) GDPR) and are a condition of using the
+          service. They do not constitute unlawful processing of your personal
+          data.
+        </p>
+      </section>
+
+      <section>
+        <h2>7. Your Rights Under the GDPR</h2>
+        <p>As a data subject under the GDPR, you have the following rights:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Right</th>
+              <th>What it means in practice</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Access</td>
+              <td>
+                You can request a copy of the personal data we hold about you.
+              </td>
+            </tr>
+            <tr>
+              <td>Portability</td>
+              <td>
+                You can export your data directly from Card Nest (see below).
+              </td>
+            </tr>
+            <tr>
+              <td>Rectification</td>
+              <td>
+                You can update your username, avatar, and email address in your
+                account settings.
+              </td>
+            </tr>
+            <tr>
+              <td>Erasure</td>
+              <td>You can delete your account at any time (see Section 8).</td>
+            </tr>
+            <tr>
+              <td>Restriction</td>
+              <td>
+                You can ask us to restrict processing of your data in certain
+                circumstances.
+              </td>
+            </tr>
+            <tr>
+              <td>Objection</td>
+              <td>
+                You can object to processing based on legitimate interests.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>7.1 Data export (portability)</h3>
+        <p>
+          You may request an export of your personal data at any time from
+          within your account settings. You can select any combination of the
+          following:
+        </p>
+        <ul>
+          <li>
+            Your <strong>user profile</strong> (username, email address, avatar)
+          </li>
+          <li>
+            Your <strong>lobby chat messages</strong>
+          </li>
+          <li>
+            Your <strong>direct messages (DMs)</strong>
+          </li>
+        </ul>
+        <p>
+          Exports are provided in a standard, machine-readable format. We will
+          process your request promptly.
+        </p>
+        <div>
+          <p>
+            Because lobby messages are part of a shared, public conversation,
+            another user who participated in the same lobby may receive copies
+            of your public messages as part of their own data export. This is
+            inherent to any public chat service.
+          </p>
+        </div>
+
+        <Link to="/data-extraction">
+          <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
+        </Link>
+
+        <h3>7.2 Right to lodge a complaint</h3>
+        <p>
+          If you believe we have not handled your personal data lawfully, you
+          have the right to lodge a complaint with your national data protection
+          authority. A list of EU/EEA supervisory authorities is available at{' '}
+          <a
+            href="https://edpb.europa.eu/about-edpb/about-edpb/members_en"
+            target="_blank"
+            rel="noopener"
+          >
+            edpb.europa.eu
+          </a>
+          .
+        </p>
+      </section>
+
+      <section>
+        <h2>8. Account Deletion and Data Retention</h2>
+        <p>
+          You may delete your account at any time from your account settings.
+          Upon deletion:
+        </p>
+        <ul>
+          <li>
+            Your <strong>user profile</strong> (email, username, avatar, friend
+            list) is permanently deleted.
+          </li>
+          <li>
+            Your <strong>direct messages (DMs)</strong> are permanently deleted.
+          </li>
+          <li>
+            Your <strong>lobby messages</strong> are anonymised - they remain
+            visible in the lobby but are reassigned to the "Guest" author. They
+            are no longer linked to your identity.
+          </li>
+        </ul>
+        <p>
+          We retain data only for as long as necessary to provide the service.
+          We do not maintain backups or archives that would preserve deleted
+          data beyond this process.
+        </p>
+      </section>
+
+      <section>
+        <h2>9. Security</h2>
+        <p>
+          We take reasonable technical measures to protect your data, including
+          hashing passwords with a one-way algorithm and using HTTP-only, secure
+          cookies for authentication tokens. However, no internet service can
+          guarantee absolute security. Please use a strong, unique password for
+          your Card Nest account.
+        </p>
+      </section>
+
+      <section>
+        <h2>10. Children</h2>
+        <p>
+          Card Nest does not have an age restriction. However, we do not
+          knowingly collect data from children under the age of 13 without
+          verifiable parental consent, as required by applicable law. If you
+          believe a child under 13 has created an account without consent,
+          please contact us at the address below and we will delete the account
+          promptly.
+        </p>
+      </section>
+
+      <section>
+        <h2>11. Changes to This Policy</h2>
+        <p>
+          We may update this Privacy Policy from time to time. If we make
+          material changes, we will post the updated policy on this page with a
+          revised "last updated" date. Continued use of Card Nest after such
+          changes constitutes acceptance of the updated policy.
+        </p>
+      </section>
+
+      <section>
+        <h2>12. Contact</h2>
+        <p>
+          For any questions, requests, or concerns regarding your personal data,
+          contact us at:
+        </p>
+        <p>
+          <strong>
+            <em className="placeholder">[your-email@example.com]</em>
+          </strong>
+        </p>
+      </section>
     </ScrollablePage>
   );
 }
