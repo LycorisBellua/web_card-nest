@@ -54,11 +54,9 @@ export class InitService implements OnModuleInit {
       this.logger.log(
         `User ${newAdmin.username} is already the Admin. Continuing startup.`,
       );
-    } else if (newAdmin.rank === Ranks.PENDING) {
-      this.logger.error(
-        `User ${newAdmin.username} cannot be promoted to ADMIN as they are unverified.`,
-      );
-    } else {
+    }
+
+    if (newAdmin.rank !== Ranks.ADMIN) {
       if (admins.length === 1) {
         await this.prisma.user.update({
           where: { id: admins[0].id },

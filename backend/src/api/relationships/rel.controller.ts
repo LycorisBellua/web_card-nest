@@ -7,112 +7,95 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Req,
-  UseGuards,
 } from '@nestjs/common';
 import { RelService } from './rel.service';
 import { RelUuidDto } from './dto/rel-uuid.dto';
-import { AuthGuard } from '../auth/guards/auth.guard';
-import { RankGuard } from '../auth/guards/auth.rankguard';
-import { RequiredRank } from '../auth/guards/auth.rank-decorator';
-import { Ranks } from 'src/generated/prisma/enums';
-import type { Request as ExpressRequest } from 'express';
-import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 
-@UseGuards(AuthGuard, RankGuard)
-@RequiredRank(Ranks.USER)
 @Controller('api/rel')
 export class RelController {
   constructor(private readonly relService: RelService) {}
 
   // FRIEND MANAGEMENT
-  @Post('/friend/')
-  async addFriend(@Req() req: ExpressRequest, @Body() relUuidDto: RelUuidDto) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.addFriend(user.id, relUuidDto.targetId);
-  }
-
-  @Delete('/friend/:targetId')
-  async removeFriend(
-    @Req() req: ExpressRequest,
-    @Param('targetId', ParseUUIDPipe) targetId: string,
-  ) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.removeFriend(user.id, targetId);
-  }
-
-  @Patch('friend/accept')
-  async acceptRequest(
-    @Req() req: ExpressRequest,
+  @Post('/friend/:originId')
+  async addFriend(
+    @Param('originId', ParseUUIDPipe) originId: string,
     @Body() relUuidDto: RelUuidDto,
   ) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.acceptRequest(user.id, relUuidDto.targetId);
+    return await this.relService.addFriend(originId, relUuidDto.targetId);
   }
 
-  @Delete('friend/reject/:targetId')
+  @Delete('/friend/:originId/:targetId')
+  async removeFriend(
+    @Param('originId', ParseUUIDPipe) originId: string,
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ) {
+    return await this.relService.removeFriend(originId, targetId);
+  }
+
+  @Patch('friend/:originId/accept')
+  async acceptRequest(
+    @Param('originId', ParseUUIDPipe) originId: string,
+    @Body() relUuidDto: RelUuidDto,
+  ) {
+    return await this.relService.acceptRequest(originId, relUuidDto.targetId);
+  }
+
+  @Delete('friend/:originId/reject/:targetId')
   async rejectRequest(
-    @Req() req: ExpressRequest,
+    @Param('originId', ParseUUIDPipe) originId: string,
     @Param('targetId', ParseUUIDPipe) targetId: string,
   ) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.rejectRequest(user.id, targetId);
+    return await this.relService.rejectRequest(originId, targetId);
   }
 
-  @Delete('friend/cancel/:targetId')
+  @Delete('friend/:originId/cancel/:targetId')
   async cancelRequest(
-    @Req() req: ExpressRequest,
+    @Param('originId', ParseUUIDPipe) originId: string,
     @Param('targetId', ParseUUIDPipe) targetId: string,
   ) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.cancelRequest(user.id, targetId);
+    return await this.relService.cancelRequest(originId, targetId);
   }
 
-  @Get('friend')
-  async fetchFriends(@Req() req: ExpressRequest) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.fetchFriends(user.id);
+  @Get('friend/:originId')
+  async fetchFriends(@Param('originId', ParseUUIDPipe) originId: string) {
+    return await this.relService.fetchFriends(originId);
   }
-
-  @Get('friend/sent')
-  async fetchSentRequests(@Req() req: ExpressRequest) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.fetchSentRequests(user.id);
+  @Get('friendList/:originId')
+  async fetchFriendsList(@Param('originId', ParseUUIDPipe) originId: string) {
+    return await this.relService.fetchFriendsList(originId);
   }
-
-  @Get('friend/received')
-  async fetchReceivedRequests(@Req() req: ExpressRequest) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.fetchReceivedRequests(user.id);
+  @Get('friend/:originId/sent')
+  async fetchSentRequests(@Param('originId', ParseUUIDPipe) originId: string) {
+    return await this.relService.fetchSentRequests(originId);
   }
+  
 
-  @Get('friend/:targetId')
-  async fetchOtherUserFriends(
-    @Req() req: ExpressRequest,
-    @Param('targetId', ParseUUIDPipe) targetId: string,
+  @Get('friend/:originId/received')
+  async fetchReceivedRequests(
+    @Param('originId', ParseUUIDPipe) originId: string,
   ) {
-    return await this.relService.fetchFriends(targetId);
+    return await this.relService.fetchReceivedRequests(originId);
   }
 
   // BLOCK MANAGEMENT
-  @Post('block')
-  async blockUser(@Req() req: ExpressRequest, @Body() relUuidDto: RelUuidDto) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.blockUser(user.id, relUuidDto.targetId);
+  @Post('block/:originId')
+  async blockUser(
+    @Param('originId', ParseUUIDPipe) originId: string,
+    @Body() relUuidDto: RelUuidDto,
+  ) {
+    return await this.relService.blockUser(originId, relUuidDto.targetId);
   }
 
-  @Delete('block/:targetId')
+  @Delete('block/:originId/:targetId')
   async unblockUser(
-    @Req() req: ExpressRequest,
+    @Param('originId', ParseUUIDPipe) originId: string,
     @Param('targetId', ParseUUIDPipe) targetId: string,
   ) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.unblockUser(user.id, targetId);
+    return await this.relService.unblockUser(originId, targetId);
   }
 
-  @Get('block')
-  async fetchBlocked(@Req() req: ExpressRequest) {
-    const user = req['user'] as JwtPayload;
-    return await this.relService.fetchBlocked(user.id);
+  @Get('block/:originId')
+  async fetchBlocked(@Param('originId', ParseUUIDPipe) originId: string) {
+    return await this.relService.fetchBlocked(originId);
   }
 }

@@ -5,12 +5,9 @@ import {
   PlayerCountStyle,
   Overlay,
   OverlayStyle,
-  RecordTableWrapper,
   RecordTableStyle,
   ShowFinishedStyle,
 } from 'game/GameTableStyle';
-import { ScrollablePage } from 'components/general/Scrollable';
-import { BtnDefault } from 'components/btn/Btn';
 import { initialGame } from 'game/state/initialState';
 import { dealInitialCards } from 'game/logic/deck';
 import { hit, stand } from 'game/logic/game';
@@ -108,6 +105,7 @@ function PlayGame() {
 
   function handleNewRound() {
     if (!game) return;
+    // setShowFinished(false)
     setHistory((h) => [
       ...h,
       {
@@ -155,7 +153,7 @@ function PlayGame() {
   }, [game]);
 
   return (
-    <ScrollablePage>
+    <div>
       {started && game && (
         <>
           <TableWrapper>
@@ -170,50 +168,46 @@ function PlayGame() {
                 {getNextActivePlayer() !== -1 && (
                   <>
                     <p>Change to Player {getNextActivePlayer() + 1}</p>
-                    <BtnDefault onClick={handleNextPlayer}>Confirm</BtnDefault>
+                    <button onClick={handleNextPlayer}>Confirm</button>
                   </>
                 )}
               </Overlay>
             )}
+            {game?.gameStatus === 'finished' && (
+              <ShowFinishedStyle>
+                <p>
+                  Round {game.turn}: winner is player {game.winnerId! + 1}
+                </p>
+                <div className="btn">
+                  <button onClick={handleNewRound}>Another turn</button>
+                  <button onClick={handleDisplayRecord}>Stop playing</button>
+                </div>
+              </ShowFinishedStyle>
+            )}
             <PlayTableStyle>
-              {game?.gameStatus === 'finished' && (
-                <ShowFinishedStyle>
-                  <p>
-                    Round {game.turn}: winner is player {game.winnerId! + 1}
-                  </p>
-                  <div className="btn">
-                    <BtnDefault onClick={handleNewRound}>
-                      Another turn
-                    </BtnDefault>
-                    <BtnDefault onClick={handleDisplayRecord}>
-                      Stop playing
-                    </BtnDefault>
-                  </div>
-                </ShowFinishedStyle>
-              )}
               <canvas ref={canvasRef} width={900} height={600}></canvas>
             </PlayTableStyle>
             <div className="btn">
-              <BtnDefault
+              <button
                 onClick={handleHit}
                 disabled={game.gameStatus !== 'playing'}
               >
                 Hit
-              </BtnDefault>
-              <BtnDefault
+              </button>
+              <button
                 onClick={handleStand}
                 disabled={game.gameStatus !== 'playing'}
               >
                 Stand
-              </BtnDefault>
+              </button>
             </div>
           </TableWrapper>
         </>
       )}
       {!local && !online && !displayRecord && (
         <div>
-          <BtnDefault onClick={handleLocalGame}>Local game</BtnDefault>
-          <BtnDefault onClick={handleOnlineGame}>Online game</BtnDefault>
+          <button onClick={handleLocalGame}>Local game</button>
+          <button onClick={handleOnlineGame}>Online game</button>
         </div>
       )}
       {(local || online) && !started && (
@@ -226,7 +220,7 @@ function PlayGame() {
       {!started && displayRecord && !local && !online && (
         <DisplayRecord game={game} history={history} />
       )}
-    </ScrollablePage>
+    </div>
   );
 }
 
@@ -243,30 +237,30 @@ function PlayerCount({
 }: PlayerCountProps) {
   return (
     <PlayerCountStyle>
-      <BtnDefault
+      <button
         onClick={() => {
           if (local) onStartLocalGame(2);
           else onStartOnlineGame(2);
         }}
       >
-        2 players
-      </BtnDefault>
-      <BtnDefault
+        1 v 1
+      </button>
+      <button
         onClick={() => {
           if (local) onStartLocalGame(3);
           else onStartOnlineGame(3);
         }}
       >
-        3 players
-      </BtnDefault>
-      <BtnDefault
+        1 v 1 v 1
+      </button>
+      <button
         onClick={() => {
           if (local) onStartLocalGame(4);
           else onStartOnlineGame(4);
         }}
       >
-        4 players
-      </BtnDefault>
+        1 v 1 v 1 v 1
+      </button>
     </PlayerCountStyle>
   );
 }
@@ -282,42 +276,40 @@ function DisplayRecord({ game, history }: DisplayRecordProps) {
       <Overlay>
         <OverlayStyle>
           <h2>No records yet.</h2>
-          <BtnDefault onClick={() => window.location.reload()}>Back</BtnDefault>
+          <button onClick={() => window.location.reload()}>Back</button>
         </OverlayStyle>
       </Overlay>
     );
   }
   return (
     <Overlay>
-      <RecordTableWrapper>
-        <RecordTableStyle>
-          <thead>
-            <tr>
-              <th>Round</th>
-              {game.players.map((p, i) =>
-                p.username ? (
-                  <th key={i}>{p.username}</th>
-                ) : (
-                  <th key={i}>Guest {p.id + 1}</th>
-                ),
-              )}
-              <th>Winner</th>
+      <RecordTableStyle>
+        <thead>
+          <tr>
+            <th>Round</th>
+            {game.players.map((p, i) =>
+              p.username ? (
+                <th key={i}>{p.username}</th>
+              ) : (
+                <th key={i}>Guest {p.id + 1}</th>
+              ),
+            )}
+            <th>Winner</th>
+          </tr>
+        </thead>
+        <tbody>
+          {history.map((h, idx) => (
+            <tr key={idx}>
+              <td>{h.round}</td>
+              {h.scores.map((score, sIdx) => (
+                <td key={sIdx}>{h.blackCrowns[sIdx] ? '21 👑​' : score}</td>
+              ))}
+              <td>{h.winnerId! + 1}</td>
             </tr>
-          </thead>
-          <tbody>
-            {history.map((h, idx) => (
-              <tr key={idx}>
-                <td>{h.round}</td>
-                {h.scores.map((score, sIdx) => (
-                  <td key={sIdx}>{h.blackCrowns[sIdx] ? '21 👑​' : score}</td>
-                ))}
-                <td>{h.winnerId! + 1}</td>
-              </tr>
-            ))}
-          </tbody>
-        </RecordTableStyle>
-      </RecordTableWrapper>
-      <BtnDefault onClick={() => window.location.reload()}>Back</BtnDefault>
+          ))}
+        </tbody>
+      </RecordTableStyle>
+      <button onClick={() => window.location.reload()}>Back</button>
     </Overlay>
   );
 }

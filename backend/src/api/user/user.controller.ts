@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RankGuard } from '../auth/guards/auth.rankguard';
 import { Ranks } from 'src/generated/prisma/enums';
@@ -22,27 +23,32 @@ import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(AuthGuard)
-  @Delete()
-  async removeUser(@Req() req: ExpressRequest) {
-    const user = req['user'] as JwtPayload;
-    return await this.userService.removeUser(user.id);
+  @Delete(':userId')
+  async removeUser(@Param('userId', ParseUUIDPipe) userId: string) {
+    return await this.userService.removeUser(userId);
   }
 
   // UPDATE ENTRIES
-  @UseGuards(AuthGuard, RankGuard)
-  @RequiredRank(Ranks.USER)
-  @Patch('update')
+  // For Patch Methods: id can be taken from auth token once implemented
+  @Patch(':userId/update')
   async updateUser(
-    @Req() req: ExpressRequest,
+    @Param('userId', ParseUUIDPipe) userId: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const user = req['user'] as JwtPayload;
-    return await this.userService.updateUser(user.id, updateUserDto);
+    return await this.userService.updateUser(userId, updateUserDto);
+  }
+
+  @Patch(':userId/password')
+  async updatePassword(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    return this.userService.updatePassword(userId, updatePasswordDto);
   }
 
   // FETCH USERS
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RankGuard)
+  @RequiredRank(Ranks.PENDING)
   @Get('me')
   async getOwnProfile(@Req() req: ExpressRequest) {
     const user = req['user'] as JwtPayload;

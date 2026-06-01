@@ -1,11 +1,10 @@
-import { ScrollablePage } from 'components/general/Scrollable';
+import { Container } from 'components/style/SignForm';
 
 function NotFound() {
   return (
-    <ScrollablePage>
+    <Container>
       <h1>404 - Page Not Found</h1>
-      <p>Sorry, the page you're looking for doesn't exist...</p>
-    </ScrollablePage>
+    </Container>
   );
 }
 
