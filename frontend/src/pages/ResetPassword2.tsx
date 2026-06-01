@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+<<<<<<< HEAD:frontend/src/pages/ResetPassword2.tsx
 import {
   Container,
   FormGroup,
@@ -9,6 +10,13 @@ import {
 } from 'components/style/SignForm';
 import { sanitizePassword } from 'functions/UserSanitation';
 import { validatePassword } from 'functions/UserValidation';
+=======
+import { sanitizePassword } from 'functions/UserSanitation';
+import { validatePassword } from 'functions/UserValidation';
+import { ScrollablePage } from 'components/general/Scrollable';
+import { BtnDefault } from 'components/btn/Btn';
+import InputField from 'components/misc/InputField';
+>>>>>>> parent of 6076e3e ([Frontend] Connect to backend (#94)):frontend/src/pages/auth/ResetPassword2.tsx
 
 function ResetPasswordSecond() {
   const [searchParams] = useSearchParams();
@@ -93,14 +101,21 @@ function ResetPasswordSecond() {
   }
 
   return (
+<<<<<<< HEAD:frontend/src/pages/ResetPassword2.tsx
     <Container>
       <h1>Reset a new password</h1>
       <p>Email: {email}</p>
+=======
+    <ScrollablePage>
+      <h1>Reset a new password</h1>
+      <p>Email: {email.length ? email : '[Error]'}</p>
+>>>>>>> parent of 6076e3e ([Frontend] Connect to backend (#94)):frontend/src/pages/auth/ResetPassword2.tsx
       <form
         onSubmit={(e) => {
           void handleSubmit(e);
         }}
       >
+<<<<<<< HEAD:frontend/src/pages/ResetPassword2.tsx
         <FormGroup>
           <label htmlFor="new-password">Please enter a new password</label>
           <input
@@ -136,6 +151,35 @@ function ResetPasswordSecond() {
       {message && <SuccessMsg>{message}</SuccessMsg>}
       <Link to="/login">Go back to login page 👈</Link>
     </Container>
+=======
+        <InputField
+          id="new-password"
+          type="password"
+          name="new-password"
+          label="New password"
+          autoComplete="new-password"
+          value={uPwd}
+          onChange={(e) => setUPwd(e.target.value)}
+          helpers={[
+            'You need a minimum of 8 characters, including one uppercase, one lowercase, one digit and one special character.',
+          ]}
+          isError={!!errors.length}
+        />
+        <InputField
+          id="confirm-password"
+          type="password"
+          name="confirm-password"
+          label="Confirm new password"
+          value={uPwdConfirm}
+          onChange={(e) => setUPwdConfirm(e.target.value)}
+          helpers={errors.length > 0 ? errors : [message]}
+          isError={!!errors.length}
+        />
+        <BtnDefault>Confirm</BtnDefault>
+      </form>
+      <Link to="/auth">Go back to login page</Link>
+    </ScrollablePage>
+>>>>>>> parent of 6076e3e ([Frontend] Connect to backend (#94)):frontend/src/pages/auth/ResetPassword2.tsx
   );
 }
 

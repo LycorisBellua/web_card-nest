@@ -71,7 +71,9 @@ export class RelService {
 
   async fetchFriends(originId: string) {
     await this.userService.userExistsOrThrow(originId);
-    return await this.findAccepted(originId);
+    const accepted: FriendshipWithUsers = await this.findAccepted(originId);
+    const friends = this.buildFriendList(originId, accepted);
+    return friends.sort((a, b) => a.username.localeCompare(b.username));
   }
   async fetchFriendsList(originId: string) {
     
@@ -86,12 +88,14 @@ export class RelService {
   
   async fetchSentRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
-    return await this.findSentPending(originId);
+    const sent = await this.findSentPending(originId);
+    return this.buildFriendList(originId, sent);
   }
 
   async fetchReceivedRequests(originId: string) {
     await this.userService.userExistsOrThrow(originId);
-    return await this.findReceivedPending(originId);
+    const received = await this.findReceivedPending(originId);
+    return this.buildFriendList(originId, received);
   }
 
   // FRIEND DB ACTIONS
@@ -218,7 +222,8 @@ export class RelService {
 
   async fetchBlocked(originId: string) {
     await this.userService.userExistsOrThrow(originId);
-    return await this.findBlockedUsers(originId);
+    const blocked = await this.findBlockedUsers(originId);
+    return this.buildBlockList(blocked);
   }
 
   async fetchBlockedList(originId:string)

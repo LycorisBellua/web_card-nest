@@ -122,7 +122,11 @@ export class UserService {
     if (!(await compareHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
+<<<<<<< HEAD
     return await this.modifyPassword(userId, await createHash(newPassword));
+=======
+    return await this.modifyPassword(userId, await createPasswordHash(newPassword));
+>>>>>>> parent of 6076e3e ([Frontend] Connect to backend (#94))
   }
 
   async getOwnProfile(userId: string) {
@@ -300,6 +304,7 @@ export class UserService {
     return result;
   }
 
+<<<<<<< HEAD
   async sendResetPasswordUnverifiedEmail(userId: string) {
       const found = await this.userExistsOrThrow(userId);
       if (!found.email_unverified) return;
@@ -318,13 +323,21 @@ export class UserService {
   async generateRefreshToken(
     userId: string,
   ): Promise<{ token: string; timeout: Date }> {
+=======
+  async updateRefreshToken(userId: string, refreshToken: string, timeout: Date) {
+>>>>>>> parent of 6076e3e ([Frontend] Connect to backend (#94))
     await this.userExistsOrThrow(userId);
     const token = getToken();
     const timeout = getRefreshTimeout();
     const result = await this.modifyRefreshToken(
       userId,
+<<<<<<< HEAD
       await createHash(token),
       timeout,
+=======
+      createTokenHash(refreshToken),
+      timeout
+>>>>>>> parent of 6076e3e ([Frontend] Connect to backend (#94))
     );
     if (
       !result.refreshToken ||
@@ -502,11 +515,15 @@ private async deleteUser(userId: string) {
     });
   }
 
+<<<<<<< HEAD
   private async modifyRefreshToken(
     userId: string,
     newToken: string | null,
     timeout: Date,
   ) {
+=======
+  private async modifyRefreshToken(userId: string, newToken: string, timeout: Date) {
+>>>>>>> parent of 6076e3e ([Frontend] Connect to backend (#94))
     return await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: newToken, refreshTimeout: timeout },
@@ -612,6 +629,16 @@ async userExistsByEmail(toFind: string) {
     });
   }
 
+<<<<<<< HEAD
+=======
+  async userExistsByRefreshTokenHash(toFind: string) {
+    return await this.prisma.user.findUnique({
+      where: { refreshToken: toFind },
+      select: { id: true, rank: true, refreshTimeout: true }
+    })
+  }
+
+>>>>>>> parent of 6076e3e ([Frontend] Connect to backend (#94))
   private async userExists(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },

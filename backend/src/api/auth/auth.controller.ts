@@ -27,8 +27,22 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
-  async addUser(@Body() createUserDto: CreateUserDto) {
-    return await this.authService.signup(createUserDto);
+  async addUser(
+    @Body() dto: CreateUserDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ) {
+    await this.authService.signup(dto);
+    const tokens = await this.authService.login(
+      dto.email_unverified,
+      dto.password,
+    );
+    res.cookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @Post('login')
@@ -36,14 +50,17 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
-    const result = await this.authService.login(loginDto.email, loginDto.password);
-    res.cookie('refresh_token', result.refreshToken, {
+    const tokens = await this.authService.login(
+      loginDto.email,
+      loginDto.password,
+    );
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: result.timeout.getTime() - Date.now(),
+      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
     });
-    return { accessToken: result.accessToken };
+    return { accessToken: tokens.accessToken };
   }
 
   @UseGuards(AuthGuard)
@@ -70,8 +87,29 @@ export class AuthController {
     if (type !== 'Bearer' || !refreshToken) {
       throw new UnauthorizedException();
     }
-    const accessToken = await this.authService.refresh(jwtToken, refreshToken);
-    return { accessToken };
+    const token = await this.authService.refresh(refreshToken);
+    return { accessToken: token };
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('password')
+  async updatePassword(
+    @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: ExpressResponse,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    const user = req['user'] as JwtPayload;
+    const tokens = await this.authService.updatePassword(
+      user.id,
+      updatePasswordDto,
+    );
+    res.cookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @Get('/:userId/:token/verify')

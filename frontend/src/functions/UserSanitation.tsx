@@ -22,4 +22,12 @@ export function sanitizeDescription(udesc: string): string {
   return udesc.normalize('NFC');
 }
 
+<<<<<<< HEAD
+=======
+export function sanitizeMessage(msg: string): string {
+  if (!msg) return '';
+  return msg.normalize('NFC').trim();
+}
+
+>>>>>>> parent of 6076e3e ([Frontend] Connect to backend (#94))
 // No sanitation for the avatar
