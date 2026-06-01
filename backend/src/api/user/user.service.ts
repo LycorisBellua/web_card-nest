@@ -11,17 +11,19 @@ import { Ranks } from 'src/generated/prisma/enums';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import {
-  compareHash,
-  createHash,
+  comparePasswordHash,
+  createPasswordHash,
   getCurrentTime,
   getVerificationTimeout,
   getToken,
   newPasswordContainsUsername,
   newPasswordContainsEmail,
-  getRefreshTimeout,
   encodeSingleAvatar,
   encodeMultipleAvatars,
   decodeAvatar,
+  createTokenHash,
+  compareTokenHash,
+  getRefreshTimeout,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
 import { AdminUpdateUserDto } from '../admin/dto/admin-update-user.dto';
@@ -80,7 +82,7 @@ export class UserService {
         throw new ConflictException(ErrorMessages.EMAIL_USED);
       }
       data.email_unverified = dto.email_unverified;
-      data.verifyToken = await createHash(token);
+      data.verifyToken = createTokenHash(token);
       data.verifyTimeout = getVerificationTimeout();
     }
 
@@ -141,12 +143,12 @@ export class UserService {
     if (newPasswordContainsEmail(newPassword, email)) {
       throw new BadRequestException(ErrorMessages.EMAIL_IN_PASSWORD);
     }
-    if (!(await compareHash(currentPassword, user.password))) {
+    if (!(await comparePasswordHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
     const updated = await this.modifyPassword(
       userId,
-      await createHash(newPassword),
+      await createPasswordHash(newPassword),
     );
     return encodeSingleAvatar(updated);
   }
@@ -234,8 +236,8 @@ export class UserService {
     const created = await this.createUser(
       newUser.username,
       newUser.email_unverified,
-      await createHash(newUser.password),
-      await createHash(token),
+      await createPasswordHash(newUser.password),
+      createTokenHash(token),
       getVerificationTimeout(),
     );
     await this.userEmailsService.sendVerificationEmail(
@@ -250,7 +252,7 @@ export class UserService {
     if (
       !found ||
       !found.verifyToken ||
-      !(await compareHash(token, found.verifyToken)) ||
+      !compareTokenHash(token, found.verifyToken) ||
       !found.email_unverified ||
       !found.verifyTimeout ||
       found.verifyTimeout < new Date()
@@ -275,7 +277,7 @@ export class UserService {
     if (
       !found ||
       !found.verifyToken ||
-      !(await compareHash(token, found.verifyToken))
+      !compareTokenHash(token, found.verifyToken)
     ) {
       throw new BadRequestException();
     }
@@ -297,7 +299,7 @@ export class UserService {
     }
     const token = getToken();
     const data: EmailVerData = {
-      verifyToken: await createHash(token),
+      verifyToken: await createTokenHash(token),
       verifyTimeout: getVerificationTimeout(),
     };
     await this.modifyVerificationData(userId, data);
@@ -314,7 +316,7 @@ export class UserService {
     const timeout = getRefreshTimeout();
     return await this.modifyRefreshToken(
       userId,
-      await createHash(token),
+      createTokenHash(token),
       timeout,
     );
   }
@@ -507,7 +509,7 @@ export class UserService {
 
   private async modifyRefreshToken(
     userId: string,
-    newToken: string | null,
+    newToken: string,
     timeout: Date,
   ): Promise<RefreshData> {
     return await this.prisma.user.update({

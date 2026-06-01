@@ -33,18 +33,24 @@ export class AuthController {
     @Res({ passthrough: true }) res: ExpressResponse,
   ): Promise<JWT> {
     await this.authService.signup(dto);
-    const login = await this.authService.login(
+    const tokens = await this.authService.login(
       dto.email_unverified,
       dto.password,
     );
-    res.cookie('refresh_token', login.refreshToken, {
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: login.refreshTimeout.getTime() - Date.now(),
+      maxAge: timeout,
     });
-    const accessToken = login.accessToken;
-    return { accessToken };
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @Post('login')
@@ -56,14 +62,20 @@ export class AuthController {
       loginDto.email,
       loginDto.password,
     );
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
     res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: tokens.refreshTimeout.getTime() - Date.now(),
+      maxAge: timeout,
     });
-    const accessToken = tokens.accessToken;
-    return { accessToken };
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @UseGuards(AuthGuard)
@@ -80,6 +92,12 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: 0,
     });
+    res.cookie('dummy_refresh', '', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 0,
+    });
     return { message: 'Logged out' };
   }
 
@@ -87,7 +105,7 @@ export class AuthController {
   async refresh(@Req() req: ExpressRequest): Promise<JWT> {
     const [type, jwtToken] = req.headers.authorization?.split(' ') ?? [];
     const refreshToken = req.cookies['refresh_token'] as string | undefined;
-    if (type !== 'Bearer' || !refreshToken) {
+    if (!refreshToken) {
       throw new UnauthorizedException();
     }
     return await this.authService.refresh(jwtToken, refreshToken);
@@ -97,10 +115,28 @@ export class AuthController {
   @Patch('password')
   async updatePassword(
     @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: ExpressResponse,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
-    return await this.authService.updatePassword(user.id, updatePasswordDto);
+    const tokens = await this.authService.updatePassword(
+      user.id,
+      updatePasswordDto,
+    );
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
+    res.cookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @Get('/:userId/:token/verify')

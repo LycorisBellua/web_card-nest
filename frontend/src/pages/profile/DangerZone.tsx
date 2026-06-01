@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useUser } from 'context/useUser';
 import type { User } from 'context/Types';
+import { ChangeRankRequest, DeleteSelfRequest } from 'functions/Requests';
 import { BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
@@ -19,38 +20,44 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
   async function handleDownrank() {
     closeModals();
     try {
-      const res = await fetch(`/api/users/${user.id}/rank`, {
-        method: 'PATCH',
-      });
-      if (!res.ok) {
-        setError(`Error ${res.status}: ${res.statusText}`);
+      const newRank = 'user';
+      const newaccessToken = await ChangeRankRequest(
+        user.accessToken,
+        user.id,
+        newRank,
+      );
+      if (!newaccessToken.length) {
+        setError('Error occurred');
         return;
       }
-      setUser((prev) => ({ ...prev, rank: 'user' }) as User);
+      setUser(
+        (prev) =>
+          ({ ...prev, accessToken: newaccessToken, rank: newRank }) as User,
+      );
     } catch {
-      setError('An error occurred. Please try again.');
+      setError('Error occurred');
     }
   }
 
   async function handleDelete() {
     closeModals();
     try {
-      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        setError(`Error ${res.status}: ${res.statusText}`);
+      const newaccessToken = await DeleteSelfRequest(user.accessToken);
+      if (!newaccessToken.length) {
+        setError('Error occurred');
         return;
       }
       setUser(null);
       window.location.href = '/';
     } catch {
-      setError('An error occurred. Please try again.');
+      setError('Error occurred');
     }
   }
 
   return (
     <div>
       <h2>Danger zone</h2>
-      {user.rank.toLowerCase() == 'mod' && (
+      {user.rank.toLowerCase() == 'moderator' && (
         <BtnDanger onClick={() => setIsDownrankModalOpen(true)}>
           Renounce Mod Rank
         </BtnDanger>

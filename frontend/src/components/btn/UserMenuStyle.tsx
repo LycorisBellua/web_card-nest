@@ -34,6 +34,7 @@ export const Option = styled.button<{ $destructive?: boolean }>`
   border: none;
   border-bottom: 1px solid #3a2a1e;
   text-align: left;
+  white-space: nowrap;
   transition: background 0.12s;
   color: ${({ $destructive }) => ($destructive ? '#c0624a' : '#aa8a68')};
 

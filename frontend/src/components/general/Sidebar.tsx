@@ -1,5 +1,5 @@
 import { useUser } from 'context/useUser';
-import { IsLoggedIn, IsPendingUser } from 'functions/Ranks';
+import type { OtherUser } from 'context/Types';
 import styled from 'styled-components';
 import { ScrollableArea } from 'components/general/Scrollable';
 import UserBtn from 'components/btn/UserBtn';
@@ -152,9 +152,9 @@ function Sidebar({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const { friends } = useUser();
+  const { user, friends } = useUser();
 
-  if (!IsLoggedIn() || IsPendingUser()) return <></>;
+  if (!user || user.rank.toLowerCase() == 'pending') return <></>;
   return (
     <>
       <Backdrop $isOpen={isOpen} onClick={onClose} />
@@ -168,7 +168,7 @@ function Sidebar({
               friends.map((e) => (
                 <UserBtn
                   key={e.id}
-                  user={e}
+                  user={e as OtherUser}
                   path={`/chat/${e.username}`}
                   onClick={onClose}
                 />

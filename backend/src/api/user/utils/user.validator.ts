@@ -319,11 +319,11 @@ export function IsPasswordNotTooLong(validationOptions?: ValidationOptions) {
       name: 'isPasswordNotTooLong',
       validator: {
         validate(value: string): boolean {
-          return !value || value.length <= 128;
+          return !value || value.length <= 64;
         },
         defaultMessage: buildMessage(
           (eachPrefix) =>
-            eachPrefix + 'The password cannot be longer than 128 characters.',
+            eachPrefix + 'The password cannot be longer than 64 characters.',
           validationOptions,
         ),
       },
@@ -405,7 +405,7 @@ export function IsAvatarNotTooBig(validationOptions?: ValidationOptions) {
           if (!value) return true;
           const buf = decodeAvatarBase64(value);
           if (!buf) return true;
-          return buf.length <= 1 * 1024 * 1024;
+          return buf.length <= 2 * 1024 * 1024;
         },
         defaultMessage: buildMessage(
           (eachPrefix) => eachPrefix + 'The avatar must be under 1 MB.',

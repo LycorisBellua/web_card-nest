@@ -6,11 +6,18 @@ import {
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { compareHash, getCurrentTime } from '../user/utils/user.utils';
+import {
+  comparePasswordHash,
+  createTokenHash,
+  getCurrentTime,
+  getRefreshTimeout,
+  getToken,
+} from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { ErrorMessages } from '../user/error_messages/ErrorMessages';
 import { JWT, RedirectURL, TokenSet } from './types/auth.types';
+import { RefreshData } from '../user/types/user.types';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +35,7 @@ export class AuthService {
     if (
       !found ||
       (found.email && found.email !== email) ||
-      !(await compareHash(password, found.password))
+      !(await comparePasswordHash(password, found.password))
     ) {
       throw new UnauthorizedException('Email address or password incorrect.');
     }
@@ -50,24 +57,21 @@ export class AuthService {
   }
 
   async refresh(jwtToken: string, refreshToken: string): Promise<JWT> {
-    const payload: JwtPayload = this.jwtService.decode(jwtToken);
-    if (!payload) {
-      throw new UnauthorizedException();
-    }
-    const found = await this.userService.userExistsOrThrow(payload.id);
+    const hash = createTokenHash(refreshToken);
+    const user = await this.userService.userExistsByRefreshTokenHash(hash);
     if (
-      !found.refreshToken ||
-      !found.refreshTimeout ||
-      found.refreshTimeout < getCurrentTime() ||
-      !(await compareHash(refreshToken, found.refreshToken))
+      !user ||
+      !user.refreshTimeout ||
+      user.refreshTimeout < getCurrentTime()
     ) {
       throw new UnauthorizedException();
     }
-    return await this.generateJwtToken(payload.id);
+    return await this.generateJwtToken(user.id, user.rank);
   }
 
   async updatePassword(userId: string, dto: UpdatePasswordDto) {
-    return await this.userService.updatePassword(userId, dto);
+    const result = await this.userService.updatePassword(userId, dto);
+    return await this.generateTokenPair(userId, result.rank);
   }
 
   async verifyEmail(userId: string, token: string): Promise<RedirectURL> {
@@ -75,6 +79,7 @@ export class AuthService {
     if (!verified) {
       return { url: `${process.env.HOME_URL}/verify-error` };
     }
+    this.userService.removeRefreshToken(userId);
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
@@ -91,8 +96,15 @@ export class AuthService {
     const user = await this.userService.userExistsOrThrow(userId);
     const payload = {
       id: userId,
-      rank: user.rank,
+      rank: rank,
     };
     return { accessToken: await this.jwtService.signAsync(payload) };
+  }
+
+  async generateRefreshToken(userId: string): Promise<RefreshData> {
+    const token = getToken();
+    const timeout = getRefreshTimeout();
+    await this.userService.generateRefreshToken(userId);
+    return { token, timeout };
   }
 }

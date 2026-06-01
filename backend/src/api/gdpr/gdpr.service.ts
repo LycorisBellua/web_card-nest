@@ -23,6 +23,13 @@ export class GdprService {
     const dm = await this.chatService.fetchDMHistoryGDPR(userid);
     const lobby = await this.chatService.fetchLobbyHistoryGDPR(userid);
 
+    const omitAvatar = <T extends { avatar?: unknown }>(
+      obj: T,
+    ): Omit<T, 'avatar'> => {
+      const { avatar, ...rest } = obj;
+      return rest;
+    };
+
     return {
       userProfile: profile,
       sentFriendRequests: sentReq,
@@ -41,15 +48,14 @@ export class GdprService {
     }
 
     const message =
-      'Dear ' +
+      '<p>Dear ' +
       user.username +
-      ',\n' +
-      'Your personnal data have been successfully exported.\n' +
-      'Best regards,\n' +
-      'Web-Nest-Card Team.\n';
+      ',</p>' +
+      '<p>Your personal data have been successfully exported.</p>' +
+      '<p>Best regards,</p><p>Card Nest.</p>\n';
     await this.sendMailService.sendMail(
       email,
-      'WEB-NEST-CARD DATA EXTRACTION CONFIRMATION',
+      'Card Nest - Data extraction confirmation',
       message,
     );
   }
