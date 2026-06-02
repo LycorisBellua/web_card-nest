@@ -45,7 +45,7 @@ const Field = styled.input`
 `;
 
 function ChatInput({ onSend }: { onSend: (content: string) => void }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
   const maxLen = 500;
 
   function handleSubmit() {

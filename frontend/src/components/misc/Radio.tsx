@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 /*
-  const [mode, setMode] = useState('casual');
+  const [mode, setMode] = useState<string>('casual');
 
   <Radio
     options={[

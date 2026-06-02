@@ -10,7 +10,7 @@ import Page from 'components/general/Page';
 import Footer from 'components/general/Footer';
 
 function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   return (
     <>

@@ -36,13 +36,13 @@ function PlayGame() {
     typeof parsed.username === 'string'
       ? { username: parsed.username }
       : undefined;
-  const [started, setStarted] = useState(false);
-  const [local, setLocal] = useState(false);
-  const [online, setOnline] = useState(false);
+  const [started, setStarted] = useState<boolean>(false);
+  const [local, setLocal] = useState<boolean>(false);
+  const [online, setOnline] = useState<boolean>(false);
   const [game, setGame] = useState<GameState | null>(null);
   const [history, setHistory] = useState<RoundRecord[]>([]);
-  const [displayRecord, setDisplayRecord] = useState(false);
-  const [showTransition, setShowTransition] = useState(false);
+  const [displayRecord, setDisplayRecord] = useState<boolean>(false);
+  const [showTransition, setShowTransition] = useState<boolean>(false);
   const { canvasRef, reset } = useGameCanvas(game, started);
 
   function handleLocalGame() {

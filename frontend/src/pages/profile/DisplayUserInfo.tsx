@@ -65,7 +65,7 @@ export function DisplayPrivateUserInfo({ user }: { user: NonNullable<User> }) {
 
 function VerifyEmail({ user }: { user: NonNullable<User> }) {
   const { setUser } = useUser();
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<string>('');
   const [errors, setErrors] = useState<string[]>([]);
 
   async function handleVerifyEmail() {

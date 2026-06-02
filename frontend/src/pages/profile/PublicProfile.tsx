@@ -45,9 +45,9 @@ function PublicProfile() {
   } = useUser();
   const [otherUser, setOtherUser] = useState<OtherUserOrGuest>(null);
   const fetchedUsernameRef = useRef<string | null>(null);
-  const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
-  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
-  const [error, setError] = useState('');
+  const [isFriendModalOpen, setIsFriendModalOpen] = useState<boolean>(false);
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
   const navigate = useNavigate();
 
   const noAccess = !user || user.rank.toLowerCase() == 'pending';

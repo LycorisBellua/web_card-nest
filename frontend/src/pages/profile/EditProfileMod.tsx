@@ -58,16 +58,16 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
     receivedFriends,
     setReceivedFriends,
   } = useUser();
-  const [displaySpinner, setDisplaySpinner] = useState(false);
+  const [displaySpinner, setDisplaySpinner] = useState<boolean>(false);
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>(emptyFieldErrors());
-  const [successMessage, setSuccessMessage] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [resetKey, setResetKey] = useState(0);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [resetKey, setResetKey] = useState<number>(0);
 
   const [avatar, setAvatar] = useState<File | '' | undefined>(undefined);
-  const [username, setUsername] = useState('');
-  const [desc, setDesc] = useState('');
+  const [username, setUsername] = useState<string>('');
+  const [desc, setDesc] = useState<string>('');
 
   if (!user || !otherUser || !CanDisciplineThisUser(user, otherUser))
     return <></>;
@@ -344,7 +344,7 @@ function UpdateUsername({
   onChange: (v: string) => void;
   errors: string[];
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
 
   function updateValue(e: React.ChangeEvent<HTMLInputElement>) {
     setValue(e.target.value);
@@ -376,7 +376,7 @@ function UpdateDescription({
   onChange: (v: string) => void;
   errors: string[];
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
 
   function updateValue(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setValue(e.target.value);

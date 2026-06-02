@@ -23,9 +23,9 @@ function ResetPassword() {
 }
 
 function ResetPasswordQuery() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState<string>('');
   const [errors, setErrors] = useState<string[]>([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<string>('');
 
   async function handlerLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -93,9 +93,9 @@ function ResetPasswordQuery() {
 }
 
 function ResetPasswordEdit({ email, token }: { email: string; token: string }) {
-  const [message, setMessage] = useState('');
-  const [uPwd, setUPwd] = useState('');
-  const [uPwdConfirm, setUPwdConfirm] = useState('');
+  const [message, setMessage] = useState<string>('');
+  const [uPwd, setUPwd] = useState<string>('');
+  const [uPwdConfirm, setUPwdConfirm] = useState<string>('');
   const [errors, setErrors] = useState<string[]>([]);
   const navigate = useNavigate();
 

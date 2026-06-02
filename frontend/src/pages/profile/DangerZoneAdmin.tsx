@@ -31,10 +31,12 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
     receivedFriends,
     setReceivedFriends,
   } = useUser();
-  const [isDownrankModalOpen, setIsDownrankModalOpen] = useState(false);
-  const [isUprankModalOpen, setIsUprankModalOpen] = useState(false);
-  const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
-  const [error, setError] = useState('');
+  const [isDownrankModalOpen, setIsDownrankModalOpen] =
+    useState<boolean>(false);
+  const [isUprankModalOpen, setIsUprankModalOpen] = useState<boolean>(false);
+  const [isDeletionModalOpen, setIsDeletionModalOpen] =
+    useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   if (
     !user ||

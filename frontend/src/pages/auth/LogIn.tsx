@@ -15,10 +15,10 @@ function LogIn() {
     setSentFriends,
     setReceivedFriends,
   } = useUser();
-  const [logMail, setLogMail] = useState('');
-  const [logPwd, setLogPwd] = useState('');
+  const [logMail, setLogMail] = useState<string>('');
+  const [logPwd, setLogPwd] = useState<string>('');
   const [errors, setErrors] = useState<string[]>([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<string>('');
   const navigate = useNavigate();
 
   async function handlerLogin(e: React.FormEvent<HTMLFormElement>) {

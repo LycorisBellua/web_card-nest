@@ -98,7 +98,7 @@ function Dropdown({
   initialValue: string;
   options: string[];
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   const [value, setValue] = useState<string>(initialValue);
   const ref = useRef<HTMLDivElement>(null);
 
