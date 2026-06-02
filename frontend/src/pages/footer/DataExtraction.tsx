@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import type { User } from 'context/Types';
 import { useUser } from 'context/useUser';
-import {
-  ExtractProfileDataJSON,
-  ExtractProfileDataCSV,
-} from 'functions/Requests';
+import { ExtractProfileData } from 'functions/Requests';
 import { ScrollablePage } from 'components/general/Scrollable';
 import Checkbox from 'components/misc/Checkbox';
 import Spinner from 'components/misc/Spinner';
@@ -22,8 +19,6 @@ function DataExtraction() {
   const [dmSelected, setDmSelected] = useState<boolean[]>(() =>
     Array.from({ length: friends.length }, () => false),
   );
-  const [jsonSelected, setJsonSelected] = useState<boolean>(false);
-  const [csvSelected, setCsvSelected] = useState<boolean>(false);
   const [displaySpinner, setDisplaySpinner] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
 
@@ -38,20 +33,10 @@ function DataExtraction() {
     );
   }
 
-  const handleDownloadJSON = (data: object, filename = 'data.json') => {
+  const handleDownload = (data: object, filename = 'data.json') => {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json',
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadCSV = (data: string, filename = 'data.csv') => {
-    const blob = new Blob([data], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -64,40 +49,22 @@ function DataExtraction() {
     try {
       const anyDataSelected =
         profileSelected || lobbySelected || dmSelected.some(Boolean);
-      const anyFormatSelected = jsonSelected || csvSelected;
       if (!anyDataSelected) {
         setMessage('No data has been selected.');
-        return;
-      } else if (!anyFormatSelected) {
-        setMessage('No format has been selected.');
         return;
       }
       setMessage('');
       setDisplaySpinner(true);
       let accessToken = user!.accessToken;
-      if (jsonSelected) {
-        if (profileSelected) {
-          const profileJson = await ExtractProfileDataJSON(accessToken);
-          accessToken = profileJson.accessToken;
-          if (!accessToken.length) {
-            setMessage('Error with: JSON - User profile');
-            setDisplaySpinner(false);
-            return;
-          }
-          handleDownloadJSON(profileJson.data, 'profile.json');
+      if (profileSelected) {
+        const profileJson = await ExtractProfileData(accessToken);
+        accessToken = profileJson.accessToken;
+        if (!accessToken.length) {
+          setMessage('Error with: User profile extraction');
+          setDisplaySpinner(false);
+          return;
         }
-      }
-      if (csvSelected) {
-        if (profileSelected) {
-          const profileCsv = await ExtractProfileDataCSV(accessToken);
-          accessToken = profileCsv.accessToken;
-          if (!accessToken.length) {
-            setMessage('Error with: CSV - User profile');
-            setDisplaySpinner(false);
-            return;
-          }
-          handleDownloadCSV(profileCsv.data, 'profile.csv');
-        }
+        handleDownload(profileJson.data, 'profile.json');
       }
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
       setMessage('');
@@ -160,13 +127,6 @@ function DataExtraction() {
           </ShiftBox>
         </>
       )}
-      <h2>Select format</h2>
-      <Checkbox
-        label="JSON"
-        checked={jsonSelected}
-        onChange={setJsonSelected}
-      />
-      <Checkbox label="CSV" checked={csvSelected} onChange={setCsvSelected} />
       <BtnAccent onClick={() => void handleExtract()}>Extract</BtnAccent>
       {displaySpinner && <Spinner label="Extracting..." />}
       {message && <p>{message}</p>}
