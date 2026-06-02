@@ -1,55 +1,64 @@
 import { Link } from 'react-router-dom';
 import { ScrollablePage } from 'components/general/Scrollable';
 import { BtnDefault } from 'components/btn/Btn';
+import styled from 'styled-components';
+
+const Section = styled.section`
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-align: justify;
+`;
+
+const H3 = styled.h3`
+  margin-top: 15px;
+`;
 
 function PrivacyPolicy() {
   return (
     <ScrollablePage>
       <h1>Privacy Policy</h1>
       <p>Last updated: June 1, 2026</p>
-      <section>
+      <Section>
         <h2>1. Who We Are</h2>
         <p>
-          Card Nest ("we", "us", "our") is operated by{' '}
-          <em className="placeholder">[Your Name / Company Name]</em>, based in
-          the European Union / European Economic Area. We are the{' '}
-          <strong>data controller</strong> for all personal data processed
-          through this website.
+          Card Nest ("we", "us", "our") is based the European Union / European
+          Economic Area. We are the <strong>data controller</strong> for all
+          personal data processed through this website.
         </p>
         <p>
-          Contact: <em className="placeholder">[your-email@example.com]</em>
+          Contact: <em>no.rep.card.nest@gmail.com</em>
         </p>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>2. What Data We Collect and Why</h2>
 
-        <h3>2.1 Registered users (account holders)</h3>
+        <H3>2.1 Registered users (account holders)</H3>
         <p>When you create an account, we collect:</p>
         <ul>
           <li>
-            <strong>Email address</strong> - used to authenticate your account
+            <strong>Email address</strong>: used to authenticate your account
             and send transactional emails (e.g. password resets).
           </li>
           <li>
-            <strong>Username</strong> - displayed publicly in the lobby chat, in
+            <strong>Username</strong>: displayed publicly in the lobby chat, in
             multiplayer games, and on your profile.
           </li>
           <li>
-            <strong>Avatar image</strong> - displayed publicly alongside your
+            <strong>Avatar image</strong>: displayed publicly alongside your
             username. You provide this voluntarily.
           </li>
           <li>
-            <strong>Password</strong> - stored as a one-way cryptographic hash.
+            <strong>Password</strong>: stored as a one-way cryptographic hash.
             We never store or transmit your plain-text password.
           </li>
           <li>
-            <strong>Friend relationships</strong> - the list of users you have
+            <strong>Friend relationships</strong>: the list of users you have
             added as friends, stored to enable private messaging.
           </li>
           <li>
-            <strong>Direct messages (DMs)</strong> - messages exchanged
-            privately between you and friends you have added.
+            <strong>Direct messages (DMs)</strong>: messages exchanged privately
+            between you and friends you have added.
           </li>
         </ul>
         <p>
@@ -58,14 +67,14 @@ function PrivacyPolicy() {
           services you signed up for.
         </p>
 
-        <h3>2.2 Guests (non-registered visitors)</h3>
+        <H3>2.2 Guests (non-registered visitors)</H3>
         <p>
           Guests may participate in the lobby chat and play Black Crown in local
           mode. No account is required and no personal data is collected from
           guests beyond what is inherent in any internet connection.
         </p>
 
-        <h3>2.3 Lobby chat messages</h3>
+        <H3>2.3 Lobby chat messages</H3>
         <p>
           Lobby messages are <strong>publicly visible</strong> to all users,
           including guests. If you are logged in, your username is attached to
@@ -77,16 +86,16 @@ function PrivacyPolicy() {
           GDPR) - operating a functional public chat space.
         </p>
 
-        <h3>2.4 Technical data</h3>
+        <H3>2.4 Technical data</H3>
         <p>
           We do not maintain server-side logs of IP addresses or other technical
           metadata. No browser fingerprints, analytics cookies, or tracking
           technologies are used.
         </p>
 
-        <h3>
+        <H3>
           2.5 Data we do <em>not</em> collect
-        </h3>
+        </H3>
         <ul>
           <li>
             Game results, scores, or statistics - Black Crown sessions are
@@ -95,9 +104,9 @@ function PrivacyPolicy() {
           <li>Date of birth or any demographic information.</li>
           <li>Payment information - Card Nest has no paid features.</li>
         </ul>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>3. How We Use Your Data</h2>
         <p>We use the data described above solely to:</p>
         <ul>
@@ -119,13 +128,13 @@ function PrivacyPolicy() {
           We do <strong>not</strong> use your data for advertising, profiling,
           or automated decision-making.
         </p>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>4. Data Sharing and Third Parties</h2>
         <p>We share your data with as few parties as possible.</p>
 
-        <h3>4.1 Email delivery (Google / Gmail)</h3>
+        <H3>4.1 Email delivery (Google / Gmail)</H3>
         <p>
           Transactional emails (such as password resets) are sent from a Gmail
           account via Nodemailer. When an email is sent to you, your email
@@ -145,7 +154,7 @@ function PrivacyPolicy() {
           your data. We do not use advertising networks or analytics services.
         </p>
 
-        <h3>4.2 Visibility to other users</h3>
+        <H3>4.2 Visibility to other users</H3>
         <p>By using Card Nest, you acknowledge that:</p>
         <ul>
           <li>
@@ -166,9 +175,9 @@ function PrivacyPolicy() {
             private messages.
           </li>
         </ul>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>5. Cookies</h2>
         <p>
           We use one cookie, described below. No third-party cookies,
@@ -206,9 +215,9 @@ function PrivacyPolicy() {
             your account.
           </p>
         </div>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>6. Moderation and Account Actions</h2>
         <p>
           Card Nest moderators may take the following actions to maintain a safe
@@ -240,9 +249,9 @@ function PrivacyPolicy() {
           service. They do not constitute unlawful processing of your personal
           data.
         </p>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>7. Your Rights Under the GDPR</h2>
         <p>As a data subject under the GDPR, you have the following rights:</p>
 
@@ -293,7 +302,7 @@ function PrivacyPolicy() {
           </tbody>
         </table>
 
-        <h3>7.1 Data export (portability)</h3>
+        <H3>7.1 Data export (portability)</H3>
         <p>
           You may request an export of your personal data at any time from
           within your account settings. You can select any combination of the
@@ -327,7 +336,7 @@ function PrivacyPolicy() {
           <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
         </Link>
 
-        <h3>7.2 Right to lodge a complaint</h3>
+        <H3>7.2 Right to lodge a complaint</H3>
         <p>
           If you believe we have not handled your personal data lawfully, you
           have the right to lodge a complaint with your national data protection
@@ -341,9 +350,9 @@ function PrivacyPolicy() {
           </a>
           .
         </p>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>8. Account Deletion and Data Retention</h2>
         <p>
           You may delete your account at any time from your account settings.
@@ -368,9 +377,9 @@ function PrivacyPolicy() {
           We do not maintain backups or archives that would preserve deleted
           data beyond this process.
         </p>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>9. Security</h2>
         <p>
           We take reasonable technical measures to protect your data, including
@@ -379,9 +388,9 @@ function PrivacyPolicy() {
           guarantee absolute security. Please use a strong, unique password for
           your Card Nest account.
         </p>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>10. Children</h2>
         <p>
           Card Nest does not have an age restriction. However, we do not
@@ -391,9 +400,9 @@ function PrivacyPolicy() {
           please contact us at the address below and we will delete the account
           promptly.
         </p>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>11. Changes to This Policy</h2>
         <p>
           We may update this Privacy Policy from time to time. If we make
@@ -401,9 +410,9 @@ function PrivacyPolicy() {
           revised "last updated" date. Continued use of Card Nest after such
           changes constitutes acceptance of the updated policy.
         </p>
-      </section>
+      </Section>
 
-      <section>
+      <Section>
         <h2>12. Contact</h2>
         <p>
           For any questions, requests, or concerns regarding your personal data,
@@ -411,10 +420,10 @@ function PrivacyPolicy() {
         </p>
         <p>
           <strong>
-            <em className="placeholder">[your-email@example.com]</em>
+            <em>no.rep.card.nest@gmail.com</em>
           </strong>
         </p>
-      </section>
+      </Section>
     </ScrollablePage>
   );
 }
