@@ -1,3 +1,23 @@
+WEBSOCKET FEATURES
+
+routes.tsx
+	- Contains WebSocket content, that I have commented out for now.
+	- It refers to pages/ChatPage.tsx.
+pages/ChatPage.tsx
+	- Placed in tmp-ws/.
+components/chat/chat.tsx
+	- Placed in tmp-ws/.
+components/chat/RealTimeFriendList.tsx
+	- Placed in tmp-ws/.
+components/chat/room.tsx
+	- Placed in tmp-ws/.
+components/websocket/socket.ts
+	- Placed in tmp-ws/.
+components/websocket/socketContext.tsx
+	- Placed in tmp-ws/.
+
+--------------------------------------------------------------------------------
+
 CONNECTION TO THE BACKEND
 - The backend has harmonized its return types, so you gotta check that you 
 still receive what you need. Since you modified these return types as well to 
