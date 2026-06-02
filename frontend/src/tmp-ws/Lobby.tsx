@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from 'tmp-ws/useSocket';
-import type { Message } from 'tmp-ws/socket';
+import type { Message } from 'tmp-ws/Socket';
 
-export const Room = () => {
+const Lobby = () => {
   const socket = useSocket();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -34,7 +34,7 @@ export const Room = () => {
 
   return (
     <div>
-      <h3>Chat - your ID: {userId}</h3>
+      <h3>Lobby - your ID: {userId}</h3>
 
       <div style={{ border: '1px solid #ccc', height: 200, overflowY: 'auto' }}>
         {messages.map((msg, idx) => (
@@ -56,4 +56,4 @@ export const Room = () => {
   );
 };
 
-export default Room;
+export default Lobby;

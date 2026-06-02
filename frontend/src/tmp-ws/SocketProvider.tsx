@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
-import socket from './socket';
-import { SocketContext } from './useSocket';
+import socket from 'tmp-ws/Socket';
+import { SocketContext } from 'tmp-ws/useSocket';
 
 export const SocketProvider = ({
   children,

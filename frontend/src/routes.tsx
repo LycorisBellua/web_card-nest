@@ -1,6 +1,5 @@
 //import { lazy, Suspense } from 'react';
 import Layout from 'App';
-import Lobby from 'pages/chat/Lobby';
 import Auth from 'pages/auth/Auth';
 import ResetPassword from 'pages/auth/ResetPassword';
 import VerifySuccess from 'pages/auth/VerifySuccess';
@@ -9,7 +8,6 @@ import VerifyCancel from 'pages/auth/VerifyCancel';
 import Users from 'pages/profile/Users';
 import PublicProfile from 'pages/profile/PublicProfile';
 import PrivateProfile from 'pages/profile/PrivateProfile';
-import DM from 'pages/chat/DM';
 import Play from 'game/Play';
 import PrivacyPolicy from 'pages/footer/PrivacyPolicy';
 import TermsOfService from 'pages/footer/TermsOfService';
@@ -17,10 +15,11 @@ import Credits from 'pages/footer/Credits';
 import DataExtraction from 'pages/footer/DataExtraction';
 import NotFound from 'pages/NotFound';
 
+import Lobby from 'pages/chat/Lobby';
+import DM from 'pages/chat/DM';
 /*
-const ChatApp = lazy(() =>
-  import('pages/ChatPage').then((m) => ({ default: m.ChatApp })),
-);
+const Lobby = lazy(() => import('tmp-ws/Lobby'));
+const DM = lazy(() => import('tmp-ws/DM'));
 */
 
 const routes = [
@@ -29,6 +28,16 @@ const routes = [
     element: <Layout />,
     children: [
       { index: true, element: <Lobby /> },
+	  /*
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<div>Loading lobby chat...</div>}>
+            <Lobby />
+          </Suspense>
+        ),
+      },
+	  */
       { path: 'auth', element: <Auth /> },
       { path: 'reset-pwd', element: <ResetPassword /> },
       { path: 'verify-success', element: <VerifySuccess /> },
@@ -38,12 +47,12 @@ const routes = [
       { path: 'user/:username', element: <PublicProfile /> },
       { path: 'profile', element: <PrivateProfile /> },
       { path: 'chat/:username', element: <DM /> },
-      /*
-	  {
-        path: 'chat',
+	  /*
+      {
+        path: 'chat/:username',
         element: (
-          <Suspense fallback={<div>Loading...</div>}>
-            <ChatApp />
+          <Suspense fallback={<div>Loading DM thread...</div>}>
+            <DM />
           </Suspense>
         ),
       },

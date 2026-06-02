@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from 'tmp-ws/useSocket';
-import type { PrivateMessage } from 'tmp-ws/socket';
+import type { PrivateMessage } from 'tmp-ws/Socket';
 
-export const Chat = () => {
+const DM = () => {
   const socket = useSocket();
   const [input, setInput] = useState('');
   const [targetUserId, setTargetUserId] = useState('');
@@ -37,7 +37,7 @@ export const Chat = () => {
 
   return (
     <div>
-      <h3>Chat - your ID: {userId}</h3>
+      <h3>DM - your ID: {userId}</h3>
 
       <div>
         <label>Target User ID:</label>
@@ -68,4 +68,4 @@ export const Chat = () => {
   );
 };
 
-export default Chat;
+export default DM;

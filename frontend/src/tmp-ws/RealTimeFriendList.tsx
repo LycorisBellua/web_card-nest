@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from 'tmp-ws/useSocket';
-import type { Friend } from 'tmp-ws/socket';
+import type { Friend } from 'tmp-ws/Socket';
 
 export const FriendList = () => {
   const socket = useSocket();

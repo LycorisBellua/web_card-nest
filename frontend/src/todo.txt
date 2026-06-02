@@ -1,22 +1,17 @@
 WEBSOCKET FEATURES
 
-routes.tsx
-	- Contains WebSocket content, that I have commented out for now.
-	- It refers to pages/ChatPage.tsx.
-	- Claude confirmed that it was necessary and written properly, but advises 
-	to rethink the '/chat' path.
-pages/ChatPage.tsx
-	- Placed in tmp-ws/.
-components/chat/chat.tsx
-	- Placed in tmp-ws/.
-components/chat/RealTimeFriendList.tsx
-	- Placed in tmp-ws/.
-components/chat/room.tsx
-	- Placed in tmp-ws/.
-components/websocket/socket.ts
-	- Placed in tmp-ws/.
-components/websocket/socketContext.tsx
-	- Placed in tmp-ws/.
+routes.tsx contains WebSocket content, that I have commented out for now.
+
+App.tsx calls the socket context now. The page that used to call this context 
+no longer exists, but note that it used to call other socket components as well 
+like so:
+```
+<SocketProvider userId={userId}>
+  <Chat />
+  <FriendList />
+  <Room />
+</SocketProvider>
+```
 
 --------------------------------------------------------------------------------
 
