@@ -1,18 +1,24 @@
-import { createContext, useContext, useEffect} from 'react';
-import type { ReactNode } from "react";
+import { createContext, useContext, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import socket from './socket';
 
 const SocketContext = createContext(socket);
 
-export const SocketProvider = ({ children, userId }: { children: ReactNode, userId: string }) => {
+export const SocketProvider = ({
+  children,
+  userId,
+}: {
+  children: ReactNode;
+  userId: string;
+}) => {
   useEffect(() => {
     socket.io.opts.query = { userId };
-    console.log("connection socket context userid: " ,userId);
+    console.log('connection socket context userid: ', userId);
     socket.connect();
-    console.log("connection socket context is coonected :  " , socket.connected);
+    console.log('connection socket context is coonected :  ', socket.connected);
     socket.on('connect', () => {
-  console.log('connected');
-});
+      console.log('connected');
+    });
 
     return () => {
       socket.disconnect();
@@ -20,9 +26,7 @@ export const SocketProvider = ({ children, userId }: { children: ReactNode, user
   }, [userId]);
 
   return (
-    <SocketContext.Provider value={socket}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
   );
 };
 

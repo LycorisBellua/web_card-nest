@@ -29,7 +29,7 @@ import { ChatService } from './chat/chat.service';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '5m' },
     }),
-     EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot(),
   ],
   controllers: [
     HelloController,

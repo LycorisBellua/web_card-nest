@@ -37,10 +37,8 @@ export class UserService {
     private eventEmitter: EventEmitter2,
     // readonly WebsocketServer : WebsocketServer,
   ) {}
-  
 
-
-  // async findAcceptedUserService(originId: string) 
+  // async findAcceptedUserService(originId: string)
   // {
   //   return await this.prisma.friend.findMany({
   //     where: {
@@ -48,20 +46,20 @@ export class UserService {
   //       OR: [{ requesterId: originId }, { addresseeId: originId }],
   //     },
   //   });
-  // }  
+  // }
   // async fetchFriendsListUserService(originId: string) {
-    
+
   //   const RawData = await this.fetchFriendsUserService(originId);
   //   const FriendIdList = RawData.map(item => item.requesterId !== originId ? item.requesterId : item.addresseeId);
   //   const FriendsList = await Promise.all(FriendIdList.map(item => this.getUsernameById(item)));
   //   return {FriendsList};
   // }
-  // async fetchFriendsUserService(originId: string) 
+  // async fetchFriendsUserService(originId: string)
   //   {
   //   await this.userExistsOrThrow(originId);
   //   return await this.findAcceptedUserService(originId);
   //   }
-  
+
   // async UpdateFriendFriendlist(userId: string, friendList: any[])
   // {
   //   let friendfriendList;
@@ -76,7 +74,7 @@ export class UserService {
   async removeUser(userId: string) {
     const found = await this.userExistsOrThrow(userId);
     await this.eventEmitter.emit('RefreshFriendsFriendList', userId);
-    const result = await this.deleteUser(userId); 
+    const result = await this.deleteUser(userId);
     await this.deleteUserFromFriendTable(userId);
     const address = found.email ? found.email : found.email_unverified;
     if (address) {
@@ -89,7 +87,7 @@ export class UserService {
     await this.userExistsOrThrow(userId);
     const data: Record<string, unknown> = {};
     const token = getToken();
-    
+
     if (dto.username !== undefined) {
       if (await this.usernameIsTaken(dto.username)) {
         throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
@@ -124,7 +122,6 @@ export class UserService {
       } else {
         data.desc = dto.desc;
       }
-
     }
 
     if (Object.keys(data).length === 0) {
@@ -440,8 +437,7 @@ export class UserService {
   }
   private async deleteUserFromFriendTable(userId: string) {
     return await this.prisma.friend.deleteMany({
-      where: {  OR: [ {addresseeId: userId}, {requesterId: userId}, ]},
-  
+      where: { OR: [{ addresseeId: userId }, { requesterId: userId }] },
     });
   }
 

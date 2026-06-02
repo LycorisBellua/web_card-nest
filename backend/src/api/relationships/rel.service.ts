@@ -22,12 +22,12 @@ export class RelService {
     private eventEmitter: EventEmitter2,
     // private  WebsocketServer: WebsocketServer,
   ) {}
-  
+
   // async UpdateFriendListDisplay(originId: string, targetId: string)
   // {
   //   const friendListOid = await this.fetchFriendsListUserService(originId);
   //   const friendListTargid = await this.fetchFriendsListUserService(targetId);
-    
+
   //   this.WebsocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
   //   this.WebsocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
   // }
@@ -62,10 +62,9 @@ export class RelService {
       throw new BadRequestException(ErrorMessages.NOT_FRIENDS);
     }
     // this.userService.UpdateFriendFriendlist
-    await this.deleteFriendship(existing)
+    await this.deleteFriendship(existing);
     await this.eventEmitter.emit('UpdateFriendList', related_ids);
-    return ;
-
+    return;
   }
 
   async acceptRequest(originId: string, targetId: string) {
@@ -77,7 +76,7 @@ export class RelService {
     if (blocked || !found || found.status === FriendStatus.ACCEPTED) {
       throw new BadRequestException(ErrorMessages.REQ_NOT_FOUND);
     }
-    await this.eventEmitter.emit('UpdateFriendList', related_ids)
+    await this.eventEmitter.emit('UpdateFriendList', related_ids);
     return await this.statusAccept(found);
   }
 
@@ -237,7 +236,7 @@ export class RelService {
     ) {
       await this.deleteFriendship(friendship);
     }
-    this.eventEmitter.emit('UpdateFriendList',related_ids);
+    this.eventEmitter.emit('UpdateFriendList', related_ids);
     return await this.createBlock(originId, targetId);
   }
 
