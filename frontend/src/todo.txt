@@ -3,6 +3,8 @@ WEBSOCKET FEATURES
 routes.tsx
 	- Contains WebSocket content, that I have commented out for now.
 	- It refers to pages/ChatPage.tsx.
+	- Claude confirmed that it was necessary and written properly, but advises 
+	to rethink the '/chat' path.
 pages/ChatPage.tsx
 	- Placed in tmp-ws/.
 components/chat/chat.tsx

@@ -1,44 +1,44 @@
 import { useEffect, useState } from 'react';
-import { useSocket } from '../websocket/socketContext';
+import { useSocket } from 'tmp-ws/useSocket';
+import type { PrivateMessage } from 'tmp-ws/socket';
 
 export const Chat = () => {
   const socket = useSocket();
   const [input, setInput] = useState('');
   const [targetUserId, setTargetUserId] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<PrivateMessage[]>([]);
 
   useEffect(() => {
-    socket.emit('FetchConvoHistory', targetUserId, (response: any) => {
+    if (!targetUserId) return;
+
+    socket.emit('FetchConvoHistory', targetUserId, (response) => {
       setMessages(response);
     });
-  }, [targetUserId]);
+  }, [socket, targetUserId]);
 
   useEffect(() => {
-    socket.on('receiveMessage', (data: any) => {
-      setMessages((prev: any) => [...prev, data]);
+    socket.on('receiveMessage', (data) => {
+      setMessages((prev) => [...prev, data]);
     });
+
     return () => {
       socket.off('receiveMessage');
-
-      socket.disconnect();
     };
   }, [socket]);
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    socket.emit('PrivateMessage', {
-      targetUserId: targetUserId,
-      message: input,
-    });
+    socket.emit('PrivateMessage', { targetUserId, message: input });
     setMessages((prev) => [...prev, { senderId: 'me', message: input }]);
     setInput('');
   };
+
+  const userId = (socket.io.opts.query as { userId?: string })?.userId ?? '';
+
   return (
     <div>
-      <h3>
-        Chat your ID {(socket.io.opts.query as { userId: string })?.userId}
-      </h3>
-      <div />
+      <h3>Chat - your ID: {userId}</h3>
+
       <div>
         <label>Target User ID:</label>
         <input
@@ -51,7 +51,7 @@ export const Chat = () => {
       <div style={{ border: '1px solid #ccc', height: 200, overflowY: 'auto' }}>
         {messages.map((msg, idx) => (
           <div key={idx}>
-            <strong>{msg.Sender}: </strong>
+            <strong>{msg.senderId}: </strong>
             {msg.message}
           </div>
         ))}

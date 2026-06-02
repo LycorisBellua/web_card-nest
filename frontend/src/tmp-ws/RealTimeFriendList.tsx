@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useSocket } from '../websocket/socketContext';
+import { useSocket } from 'tmp-ws/useSocket';
+import type { Friend } from 'tmp-ws/socket';
 
 export const FriendList = () => {
   const socket = useSocket();
-  const [FriendListConnected, RefreshFriendListConnected] = useState<any[]>([]);
-  const [FriendListDisconnected, RefreshFriendListDisconnected] = useState<
-    any[]
-  >([]);
+  const [connectedFriends, setConnectedFriends] = useState<Friend[]>([]);
+  const [disconnectedFriends, setDisconnectedFriends] = useState<Friend[]>([]);
 
   useEffect(() => {
-    socket.on('FriendListConnected', (data: any[]) => {
-      RefreshFriendListConnected(data);
+    socket.on('FriendListConnected', (data) => {
+      setConnectedFriends(data);
     });
 
     return () => {
@@ -19,8 +18,8 @@ export const FriendList = () => {
   }, [socket]);
 
   useEffect(() => {
-    socket.on('FriendListDisconnected', (data: any[]) => {
-      RefreshFriendListDisconnected(data);
+    socket.on('FriendListDisconnected', (data) => {
+      setDisconnectedFriends(data);
     });
 
     return () => {
@@ -31,17 +30,15 @@ export const FriendList = () => {
   return (
     <div>
       <h2>Connected Friends</h2>
-
       <ul>
-        {FriendListConnected.map((friend, index) => (
+        {connectedFriends.map((friend, index) => (
           <li key={index}>{friend.username}</li>
         ))}
       </ul>
 
       <h2>Disconnected Friends</h2>
-
       <ul>
-        {FriendListDisconnected.map((friend, index) => (
+        {disconnectedFriends.map((friend, index) => (
           <li key={index}>{friend.username}</li>
         ))}
       </ul>

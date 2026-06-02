@@ -1,6 +1,45 @@
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 
-const socket = io('https://localhost:8080', {
+// ---------- shared message shapes ----------
+
+export interface Message {
+  Sender: string;
+  message: string;
+}
+
+export interface PrivateMessage {
+  senderId: string;
+  message: string;
+}
+
+export interface Friend {
+  username: string;
+}
+
+// ---------- socket event maps ----------
+
+interface ServerToClientEvents {
+  PublicMessage: (data: Message) => void;
+  receiveMessage: (data: PrivateMessage) => void;
+  FriendListConnected: (data: Friend[]) => void;
+  FriendListDisconnected: (data: Friend[]) => void;
+}
+
+interface ClientToServerEvents {
+  PublicMessage: (message: string) => void;
+  PrivateMessage: (payload: { targetUserId: string; message: string }) => void;
+  FetchLobbyHistory: (callback: (data: Message[]) => void) => void;
+  FetchConvoHistory: (
+    targetUserId: string,
+    callback: (data: PrivateMessage[]) => void,
+  ) => void;
+}
+
+export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+
+// ---------- singleton ----------
+
+const socket: AppSocket = io('https://localhost:8080', {
   autoConnect: false,
   withCredentials: true,
 });

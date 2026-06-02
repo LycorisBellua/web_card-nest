@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect } from 'react';
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import socket from './socket';
-
-const SocketContext = createContext(socket);
+import { SocketContext } from './useSocket';
 
 export const SocketProvider = ({
   children,
@@ -14,7 +13,7 @@ export const SocketProvider = ({
   useEffect(() => {
     socket.io.opts.query = { userId };
     socket.connect();
-    socket.on('connect', () => {});
+
     return () => {
       socket.disconnect();
     };
@@ -24,5 +23,3 @@ export const SocketProvider = ({
     <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
   );
 };
-
-export const useSocket = () => useContext(SocketContext);
