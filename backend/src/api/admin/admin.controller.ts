@@ -108,10 +108,27 @@ export class AdminController {
     return await this.adminService.guestLobbyChatUnban();
   }
 
-  @Get('ban')
-  async fetchBanList(@Req() req: ExpressRequest): Promise<UserProfile[]> {
+  @Get('ban/user/:targetId')
+  async fetchBan(
+    @Req() req: ExpressRequest,
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ): Promise<LobbyBan | null> {
     const user = req['user'] as JwtPayload;
-    return await this.adminService.fetchBanList(user.id, user.rank as Ranks);
+    return await this.adminService.fetchBan(
+      user.id,
+      user.rank as Ranks,
+      targetId,
+    );
+  }
+
+  @Get('ban/guest')
+  async fetchGuestBan(@Req() req: ExpressRequest): Promise<LobbyBan | null> {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.fetchBan(
+      user.id,
+      user.rank as Ranks,
+      'Guest',
+    );
   }
 
   @Patch('moderate')

@@ -12,14 +12,8 @@ import { AdmErrMsg } from './errors/admin-error-messages';
 import { UpdateRankDto } from './dto/update-rank.dto';
 import { LobbyBan, LobbyMessage, Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {
-  banListOrder,
-  banListSelect,
-  BannedUsers,
-  lobbyModeratedData,
-} from './types/admin.types';
+import { lobbyModeratedData } from './types/admin.types';
 import { UserProfile } from '../user/types/user.types';
-import { encodeMultipleAvatars } from '../user/utils/user.utils';
 
 @Injectable()
 export class AdminService {
@@ -151,10 +145,13 @@ export class AdminService {
     }
   }
 
-  async fetchBanList(userId: string, rank: Ranks): Promise<UserProfile[]> {
+  async fetchBan(
+    userId: string,
+    rank: Ranks,
+    targetId: string,
+  ): Promise<LobbyBan | null> {
     await this.jwtRankIsValid(userId, rank);
-    const users = await this.findAllLobbyBans();
-    return this.convertBanListToUserProfiles(users);
+    return await this.findLobbyBan(targetId);
   }
 
   async moderateLobbyMessage(
@@ -199,13 +196,6 @@ export class AdminService {
     }
   }
 
-  private convertBanListToUserProfiles(bans: BannedUsers): UserProfile[] {
-    const raw = bans.map((ban) => {
-      return ban.user;
-    });
-    return encodeMultipleAvatars(raw);
-  }
-
   // LOBBY BAN DB ACCESS
   private async createLobbyBan(userId: string): Promise<LobbyBan> {
     return await this.prisma.lobbyBan.create({
@@ -219,11 +209,9 @@ export class AdminService {
     });
   }
 
-  private async findAllLobbyBans(): Promise<BannedUsers> {
-    return await this.prisma.lobbyBan.findMany({
-      where: {},
-      select: banListSelect,
-      orderBy: banListOrder,
+  private async findLobbyBan(userId: string): Promise<LobbyBan | null> {
+    return await this.prisma.lobbyBan.findUnique({
+      where: { userId },
     });
   }
 
