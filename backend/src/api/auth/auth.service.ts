@@ -4,6 +4,7 @@ import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import {
   comparePasswordHash,
+  compareTokenHash,
   createTokenHash,
   getCurrentTime,
   getRefreshTimeout,
@@ -27,25 +28,15 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<TokenPair> {
     const found = await this.userService.userExistsByEmail(email);
-    if (
-      !found ||
-      (found.email && found.email !== email) ||
-      !(await comparePasswordHash(password, found.password))
-    ) {
-      throw new UnauthorizedException('Email address or password incorrect.');
-    }
-    return this.generateTokenPair(found.id, found.rank);
-  }
-
     if (found?.loginLockedUntil && found.loginLockedUntil > new Date()) {
-        const remaining = Math.ceil((found.loginLockedUntil.getTime() - Date.now()) / 60000)
-        throw new UnauthorizedException(`Too many attempts. Try again in ${remaining} minutes.`)
+      const remaining = Math.ceil((found.loginLockedUntil.getTime() - Date.now()) / 60000)
+      throw new UnauthorizedException(`Too many attempts. Try again in ${remaining} minutes.`)
     }
 
     if (
         !found ||
         (found.email && found.email !== email) ||
-        !(await compareHash(password, found.password))
+        !(await compareTokenHash(password, found.password))
     ) {
         if (found) {
             const attempts = found.loginAttempts + 1
@@ -57,18 +48,10 @@ export class AuthService {
         }
         throw new UnauthorizedException('Email address or password incorrect.')
     }
-
     await this.userService.updateLoginAttempts(found.id, 0, null)
-
-    const refresh = await this.userService.generateRefreshToken(found.id)
-    const access = await this.generateJwtToken(found.id)
-    return {
-        refreshToken: refresh.token,
-        timeout: refresh.timeout,
-        accessToken: access,
-    }
+    return this.generateTokenPair(found.id, found.rank);
   }
-  
+
   async logout(userId: string) {
     return await this.userService.removeRefreshToken(userId);
   }
