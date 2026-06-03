@@ -28,7 +28,7 @@ const routes = [
     element: <Layout />,
     children: [
       { index: true, element: <Lobby /> },
-	  /*
+      /*
       {
         index: true,
         element: (
@@ -47,7 +47,7 @@ const routes = [
       { path: 'user/:username', element: <PublicProfile /> },
       { path: 'profile', element: <PrivateProfile /> },
       { path: 'chat/:username', element: <DM /> },
-	  /*
+      /*
       {
         path: 'chat/:username',
         element: (

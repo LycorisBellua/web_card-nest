@@ -15,9 +15,7 @@ import Footer from 'components/general/Footer';
 function AppWithSocket({ children }: { children: ReactNode }) {
   const { user } = useUser();
   return (
-    <SocketProvider userId={user ? user.id : 'Guest'}>
-      {children}
-    </SocketProvider>
+    <SocketProvider userId={user?.id ?? 'Guest'}>{children}</SocketProvider>
   );
 }
 

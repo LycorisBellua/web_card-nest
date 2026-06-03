@@ -24,7 +24,7 @@ export type OtherUserOrGuest = OtherUser | null;
 
 export type Msg = {
   id: string;
-  authorId: string | null;
+  authorId: string;
   created: Date;
   content: string;
   moderated: boolean;
