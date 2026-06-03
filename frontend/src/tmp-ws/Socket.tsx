@@ -21,8 +21,7 @@ export interface Friend {
 interface ServerToClientEvents {
   PublicMessage: (data: Message) => void;
   receiveMessage: (data: PrivateMessage) => void;
-  FriendListConnected: (data: Friend[]) => void;
-  FriendListDisconnected: (data: Friend[]) => void;
+  OnlineUsers: (data: string[]) => void;
 }
 
 interface ClientToServerEvents {

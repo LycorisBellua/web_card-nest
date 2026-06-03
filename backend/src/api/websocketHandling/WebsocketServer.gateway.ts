@@ -21,6 +21,7 @@ import type { AppSocket } from './types/socket.types';
 import { ConnectionRegistry } from './registry/connection-registry';
 import { Ranks } from 'src/generated/prisma/enums';
 import { send } from 'node:process';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 @WebSocketGateway({
@@ -37,6 +38,7 @@ export class WebsocketServer
     private readonly connections: ConnectionRegistry,
     private readonly jwtService: JwtService,
     private readonly relService: RelService,
+    private readonly userService: UserService,
     private readonly chatService: ChatService,
   ) {}
 
@@ -45,77 +47,41 @@ export class WebsocketServer
   @WebSocketServer()
   server = new Server();
 
-async handleConnection(client: AppSocket): Promise<void> {
-  const accessToken = client.handshake.auth?.accessToken as string;
+  async handleConnection(client: AppSocket): Promise<void> {
+    const accessToken = client.handshake.auth?.accessToken as string;
 
-  if (accessToken) {
-    try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(accessToken);
-      client.data.user = payload;
-    } catch {
-      client.disconnect();
-      return;
-    }
-  } else {
-    client.data.user = { id: 'Guest', rank: Ranks.PENDING } as JwtPayload;
-  }
-
-  const userId = client.data.user.id;
-  console.log('User connected:', userId);
-
-  if (userId === 'Guest') return;
-
-  this.connections.add(userId, client.id);
-  const friendlist = await this.relService.fetchFriends(userId);
-  await this.emitFriendList(userId);
-  await this.updateFriendsFriendList(friendlist);
-}
-
-  async updateFriendsFriendList(Friends: UserProfile[]): Promise<void> {
-    for (const friend of Friends) {
-      if (this.connections.isOnline(friend.id)) {
-        await this.emitFriendList(friend.id);
+    if (accessToken) {
+      try {
+        const payload = await this.jwtService.verifyAsync<JwtPayload>(accessToken);
+        client.data.user = payload;
+      } catch {
+        client.disconnect();
+        return;
       }
+    } else {
+      client.data.user = { id: 'Guest', rank: Ranks.PENDING } as JwtPayload;
     }
+
+    const userId = client.data.user.id;
+    console.log('User connected:', userId);
+
+    if (userId === 'Guest') return;
+
+    this.connections.add(userId, client.id);
+    this.emitOnlineList(client);
   }
 
   async handleDisconnect(client: AppSocket): Promise<void> {
     const userId = this.connections.removeBySocketId(client.id);
-    if (!userId) {
+    this.emitOnlineList(client);
+  }
+
+  async emitOnlineList(client: AppSocket): Promise<void> {
+    if (client.data.user.id === 'Guest') {
       return;
     }
-    const friendlist = await this.relService.fetchFriends(userId);
-    await this.updateFriendsFriendList(friendlist);
-  }
-
-  async emitFriendList(@MessageBody() targetUserId: string): Promise<void> {
-    const socketId = this.connections.getSocketId(targetUserId);
-    const friends = await this.relService.fetchFriends(targetUserId);
-    const connected: UserProfile[] = [];
-    const disconnected: UserProfile[] = [];
-    if (!socketId) return;
-    for (const friend of friends) {
-      if (this.connections.isOnline(friend.id)) {
-        connected.push(friend);
-      } else {
-        disconnected.push(friend);
-      }
-      this.server.to(socketId).emit('FriendListConnected', connected);
-      this.server.to(socketId).emit('FriendListDisconnected', disconnected);
-    }
-  }
-
-  @SubscribeMessage('RefreshFriendFriendList')
-  async RefereshRefreshFriendFriendList(
-    @MessageBody() userId: string,
-  ): Promise<void> {
-    const friends = await this.relService.fetchFriends(userId);
-    await this.updateFriendsFriendList(friends);
-  }
-
-  @SubscribeMessage('UpdateFriendList')
-  async emitFriendListToAllId(@MessageBody() users: string[]): Promise<void> {
-    await Promise.all(users.map((user) => this.emitFriendList(user)));
+    const users = this.connections.getAllOnlineUsers();
+    client.broadcast.emit('OnlineUsers', users);
   }
 
   @SubscribeMessage('FetchConvoHistory')

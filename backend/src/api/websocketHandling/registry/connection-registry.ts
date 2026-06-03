@@ -35,4 +35,8 @@ export class ConnectionRegistry {
   isOnline(userId: string): boolean {
     return this.socketIdByUserId.has(userId);
   }
+
+  getAllOnlineUsers(): string[] {
+  return Array.from(this.socketIdByUserId.keys());
+}
 }
