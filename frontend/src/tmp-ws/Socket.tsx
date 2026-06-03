@@ -39,9 +39,10 @@ export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 // ---------- singleton ----------
 
-const socket: AppSocket = io(import.meta.env.VITE_HOME_URL, {
+const socket: AppSocket = io({
   autoConnect: false,
   withCredentials: true,
+  path: '/socket.io',
 });
 
 export default socket;
