@@ -11,7 +11,6 @@ export const SocketProvider = ({
   accessToken: string;
 }) => {
   useEffect(() => {
-    //socket.io.opts.query = { userId };
     socket.auth = { accessToken };
     socket.connect();
 

@@ -19,6 +19,8 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 import type { AppSocket } from './types/socket.types';
 import { ConnectionRegistry } from './registry/connection-registry';
+import { Ranks } from 'src/generated/prisma/enums';
+import { send } from 'node:process';
 
 @Injectable()
 @WebSocketGateway({
@@ -43,22 +45,31 @@ export class WebsocketServer
   @WebSocketServer()
   server = new Server();
 
-  async handleConnection(client: AppSocket): Promise<void> {
+async handleConnection(client: AppSocket): Promise<void> {
+  const accessToken = client.handshake.auth?.accessToken as string;
+
+  if (accessToken) {
     try {
-      const accessToken = client.handshake.auth?.accessToken as string;
-      const payload =
-        await this.jwtService.verifyAsync<JwtPayload>(accessToken);
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(accessToken);
       client.data.user = payload;
     } catch {
       client.disconnect();
       return;
     }
-    const userId = client.data.user.id;
-    this.connections.add(client.data.user.id, client.id);
-    const friendlist = await this.relService.fetchFriends(userId);
-    await this.emitFriendList(userId);
-    await this.updateFriendsFriendList(friendlist);
+  } else {
+    client.data.user = { id: 'Guest', rank: Ranks.PENDING } as JwtPayload;
   }
+
+  const userId = client.data.user.id;
+  console.log('User connected:', userId);
+
+  if (userId === 'Guest') return;
+
+  this.connections.add(userId, client.id);
+  const friendlist = await this.relService.fetchFriends(userId);
+  await this.emitFriendList(userId);
+  await this.updateFriendsFriendList(friendlist);
+}
 
   async updateFriendsFriendList(Friends: UserProfile[]): Promise<void> {
     for (const friend of Friends) {
@@ -113,7 +124,7 @@ export class WebsocketServer
     @MessageBody() targetUserId: string,
   ): Promise<DMHistory> {
     const senderUserId = this.connections.getUserId(sender.id);
-    if (!senderUserId || !targetUserId) {
+    if (!senderUserId || !targetUserId || senderUserId === 'Guest' || targetUserId === 'Guest') {
       return [];
     }
     const convoId = await this.chatService.getDMId(senderUserId, targetUserId);
@@ -135,6 +146,9 @@ export class WebsocketServer
     @ConnectedSocket() sender: AppSocket,
     @MessageBody() payload: { targetUserId: string; message: string },
   ): Promise<void> {
+    if (sender.data.user.id === 'Guest') {
+      return;
+    }
     const receiverSocketId = this.connections.getSocketId(payload.targetUserId);
     const senderUserId = this.connections.getUserId(sender.id);
     let convoId: DMChat;
@@ -176,6 +190,10 @@ export class WebsocketServer
       return;
     }
 
+    if (sender.data.user.id === 'Guest') {
+      await this.chatService.guestSaveLobbyMessage(message);
+      return;
+    }
     await this.chatService.saveLobbyMessage(senderUserId, message);
     sender.broadcast.emit('PublicMessage', {
       sender: senderUserId,

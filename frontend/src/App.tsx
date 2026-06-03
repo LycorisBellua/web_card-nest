@@ -1,9 +1,9 @@
 import { useState } from 'react';
-//import type { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
 import { UserProvider } from 'context/UserProvider';
-//import { useUser } from 'context/useUser';
-//import { SocketProvider } from 'tmp-ws/SocketProvider';
+import { useUser } from 'context/useUser';
+import { SocketProvider } from 'tmp-ws/SocketProvider';
 import GlobalStyle from 'components/general/GlobalStyle';
 import Border from 'components/general/Border';
 import Nav from 'components/general/Nav';
@@ -12,14 +12,12 @@ import Sidebar from 'components/general/Sidebar';
 import Page from 'components/general/Page';
 import Footer from 'components/general/Footer';
 
-/*
 function AppWithSocket({ children }: { children: ReactNode }) {
   const { user } = useUser();
   return (
     <SocketProvider accessToken={user?.accessToken ?? ''}>{children}</SocketProvider>
   );
 }
-*/
 
 function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
@@ -27,7 +25,7 @@ function Layout() {
   return (
     <>
       <UserProvider>
-        {/*<AppWithSocket>*/}
+        <AppWithSocket>
           <GlobalStyle />
           <Border>
             <Nav onDMsClick={() => setSidebarOpen(true)} />
@@ -42,7 +40,7 @@ function Layout() {
             </Content>
           </Border>
           <Footer />
-        {/*</AppWithSocket>*/}
+        </AppWithSocket>
       </UserProvider>
     </>
   );

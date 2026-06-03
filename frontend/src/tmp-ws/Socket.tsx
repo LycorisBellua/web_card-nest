@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 // ---------- shared message shapes ----------
 
 export interface Message {
-  Sender: string;
+  sender: string;
   message: string;
 }
 
