@@ -39,7 +39,7 @@ export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 // ---------- singleton ----------
 
-const socket: AppSocket = io('https://localhost:8080', {
+const socket: AppSocket = io(import.meta.env.VITE_HOME_URL, {
   autoConnect: false,
   withCredentials: true,
 });

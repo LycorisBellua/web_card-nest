@@ -15,6 +15,11 @@ like so:
 
 --------------------------------------------------------------------------------
 
+- Ideally, you don't just see the online status of your friends, but of 
+everyone.
+
+--------------------------------------------------------------------------------
+
 CONNECTION TO THE BACKEND
 - The backend has harmonized its return types, so you gotta check that you 
 still receive what you need. Since you modified these return types as well to 

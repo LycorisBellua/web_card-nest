@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useUser } from 'context/useUser';
 import {
   PlayTableStyle,
   TableWrapper,
@@ -28,13 +29,13 @@ type RoundRecord = {
 type CurrentUser = { username: string };
 
 function PlayGame() {
-  const parsed: unknown = JSON.parse(localStorage.getItem('user') || 'null');
+  const { user } = useUser();
   const currentUser: CurrentUser | undefined =
-    parsed &&
-    typeof parsed === 'object' &&
-    'username' in parsed &&
-    typeof parsed.username === 'string'
-      ? { username: parsed.username }
+    user &&
+    typeof user === 'object' &&
+    'username' in user &&
+    typeof user.username === 'string'
+      ? { username: user.username }
       : undefined;
   const [started, setStarted] = useState<boolean>(false);
   const [local, setLocal] = useState<boolean>(false);

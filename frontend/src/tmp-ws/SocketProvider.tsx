@@ -5,19 +5,20 @@ import { SocketContext } from 'tmp-ws/useSocket';
 
 export const SocketProvider = ({
   children,
-  userId,
+  accessToken,
 }: {
   children: ReactNode;
-  userId: string;
+  accessToken: string;
 }) => {
   useEffect(() => {
-    socket.io.opts.query = { userId };
+    //socket.io.opts.query = { userId };
+    socket.auth = { accessToken };
     socket.connect();
 
     return () => {
       socket.disconnect();
     };
-  }, [userId]);
+  }, [accessToken]);
 
   return (
     <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>

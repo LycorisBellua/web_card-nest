@@ -5,6 +5,7 @@ services:
     environment:
       NODE_ENV: production
       HOME_URL: ${PROD_URL}
+      VITE_HOME_URL: ${PROD_URL}
     networks:
       - app-net
 

@@ -51,6 +51,7 @@ export class WebsocketServer
       client.data.user = payload;
     } catch {
       client.disconnect();
+      return;
     }
     const userId = client.data.user.id;
     this.connections.add(client.data.user.id, client.id);
