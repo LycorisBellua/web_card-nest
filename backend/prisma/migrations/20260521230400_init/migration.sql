@@ -19,6 +19,9 @@ CREATE TABLE "User" (
     "verifyTimeout" TIMESTAMP(3),
     "refreshToken" TEXT,
     "refreshTimeout" TIMESTAMP(3),
+    "loginAttempts"    INTEGER NOT NULL DEFAULT 0,
+    "loginLockedUntil" TIMESTAMP(3),
+
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );

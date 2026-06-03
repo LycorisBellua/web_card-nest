@@ -36,7 +36,7 @@ export class AuthService {
     if (
         !found ||
         (found.email && found.email !== email) ||
-        !(await compareTokenHash(password, found.password))
+        !(await comparePasswordHash(password, found.password))
     ) {
         if (found) {
             const attempts = found.loginAttempts + 1
