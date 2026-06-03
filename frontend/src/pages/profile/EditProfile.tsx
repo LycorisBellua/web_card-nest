@@ -13,7 +13,9 @@ import {
   validatePassword,
   validateDescription,
   validateAvatar,
+  addAvatarPrefix,
 } from 'functions/UserValidation';
+import { RefreshTokenRequest } from 'functions/Requests';
 import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
 import { AvatarBig } from 'components/btn/Avatar';
 import InputField from 'components/misc/InputField';
@@ -24,18 +26,18 @@ import styled from 'styled-components';
 type FieldErrors = {
   avatar: string[];
   username: string[];
-  description: string[];
+  desc: string[];
   email: string[];
-  password: string[];
+  newPassword: string[];
   server: string[];
 };
 
 const emptyFieldErrors = (): FieldErrors => ({
   avatar: [],
   username: [],
-  description: [],
+  desc: [],
   email: [],
-  password: [],
+  newPassword: [],
   server: [],
 });
 
@@ -50,16 +52,17 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
 
   const [avatar, setAvatar] = useState<File | '' | undefined>(undefined);
   const [username, setUsername] = useState('');
-  const [description, setDescription] = useState('');
+  const [desc, setDesc] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   const hasPendingChanges =
     avatar !== undefined ||
     username !== '' ||
-    description !== '' ||
+    desc !== '' ||
     email !== '' ||
-    password !== '';
+    newPassword !== '';
 
   async function handleSave() {
     if (!hasPendingChanges || isSaving) return;
@@ -70,10 +73,10 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     setIsSaving(true);
 
     const sanitizedUsername = username !== '' ? sanitizeUsername(username) : '';
-    const sanitizedDescription =
-      description !== '' ? sanitizeDescription(description) : '';
+    const sanitizedDescription = desc !== '' ? sanitizeDescription(desc) : '';
     const sanitizedEmail = email !== '' ? sanitizeEmail(email) : '';
-    const sanitizedPassword = password !== '' ? sanitizePassword(password) : '';
+    const sanitizedPassword =
+      newPassword !== '' ? sanitizePassword(newPassword) : '';
 
     const nextErrors: FieldErrors = emptyFieldErrors();
     if (avatar instanceof File)
@@ -81,22 +84,23 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     if (sanitizedUsername !== '')
       nextErrors.username.push(...validateUsername(sanitizedUsername));
     if (sanitizedDescription !== '')
-      nextErrors.description.push(...validateDescription(sanitizedDescription));
+      nextErrors.desc.push(...validateDescription(sanitizedDescription));
     if (sanitizedEmail !== '')
       nextErrors.email.push(...validateEmail(sanitizedEmail));
-    if (sanitizedPassword !== '')
-      nextErrors.password.push(
-        ...validatePassword(sanitizedPassword, user.username, user.email),
+    if (sanitizedPassword !== '') {
+      const tmpEmail = sanitizedEmail ?? user.email ?? user.email_unverified;
+      nextErrors.newPassword.push(
+        ...validatePassword(sanitizedPassword, user.username, tmpEmail),
       );
+    }
 
     const hasFieldErrors = Object.values(nextErrors).some((e) => e.length > 0);
     if (hasFieldErrors) {
+      setDisplaySpinner(false);
       setFieldErrors(nextErrors);
       setIsSaving(false);
       return;
     }
-
-    const requests: Promise<Response>[] = [];
 
     const body: Record<string, unknown> = {};
     if (avatar !== undefined) {
@@ -113,52 +117,138 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         });
       }
     }
-    if (sanitizedUsername !== '') body.username = sanitizedUsername;
-    if (sanitizedDescription !== '') body.description = sanitizedDescription;
-    if (sanitizedEmail !== '') body.unverifiedEmail = sanitizedEmail;
+    if (sanitizedUsername !== '' && sanitizedUsername != user.username) {
+      body.username = sanitizedUsername;
+    }
+    if (sanitizedDescription !== '' && sanitizedDescription != user.desc) {
+      body.desc = sanitizedDescription;
+    }
+    if (
+      sanitizedEmail !== '' &&
+      sanitizedEmail != user.email &&
+      sanitizedEmail != user.email_unverified
+    ) {
+      body.email_unverified = sanitizedEmail;
+    }
 
-    if (Object.keys(body).length > 0) {
-      requests.push(
-        fetch(`/api/users/${user.id}`, {
+    try {
+      const tmpUser = { ...user };
+      let token = user.accessToken;
+
+      if (Object.keys(body).length > 0) {
+        let res = await fetch('/api/user/update', {
           method: 'PATCH',
-          headers: { 'Content-type': 'application/json' },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify(body),
-        }),
-      );
-    }
+        });
 
-    if (sanitizedPassword !== '') {
-      requests.push(
-        fetch(`/api/users/${user.id}/password`, {
+        if (res.status === 401) {
+          token = await RefreshTokenRequest(token);
+          if (token.length) {
+            res = await fetch('/api/user/update', {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(body),
+            });
+          }
+        }
+
+        if (!res.ok) {
+          const data = (await res.json().catch(() => null)) as {
+            message: string;
+          } | null;
+          setFieldErrors((prev) => ({
+            ...prev,
+            server: [
+              ...prev.server,
+              data?.message ?? `Error ${res.status}: ${res.statusText}`,
+            ],
+          }));
+          setIsSaving(false);
+          setDisplaySpinner(false);
+          return;
+        }
+
+        const updated = (await res.json()) as Partial<NonNullable<User>>;
+        if (updated.username) tmpUser.username = updated.username;
+        if (updated.desc) tmpUser.desc = updated.desc;
+        if (updated.email_unverified)
+          tmpUser.email_unverified = updated.email_unverified;
+        tmpUser.avatar = addAvatarPrefix(updated.avatar ?? '');
+      }
+
+      if (sanitizedPassword !== '') {
+        let res = await fetch('/api/auth/password', {
           method: 'PATCH',
-          headers: { 'Content-type': 'application/json' },
-          body: JSON.stringify({ password: sanitizedPassword }),
-        }),
-      );
-    }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            oldPassword: currentPassword,
+            newPassword: sanitizedPassword,
+          }),
+        });
 
-    const responses = await Promise.all(requests);
-    const failed = responses.filter((r) => !r.ok);
-    if (failed.length > 0) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        server: failed.map((r) => `Error ${r.status}: ${r.statusText}`),
-      }));
+        if (res.status === 401) {
+          token = await RefreshTokenRequest(token);
+          if (token.length) {
+            res = await fetch('/api/auth/password', {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                oldPassword: currentPassword,
+                newPassword: sanitizedPassword,
+              }),
+            });
+          }
+        }
+
+        if (!res.ok) {
+          const data = (await res.json().catch(() => null)) as {
+            message: string;
+          } | null;
+          setFieldErrors((prev) => ({
+            ...prev,
+            server: [
+              ...prev.server,
+              data?.message ?? `Error ${res.status}: ${res.statusText}`,
+            ],
+          }));
+          setIsSaving(false);
+          setDisplaySpinner(false);
+          return;
+        }
+
+        const data = (await res.json()) as { accessToken: string };
+        token = data.accessToken;
+      }
+
+      if (token.length) {
+        tmpUser.accessToken = token;
+        setUser(tmpUser);
+      }
+    } catch {
       setIsSaving(false);
       setDisplaySpinner(false);
       return;
     }
 
-    if (Object.keys(body).length > 0) {
-      const updated = (await responses[0].json()) as Partial<NonNullable<User>>;
-      setUser((old) => (old ? { ...old, ...updated } : null));
-    }
-
     setAvatar(undefined);
     setUsername('');
-    setDescription('');
+    setDesc('');
     setEmail('');
-    setPassword('');
+    setCurrentPassword('');
+    setNewPassword('');
     setResetKey((k) => k + 1);
     setSuccessMessage('Changes saved successfully.');
     setIsSaving(false);
@@ -166,40 +256,48 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
   }
 
   const SaveButton = hasPendingChanges && !isSaving ? BtnDefault : BtnDisabled;
+  const isVerified = user.rank.toLowerCase() != 'pending';
 
   return (
     <div>
       <h2>Edit Profile</h2>
-      <UpdateAvatar
-        key={`avatar-${resetKey}`}
-        user={user}
-        pendingAvatar={avatar}
-        onChange={setAvatar}
-        errors={fieldErrors.avatar}
-      />
+      {isVerified && (
+        <UpdateAvatar
+          key={`avatar-${resetKey}`}
+          user={user}
+          pendingAvatar={avatar}
+          onChange={setAvatar}
+          errors={fieldErrors.avatar}
+        />
+      )}
       <div className="main">
-        <UpdateUsername
-          key={`username-${resetKey}`}
-          user={user}
-          onChange={setUsername}
-          errors={fieldErrors.username}
-        />
-        <UpdateDescription
-          key={`description-${resetKey}`}
-          user={user}
-          onChange={setDescription}
-          errors={fieldErrors.description}
-        />
-        <UpdateEmail
-          key={`email-${resetKey}`}
-          user={user}
-          onChange={setEmail}
-          errors={fieldErrors.email}
-        />
+        {isVerified && (
+          <>
+            <UpdateUsername
+              key={`username-${resetKey}`}
+              user={user}
+              onChange={setUsername}
+              errors={fieldErrors.username}
+            />
+            <UpdateDescription
+              key={`desc-${resetKey}`}
+              user={user}
+              onChange={setDesc}
+              errors={fieldErrors.desc}
+            />
+            <UpdateEmail
+              key={`email-${resetKey}`}
+              user={user}
+              onChange={setEmail}
+              errors={fieldErrors.email}
+            />
+          </>
+        )}
         <UpdatePassword
           key={`password-${resetKey}`}
-          onChange={setPassword}
-          errors={fieldErrors.password}
+          onChange={setNewPassword}
+          onChangeCurrentPassword={setCurrentPassword}
+          errors={fieldErrors.newPassword}
         />
         {fieldErrors.server.map((err, i) => (
           <div key={i}>{err}</div>
@@ -330,10 +428,10 @@ function UpdateDescription({
   return (
     <div>
       <TextareaField
-        id="user-description"
-        name="user-description"
+        id="user-desc"
+        name="user-desc"
         label="New description"
-        placeholder={user.description}
+        placeholder={user.desc}
         rows={4}
         wrap="soft"
         value={value ?? ''}
@@ -380,14 +478,22 @@ function UpdateEmail({
 
 function UpdatePassword({
   onChange,
+  onChangeCurrentPassword,
   errors,
 }: {
   onChange: (v: string) => void;
+  onChangeCurrentPassword: (v: string) => void;
   errors: string[];
 }) {
+  const [currentValue, setCurrentValue] = useState('');
   const [value, setValue] = useState('');
   const [confirmValue, setConfirmValue] = useState('');
   const [confirmError, setConfirmError] = useState('');
+
+  function onChangeCurrentValue(e: React.ChangeEvent<HTMLInputElement>) {
+    setCurrentValue(e.target.value);
+    onChangeCurrentPassword(e.target.value);
+  }
 
   function onChange1(e: React.ChangeEvent<HTMLInputElement>) {
     const newValue: string = e.target.value;
@@ -414,6 +520,16 @@ function UpdatePassword({
 
   return (
     <>
+      <InputField
+        type="password"
+        id="current-password"
+        name="current-password"
+        label="Current password"
+        placeholder="••••••••"
+        value={currentValue}
+        onChange={(e) => onChangeCurrentValue(e)}
+        autoComplete="current-password"
+      />
       <InputField
         type="password"
         id="new-password"

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from 'context/useUser';
+import { FetchSelfRequest } from 'functions/Requests';
 import {
   sanitizeUsername,
   sanitizeEmail,
@@ -12,8 +14,21 @@ import {
 } from 'functions/UserValidation';
 import { BtnDefault } from 'components/btn/Btn';
 import InputField from 'components/misc/InputField';
+import styled from 'styled-components';
+
+const Helper = styled.p`
+  font-size: 0.68rem;
+  color: #7a5c42;
+`;
 
 function SignUp() {
+  const {
+    setUser,
+    setBlocked,
+    setFriends,
+    setSentFriends,
+    setReceivedFriends,
+  } = useUser();
   const [uname, setUname] = useState('');
   const [uemail, setUEmail] = useState('');
   const [upassword, setUPassword] = useState('');
@@ -43,28 +58,41 @@ function SignUp() {
       return;
     }
     try {
-      const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          uname: username,
-          uemail: email,
-          upassword: password,
+          username: username,
+          email_unverified: email,
+          password: password,
         }),
       });
-      const data = (await res.json()) as { message: string };
       if (!res.ok) {
+        const data = (await res.json()) as {
+          message: string;
+          error: string;
+          statusCode: number;
+        };
         setError([data.message]);
         return;
       }
-      setMessage(
-        "You've signed up successfully! Redirecting to your profile...",
-      );
-      setTimeout(() => {
-        void navigate('/profile');
-      }, 3000);
+      const dataSignup = (await res.json()) as { accessToken: string };
+      const dataSelf = await FetchSelfRequest(dataSignup.accessToken);
+      setUser(dataSelf.user);
+      setBlocked(dataSelf.blocked);
+      setFriends(dataSelf.friends);
+      setSentFriends(dataSelf.sentFriends);
+      setReceivedFriends(dataSelf.receivedFriends);
+      if (!dataSelf.user) {
+        setError(['Internal error.']);
+      } else {
+        setMessage(
+          "You've signed up successfully! Redirecting to your profile...",
+        );
+        await navigate('/profile');
+      }
     } catch {
       setError(['Internal error.']);
     }
@@ -103,11 +131,12 @@ function SignUp() {
           label="Password"
           value={upassword}
           onChange={(e) => setUPassword(e.target.value)}
-          helpers={[
-            'The password needs a minimum of 8 characters, including one uppercase, one lowercase, one digit and one special character.',
-          ]}
           isError={!!errors.length}
         />
+        <Helper>
+          The password needs between 8 and 64 characters, including one
+          uppercase, one lowercase, one digit and one special character.
+        </Helper>
         <InputField
           id="u-pwd-cfm"
           type="password"

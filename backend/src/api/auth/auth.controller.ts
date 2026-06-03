@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Redirect,
   Req,
@@ -17,6 +18,7 @@ import { AuthGuard } from './guards/auth.guard';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import type { Request as ExpressRequest } from 'express';
 import type { Response as ExpressResponse } from 'express';
+import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { LoginDto } from '../user/dto/login.dto';
 
 @Controller('/api/auth')
@@ -24,8 +26,29 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
-  async addUser(@Body() createUserDto: CreateUserDto) {
-    return await this.authService.signup(createUserDto);
+  async addUser(
+    @Body() dto: CreateUserDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ) {
+    await this.authService.signup(dto);
+    const tokens = await this.authService.login(
+      dto.email_unverified,
+      dto.password,
+    );
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
+    res.cookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @Post('login')
@@ -33,18 +56,24 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
-    const result = await this.authService.login(
+    const tokens = await this.authService.login(
       loginDto.email,
       loginDto.password,
     );
-    res.cookie('refresh_token', result.refreshToken, {
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: result.timeout.getTime() - Date.now(),
+      maxAge: timeout,
     });
-    const accessToken = result.accessToken;
-    return { accessToken };
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @UseGuards(AuthGuard)
@@ -61,18 +90,51 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: 0,
     });
+    res.cookie('dummy_refresh', '', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 0,
+    });
     return { message: 'Logged out' };
   }
 
   @Post('refresh')
   async refresh(@Req() req: ExpressRequest) {
-    const [type, jwtToken] = req.headers.authorization?.split(' ') ?? [];
     const refreshToken = req.cookies['refresh_token'] as string | undefined;
-    if (type !== 'Bearer' || !refreshToken) {
+    if (!refreshToken) {
       throw new UnauthorizedException();
     }
-    const accessToken = await this.authService.refresh(jwtToken, refreshToken);
-    return { accessToken };
+    const token = await this.authService.refresh(refreshToken);
+    return { accessToken: token };
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('password')
+  async updatePassword(
+    @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: ExpressResponse,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    const user = req['user'] as JwtPayload;
+    const tokens = await this.authService.updatePassword(
+      user.id,
+      updatePasswordDto,
+    );
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
+    res.cookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @Get('/:userId/:token/verify')

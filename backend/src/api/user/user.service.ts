@@ -2,8 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -13,16 +11,17 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { decodeAvatarBase64 } from './utils/user.validator';
 import {
-  compareHash,
-  createHash,
+  comparePasswordHash,
+  createPasswordHash,
   getCurrentTime,
   getVerificationTimeout,
   getToken,
   newPasswordContainsUsername,
   newPasswordContainsEmail,
-  getRefreshTimeout,
   encodeSingleAvatar,
   encodeMultipleAvatars,
+  createTokenHash,
+  compareTokenHash,
 } from './utils/user.utils';
 import { UserEmailsService } from './user-emails.service';
 import { AdminUpdateUserDto } from '../admin/dto/admin-update-user.dto';
@@ -73,7 +72,7 @@ export class UserService {
         throw new ConflictException(ErrorMessages.EMAIL_USED);
       }
       data.email_unverified = dto.email_unverified;
-      data.verifyToken = await createHash(token);
+      data.verifyToken = createTokenHash(token);
       data.verifyTimeout = getVerificationTimeout();
     }
 
@@ -126,10 +125,13 @@ export class UserService {
     if (newPasswordContainsEmail(newPassword, email)) {
       throw new BadRequestException(ErrorMessages.EMAIL_IN_PASSWORD);
     }
-    if (!(await compareHash(currentPassword, user.password))) {
+    if (!(await comparePasswordHash(currentPassword, user.password))) {
       throw new BadRequestException(ErrorMessages.CURRENT_PASS_INCORRECT);
     }
-    return await this.modifyPassword(userId, await createHash(newPassword));
+    return await this.modifyPassword(
+      userId,
+      await createPasswordHash(newPassword),
+    );
   }
 
   async getOwnProfile(userId: string) {
@@ -211,29 +213,24 @@ export class UserService {
   }
 
   // CALLED FROM AUTH SERVICE
-  async addUser(createUserDto: CreateUserDto) {
-    if (await this.usernameIsTaken(createUserDto.username)) {
-      throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
-    }
-    if (await this.emailAddressIsTaken(createUserDto.email_unverified)) {
-      throw new ConflictException(ErrorMessages.EMAIL_USED);
-    }
-    createUserDto.password = await createHash(createUserDto.password);
-    const token = getToken();
-    const timeout = getVerificationTimeout();
-    const created = await this.createUser(
-      createUserDto,
-      await createHash(token),
-      timeout,
+  async addUser(newUser: CreateUserDto) {
+    await this.throwIfUsernameOrEmailIsTaken(
+      newUser.username,
+      newUser.email_unverified,
     );
-    const found = await this.userExistsOrThrow(created.id);
-    if (found.email_unverified && found.verifyToken) {
-      await this.userEmailsService.sendVerificationEmail(
-        created.id,
-        found.email_unverified,
-        token,
-      );
-    }
+    const token = getToken();
+    const created = await this.createUser(
+      newUser.username,
+      newUser.email_unverified,
+      await createPasswordHash(newUser.password),
+      createTokenHash(token),
+      getVerificationTimeout(),
+    );
+    await this.userEmailsService.sendVerificationEmail(
+      created.id,
+      newUser.email_unverified,
+      token,
+    );
     return created;
   }
 
@@ -242,7 +239,7 @@ export class UserService {
     if (
       !found ||
       !found.verifyToken ||
-      !(await compareHash(token, found.verifyToken)) ||
+      !compareTokenHash(token, found.verifyToken) ||
       !found.email_unverified ||
       !found.verifyTimeout ||
       found.verifyTimeout < new Date()
@@ -272,7 +269,7 @@ export class UserService {
     if (
       !found ||
       !found.verifyToken ||
-      !(await compareHash(token, found.verifyToken))
+      !compareTokenHash(token, found.verifyToken)
     ) {
       return null;
     }
@@ -293,7 +290,7 @@ export class UserService {
     }
     const data: Record<string, unknown> = {};
     const token = getToken();
-    data.verifyToken = await createHash(token);
+    data.verifyToken = createTokenHash(token);
     data.verifyTimeout = getVerificationTimeout();
     const result = await this.modifyVerificationData(userId, data);
     const updated = await this.userExistsOrThrow(userId);
@@ -307,32 +304,22 @@ export class UserService {
     return result;
   }
 
-  async generateRefreshToken(
+  async updateRefreshToken(
     userId: string,
-  ): Promise<{ token: string; timeout: Date }> {
+    refreshToken: string,
+    timeout: Date,
+  ) {
     await this.userExistsOrThrow(userId);
-    const token = getToken();
-    const timeout = getRefreshTimeout();
-    const result = await this.modifyRefreshToken(
+    return await this.modifyRefreshToken(
       userId,
-      await createHash(token),
+      createTokenHash(refreshToken),
       timeout,
     );
-    if (
-      !result.refreshToken ||
-      !(await compareHash(token, result.refreshToken))
-    ) {
-      throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
-    }
-    return { token: token, timeout: timeout };
   }
 
   async removeRefreshToken(userId: string) {
     await this.userExistsOrThrow(userId);
-    const result = await this.deleteRefreshToken(userId);
-    if (result.refreshToken !== null) {
-      throw new InternalServerErrorException(ErrorMessages.REF_TOK_DEL_ERR);
-    }
+    return await this.deleteRefreshToken(userId);
   }
 
   //CALLED FROM ADMIN SERVICE
@@ -388,15 +375,17 @@ export class UserService {
 
   // DB ACTIONS (INTERNAL USE ONLY - ONLY CALLED AFTER VALIDATION)
   private async createUser(
-    createUserDto: CreateUserDto,
+    username: string,
+    email_unverified: string,
+    password: string,
     token: string,
     timeout: Date,
   ) {
     return await this.prisma.user.create({
       data: {
-        username: createUserDto.username,
-        email_unverified: createUserDto.email_unverified,
-        password: createUserDto.password,
+        username: username,
+        email_unverified: email_unverified,
+        password: password,
         verifyToken: token,
         verifyTimeout: timeout,
       },
@@ -433,7 +422,7 @@ export class UserService {
     userId: string,
     newData: Record<string, unknown>,
   ) {
-    await this.prisma.user.update({
+    return await this.prisma.user.update({
       where: { id: userId },
       data: newData,
       select: { id: true },
@@ -457,18 +446,29 @@ export class UserService {
     userId: string,
     newData: Record<string, unknown>,
   ) {
-    return await this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id: userId },
       data: newData,
-      select: { desc: true, email_unverified: true, username: true },
+      select: {
+        desc: true,
+        email_unverified: true,
+        username: true,
+        avatar: true,
+      },
     });
+    return {
+      ...updated,
+      avatar: updated.avatar
+        ? Buffer.from(updated.avatar).toString('base64')
+        : null,
+    };
   }
 
   private async modifyPassword(userID: string, newPassword: string) {
     return await this.prisma.user.update({
       where: { id: userID },
       data: { password: newPassword },
-      select: { id: true },
+      select: { id: true, rank: true },
     });
   }
 
@@ -496,7 +496,7 @@ export class UserService {
 
   private async modifyRefreshToken(
     userId: string,
-    newToken: string | null,
+    newToken: string,
     timeout: Date,
   ) {
     return await this.prisma.user.update({
@@ -522,6 +522,8 @@ export class UserService {
         username: true,
         avatar: true,
         rank: true,
+        date: true,
+        desc: true,
         email: true,
         email_unverified: true,
       },
@@ -531,21 +533,42 @@ export class UserService {
   private async findProfileById(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
     });
   }
 
   private async findProfileByUsername(toFind: string) {
     return await this.prisma.user.findFirst({
       where: { username: { equals: toFind, mode: 'insensitive' } },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
     });
   }
 
   private async listAllByUsername(incPending: boolean) {
     return await this.prisma.user.findMany({
       where: incPending ? {} : { rank: { not: Ranks.PENDING } },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
       orderBy: { username: 'asc' },
     });
   }
@@ -553,7 +576,14 @@ export class UserService {
   private async listAllByDate(incPending: boolean) {
     return await this.prisma.user.findMany({
       where: incPending ? {} : { rank: { not: Ranks.PENDING } },
-      select: { id: true, username: true, avatar: true, rank: true },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        rank: true,
+        date: true,
+        desc: true,
+      },
       orderBy: { date: 'asc' },
     });
   }
@@ -571,7 +601,6 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
-        refreshTimeout: true,
       },
     });
     if (!found) {
@@ -602,6 +631,13 @@ async userExistsByEmail(toFind: string) {
     });
   }
 
+  async userExistsByRefreshTokenHash(toFind: string) {
+    return await this.prisma.user.findUnique({
+      where: { refreshToken: toFind },
+      select: { id: true, rank: true, refreshTimeout: true },
+    });
+  }
+
   private async userExists(toFind: string) {
     return await this.prisma.user.findUnique({
       where: { id: toFind },
@@ -614,7 +650,6 @@ async userExistsByEmail(toFind: string) {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
-        refreshTimeout: true,
       },
     });
   }
@@ -635,6 +670,27 @@ async userExistsByEmail(toFind: string) {
       select: { id: true, email: true, email_unverified: true },
     });
     return found !== null;
+  }
+
+  private async throwIfUsernameOrEmailIsTaken(username: string, email: string) {
+    const found = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: username },
+          { email: email },
+          { email_unverified: email },
+        ],
+      },
+      select: { username: true, email: true, email_unverified: true },
+    });
+    if (found) {
+      if (found.username === username) {
+        throw new ConflictException(ErrorMessages.USERNAME_TAKEN);
+      } else if (found.email === email || found.email_unverified === email) {
+        throw new ConflictException(ErrorMessages.EMAIL_USED);
+      }
+    }
+    return false;
   }
 
   private async expiredUsersToDelete(time: Date) {

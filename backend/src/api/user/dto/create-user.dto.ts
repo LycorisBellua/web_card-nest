@@ -9,6 +9,7 @@ import {
   IsEmailNotEmpty,
   IsPasswordLongEnough,
   IsPasswordNotTooLong,
+  IsUsernameGuest,
   IsUsernameNotEmpty,
   IsUsernameNotTooLong,
   PasswordHasDigit,
@@ -24,6 +25,7 @@ export class CreateUserDto {
   @Transform(({ value }) => sanitizeUsername(value as string))
   @IsUsernameNotEmpty()
   @IsUsernameNotTooLong()
+  @IsUsernameGuest()
   username: string;
 
   @Transform(({ value }) => sanitizeEmail(value as string))
