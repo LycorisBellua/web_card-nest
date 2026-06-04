@@ -20,6 +20,8 @@ import type { Request as ExpressRequest } from 'express';
 import type { Response as ExpressResponse } from 'express';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { LoginDto } from '../user/dto/login.dto';
+import { ForgotPasswordDto } from '../user/dto/forgot-password.dto';
+import { ResetPasswordDto } from '../user/dto/reset-password.dto';
 
 @Controller('/api/auth')
 export class AuthController {
@@ -160,5 +162,23 @@ export class AuthController {
   async resendVerificationEmail(@Req() req: ExpressRequest) {
     const user = req['user'] as JwtPayload;
     return this.authService.resendVerificationEmail(user.id);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<{ success: boolean; message: string }> {
+    return this.authService.executeForgotPassword(forgotPasswordDto.email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ success: boolean; message: string }> {
+    return this.authService.resetPassword(
+      resetPasswordDto.email,
+      resetPasswordDto.token,
+      resetPasswordDto.newPassword,
+    );
   }
 }

@@ -294,6 +294,21 @@ export class UserService {
     return result;
   }
 
+  async sendResetPasswordUnverifiedEmail(userId: string) {
+    const found = await this.userExistsOrThrow(userId);
+    if (!found.email_unverified) return;
+    const token = getToken();
+    const data: Record<string, unknown> = {};
+    data.verifyToken = createTokenHash(token);
+    data.verifyTimeout = getVerificationTimeout();
+    await this.modifyVerificationData(userId, data);
+    await this.userEmailsService.sendPasswordResetUnverifiedEmail(
+      userId,
+      found.email_unverified,
+      token,
+    );
+  }
+
   async updateRefreshToken(
     userId: string,
     refreshToken: string,
@@ -614,6 +629,11 @@ export class UserService {
         verifyToken: true,
         verifyTimeout: true,
         refreshToken: true,
+        refreshTimeout: true,
+        loginAttempts: true,
+        loginLockedUntil: true,
+        resetToken: true,
+        resetTimeout: true,
       },
     });
   }
@@ -689,6 +709,44 @@ export class UserService {
   private async expiredUsersToModify(time: Date) {
     return await this.prisma.user.findMany({
       where: { verifyTimeout: { lt: time }, email: { not: null } },
+    });
+  }
+
+  async findUserByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  async saveResetToken(userId: string, token: string, expiry: Date) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { resetToken: token, resetTimeout: expiry },
+    });
+  }
+
+  async findUsersWithValidToken() {
+    return this.prisma.user.findMany({
+      where: {
+        resetTimeout: { gt: new Date() },
+        resetToken: { not: null },
+      },
+    });
+  }
+
+  async updatePasswordAndClearToken(userId: string, hashedPassword: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword, resetToken: null, resetTimeout: null },
+    });
+  }
+
+  async updateLoginAttempts(
+    userId: string,
+    attempts: number,
+    lockedUntil: Date | null,
+  ) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { loginAttempts: attempts, loginLockedUntil: lockedUntil },
     });
   }
 }
