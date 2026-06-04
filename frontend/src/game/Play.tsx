@@ -5,9 +5,6 @@ import {
   TableWrapper,
   PlayerCountStyle,
   Overlay,
-  OverlayStyle,
-  RecordTableWrapper,
-  RecordTableStyle,
   ShowFinishedStyle,
 } from 'game/GameTableStyle';
 import { ScrollablePage } from 'components/general/Scrollable';
@@ -19,13 +16,6 @@ import { useGameCanvas } from 'game/canvas/useGameCanvas';
 import type { GameState } from 'game/logic/types';
 import { newRoundGame, nextPlayer } from 'game/engine/gameEngine';
 
-type RoundRecord = {
-  round: number;
-  winnerId: number | null;
-  scores: number[];
-  blackCrowns: boolean[];
-};
-
 function PlayGame() {
   const { user } = useUser();
   const [username, setUsername] = useState<string>('');
@@ -33,8 +23,6 @@ function PlayGame() {
   const [local, setLocal] = useState<boolean>(false);
   const [online, setOnline] = useState<boolean>(false);
   const [game, setGame] = useState<GameState | null>(null);
-  const [history, setHistory] = useState<RoundRecord[]>([]);
-  const [displayRecord, setDisplayRecord] = useState<boolean>(false);
   const [showTransition, setShowTransition] = useState<boolean>(false);
   const { canvasRef, reset } = useGameCanvas(game, started);
 
@@ -101,36 +89,9 @@ function PlayGame() {
 
   function handleNewRound() {
     if (!game) return;
-    setHistory((h) => [
-      ...h,
-      {
-        round: game.turn,
-        winnerId: game.winnerId,
-        scores: game.players.map((p) => p.score),
-        blackCrowns: game.players.map((p) => p.hasBlackCrown),
-      },
-    ]);
-    const playerCount = game.players.length;
     reset();
-    const newGame = newRoundGame(playerCount, game, username);
+    const newGame = newRoundGame(game, username);
     setGame(dealInitialCards(newGame));
-  }
-
-  function handleDisplayRecord() {
-    if (!game) return;
-    setHistory((h) => [
-      ...h,
-      {
-        round: game.turn,
-        winnerId: game.winnerId,
-        scores: game.players.map((p) => p.score),
-        blackCrowns: game.players.map((p) => p.hasBlackCrown),
-      },
-    ]);
-    setStarted(false);
-    if (local) setLocal(false);
-    if (online) setOnline(false);
-    setDisplayRecord(true);
   }
 
   useEffect(() => {
@@ -180,14 +141,14 @@ function PlayGame() {
               {game?.gameStatus === 'finished' && (
                 <ShowFinishedStyle>
                   <p>
-                    Round {game.turn}: winner is player {game.winnerId! + 1}
+                    Round {game.turn}: Winner is player {game.winnerId! + 1}
                   </p>
                   <div className="btn">
                     <BtnDefault onClick={handleNewRound}>
-                      Another turn
+                      Another Game
                     </BtnDefault>
-                    <BtnDefault onClick={handleDisplayRecord}>
-                      Stop playing
+                    <BtnDefault onClick={() => window.location.reload()}>
+                      Stop Playing
                     </BtnDefault>
                   </div>
                 </ShowFinishedStyle>
@@ -211,7 +172,7 @@ function PlayGame() {
           </TableWrapper>
         </>
       )}
-      {!local && !online && !displayRecord && (
+      {!local && !online && (
         <div>
           <BtnDefault onClick={handleLocalGame}>Local game</BtnDefault>
           <BtnDefault onClick={handleOnlineGame}>Online game</BtnDefault>
@@ -223,9 +184,6 @@ function PlayGame() {
           onStartLocalGame={handleStartLocalGame}
           onStartOnlineGame={handleStartOnlineGame}
         />
-      )}
-      {!started && displayRecord && !local && !online && (
-        <DisplayRecord game={game} history={history} />
       )}
     </ScrollablePage>
   );
@@ -269,57 +227,6 @@ function PlayerCount({
         4 players
       </BtnDefault>
     </PlayerCountStyle>
-  );
-}
-
-type DisplayRecordProps = {
-  game: GameState | null;
-  history: RoundRecord[];
-};
-
-function DisplayRecord({ game, history }: DisplayRecordProps) {
-  if (!game) {
-    return (
-      <Overlay>
-        <OverlayStyle>
-          <h2>No records yet.</h2>
-          <BtnDefault onClick={() => window.location.reload()}>Back</BtnDefault>
-        </OverlayStyle>
-      </Overlay>
-    );
-  }
-  return (
-    <Overlay>
-      <RecordTableWrapper>
-        <RecordTableStyle>
-          <thead>
-            <tr>
-              <th>Round</th>
-              {game.players.map((p, i) =>
-                p.username ? (
-                  <th key={i}>{p.username}</th>
-                ) : (
-                  <th key={i}>Player {p.id + 1}</th>
-                ),
-              )}
-              <th>Winner</th>
-            </tr>
-          </thead>
-          <tbody>
-            {history.map((h, idx) => (
-              <tr key={idx}>
-                <td>{h.round}</td>
-                {h.scores.map((score, sIdx) => (
-                  <td key={sIdx}>{h.blackCrowns[sIdx] ? '21 👑​' : score}</td>
-                ))}
-                <td>{h.winnerId! + 1}</td>
-              </tr>
-            ))}
-          </tbody>
-        </RecordTableStyle>
-      </RecordTableWrapper>
-      <BtnDefault onClick={() => window.location.reload()}>Back</BtnDefault>
-    </Overlay>
   );
 }
 
