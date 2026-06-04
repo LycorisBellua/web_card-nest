@@ -518,7 +518,15 @@ function UpdatePassword({
   }
 
   return (
-    <>
+    <form>
+      <input
+        type="email"
+        name="username"
+        value="john.doe@email.com"
+        autoComplete="username"
+        readOnly
+        hidden
+      />
       <InputField
         type="password"
         id="current-password"
@@ -553,7 +561,7 @@ function UpdatePassword({
         isError={!!confirmError.length}
         helpers={[confirmError]}
       />
-    </>
+    </form>
   );
 }
 

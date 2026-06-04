@@ -41,7 +41,7 @@ function DM() {
   }, []);
 
   useEffect(() => {
-    if (lastMsg?.authorId === user?.id) {
+    if (lastMsg?.sender?.id === user?.id) {
       msgsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [user?.id, lastMsg]);

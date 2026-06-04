@@ -1,9 +1,7 @@
 CONNECTION TO THE BACKEND
-- Lobby & DMs: The frontend has been created in isolation. Make use of the 
-backend and remove the placeholder content.
-- Merge pages/chat/Lobby_WS.tsx and pages/chat/Lobby.tsx.
-- Merge pages/chat/DM_WS.tsx and pages/chat/DM.tsx.
-
+- Lobby: Guest messages aren't being sent. But if a user gets deleted then 
+their messages show "Guest".
+- DM: Merge pages/chat/DM_WS.tsx and pages/chat/DM.tsx.
 - Finish whatever TODOs are present in the frontend.
 
 GAME

@@ -21,8 +21,9 @@ export const SocketProvider = ({
   }, [accessToken]);
 
   useEffect(() => {
-    socket.on('OnlineUsers', (userIds: string[]) => {
-      setOnlineUsers(new Set(userIds));
+    socket.on('OnlineUsers', (data: string[]) => {
+      const withoutDummyGuest = data.filter((e) => e !== 'Guest');
+      setOnlineUsers(new Set(withoutDummyGuest));
     });
 
     return () => {
