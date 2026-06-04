@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
@@ -10,6 +14,8 @@ import {
   getCurrentTime,
   getRefreshTimeout,
   getToken,
+  newPasswordContainsEmail,
+  newPasswordContainsUsername,
 } from '../user/utils/user.utils';
 import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
@@ -67,7 +73,7 @@ export class AuthService {
     if (!verified) {
       return { url: `${process.env.HOME_URL}/verify-error` };
     }
-    this.userService.removeRefreshToken(userId);
+    await this.userService.removeRefreshToken(userId);
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
@@ -91,11 +97,11 @@ export class AuthService {
   }
 
   async generateJwtToken(userId: string, rank: Ranks) {
-      const payload: JwtPayload = {
-        id: userId,
-        rank: rank,
-      };
-      return await this.jwtService.signAsync(payload);
+    const payload: JwtPayload = {
+      id: userId,
+      rank: rank,
+    };
+    return await this.jwtService.signAsync(payload);
   }
 
   async generateRefreshToken(
@@ -106,60 +112,69 @@ export class AuthService {
     await this.userService.updateRefreshToken(userId, token, timeout);
     return { token, timeout };
   }
-  
+
   async executeForgotPassword(email: string) {
-    const user = await this.userService.userExistsByEmail(email)
+    const user = await this.userService.userExistsByEmail(email);
 
     if (!user) {
-        return { success: true, message: "If this email exists, a link has been sent." }
+      return {
+        success: true,
+        message: 'If this email exists, a link has been sent.',
+      };
     }
 
     if (!user.email) {
-      await this.userService.sendResetPasswordUnverifiedEmail(user.id)
-      return { success: true, message: "If this email exists, a link has been sent." }
+      await this.userService.sendResetPasswordUnverifiedEmail(user.id);
+      return {
+        success: true,
+        message: 'If this email exists, a link has been sent.',
+      };
     }
 
     const token = getToken();
-    const expiry = new Date(Date.now() + 30 * 60 * 1000)
-    await this.userService.saveResetToken(user.id, await createTokenHash(token), expiry)
+    const expiry = new Date(Date.now() + 30 * 60 * 1000);
+    await this.userService.saveResetToken(
+      user.id,
+      createTokenHash(token),
+      expiry,
+    );
 
-    const emailInLink = user.email ?? user.email_unverified
-    const link = `${process.env.HOME_URL}/reset-pwd?email=${emailInLink}&token=${token}`
+    const emailInLink = user.email ?? user.email_unverified;
+    const link = `${process.env.HOME_URL}/reset-pwd?email=${emailInLink}&token=${token}`;
     await this.mailer.sendMail(
-        email,
-        "Password reset",
-        `Click on this link to reset your password: ${link}\n\nThis link expires in 30 minutes.`
-    )
+      email,
+      'Password reset',
+      `<p>Click on this link to reset your password:</p><p><a href="${link}">Click here to reset your password</a></p><p>This link expires in 30 minutes.</p>`,
+    );
 
-    return { success: true, message: "If this email exists, a link has been sent." }
-}
+    return {
+      success: true,
+      message: 'If this email exists, a link has been sent.',
+    };
+  }
 
   async resetPassword(email: string, token: string, newPassword: string) {
-      const user = await this.userService.userExistsByEmail(email)
-    
-    console.log('user found:', !!user)
-    console.log('resetToken:', user?.resetToken)
-    console.log('resetTimeout:', user?.resetTimeout)
-    console.log('now:', new Date())
-    console.log('expired:', user?.resetTimeout ? user.resetTimeout < new Date() : 'null')
-    console.log('token received:', token)
-    const hashMatch = user?.resetToken ? await compareTokenHash(token, user.resetToken) : false
-    console.log('hash match:', hashMatch)
+    const user = await this.userService.userExistsByEmail(email);
+    if (
+      !user ||
+      !user.resetToken ||
+      !user.resetTimeout ||
+      user.resetTimeout < new Date() ||
+      !compareTokenHash(token, user.resetToken)
+    ) {
+      return { success: false, message: 'Invalid or expired link.' };
+    }
+    if (
+      newPasswordContainsEmail(newPassword, user.email) ||
+      newPasswordContainsUsername(newPassword, user.username)
+    ) {
+      throw new BadRequestException(
+        'New Password may not contain username or email.',
+      );
+    }
+    const hashed = await createPasswordHash(newPassword);
+    await this.userService.updatePasswordAndClearToken(user.id, hashed);
 
-
-      if (
-          !user ||
-          !user.resetToken ||
-          !user.resetTimeout ||
-          user.resetTimeout < new Date() ||
-          !(await compareTokenHash(token, user.resetToken))
-      ) {
-          return { success: false, message: "Invalid or expired link." }
-      }
-
-      const hashed = await createPasswordHash(newPassword)
-      await this.userService.updatePasswordAndClearToken(user.id, hashed)
-
-      return { success: true, message: "Password updated successfully." }
+    return { success: true, message: 'Password updated successfully.' };
   }
 }

@@ -1,7 +1,9 @@
 import { Transform } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
-import { sanitizePassword } from '../utils/user.sanitizer';
+import { sanitizeEmail, sanitizePassword } from '../utils/user.sanitizer';
 import {
+  IsEmailFormatValid,
+  IsEmailNotEmpty,
   IsPasswordLongEnough,
   IsPasswordNotTooLong,
   PasswordHasDigit,
@@ -12,7 +14,9 @@ import {
 } from '../utils/user.validator';
 
 export class ResetPasswordDto {
-  @IsEmail()
+  @Transform(({ value }) => sanitizeEmail(value as string))
+  @IsEmailNotEmpty()
+  @IsEmailFormatValid()
   email: string;
 
   @IsString()
