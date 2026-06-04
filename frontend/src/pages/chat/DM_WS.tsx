@@ -1,31 +1,34 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from 'context/useSocket';
-import type { PublicMsg } from 'context/Types';
+import type { PrivateMsg } from 'context/Types';
 
-const Lobby = () => {
+const DM_WS = () => {
   const { socket } = useSocket();
-  const [messages, setMessages] = useState<PublicMsg[]>([]);
   const [input, setInput] = useState<string>('');
+  const [targetUserId, setTargetUserId] = useState<string>('');
+  const [messages, setMessages] = useState<PrivateMsg[]>([]);
 
   useEffect(() => {
-    socket.emit('FetchLobbyHistory', (data) => {
-      setMessages(data);
+    if (!targetUserId) return;
+
+    socket.emit('FetchConvoHistory', targetUserId, (response) => {
+      setMessages(response);
     });
-  }, [socket]);
+  }, [socket, targetUserId]);
 
   useEffect(() => {
-    socket.on('PublicMessage', (data) => {
+    socket.on('receiveMessage', (data) => {
       setMessages((prev) => [...prev, data]);
     });
 
     return () => {
-      socket.off('PublicMessage');
+      socket.off('receiveMessage');
     };
   }, [socket]);
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    socket.emit('PublicMessage', input);
+    socket.emit('PrivateMessage', { targetUserId, message: input });
     setInput('');
   };
 
@@ -33,12 +36,21 @@ const Lobby = () => {
 
   return (
     <div>
-      <h3>Lobby - your ID: {userId}</h3>
+      <h3>DM - your ID: {userId}</h3>
+
+      <div>
+        <label>Target User ID:</label>
+        <input
+          value={targetUserId}
+          onChange={(e) => setTargetUserId(e.target.value)}
+          placeholder="Enter receiver userId"
+        />
+      </div>
 
       <div style={{ border: '1px solid #ccc', height: 200, overflowY: 'auto' }}>
         {messages.map((msg, idx) => (
           <div key={idx}>
-            <strong>{msg.sender?.username ?? 'Guest'}: </strong>
+            <strong>{msg.senderId}: </strong>
             {msg.message}
           </div>
         ))}
@@ -55,4 +67,4 @@ const Lobby = () => {
   );
 };
 
-export default Lobby;
+export default DM_WS;

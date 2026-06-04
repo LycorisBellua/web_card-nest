@@ -26,17 +26,9 @@ type RoundRecord = {
   blackCrowns: boolean[];
 };
 
-type CurrentUser = { username: string };
-
 function PlayGame() {
   const { user } = useUser();
-  const currentUser: CurrentUser | undefined =
-    user &&
-    typeof user === 'object' &&
-    'username' in user &&
-    typeof user.username === 'string'
-      ? { username: user.username }
-      : undefined;
+  const [username, setUsername] = useState<string>('');
   const [started, setStarted] = useState<boolean>(false);
   const [local, setLocal] = useState<boolean>(false);
   const [online, setOnline] = useState<boolean>(false);
@@ -57,7 +49,7 @@ function PlayGame() {
   function handleStartLocalGame(playerCount: number) {
     setStarted(true);
     setGame(() => {
-      const g = initialGame(playerCount, currentUser);
+      const g = initialGame(playerCount, username);
       return dealInitialCards(g);
     });
   }
@@ -65,7 +57,7 @@ function PlayGame() {
   function handleStartOnlineGame(playerCount: number) {
     setStarted(true);
     setGame(() => {
-      const g = initialGame(playerCount, currentUser);
+      const g = initialGame(playerCount, username);
       return dealInitialCards(g);
     });
   }
@@ -120,7 +112,7 @@ function PlayGame() {
     ]);
     const playerCount = game.players.length;
     reset();
-    const newGame = newRoundGame(playerCount, game, currentUser);
+    const newGame = newRoundGame(playerCount, game, username);
     setGame(dealInitialCards(newGame));
   }
 
@@ -140,6 +132,14 @@ function PlayGame() {
     if (online) setOnline(false);
     setDisplayRecord(true);
   }
+
+  useEffect(() => {
+    function updateUsername() {
+      if (local || !user) setUsername('');
+      else setUsername(user.username);
+    }
+    updateUsername();
+  }, [local, user]);
 
   useEffect(() => {
     if (!game) return;
@@ -299,7 +299,7 @@ function DisplayRecord({ game, history }: DisplayRecordProps) {
                 p.username ? (
                   <th key={i}>{p.username}</th>
                 ) : (
-                  <th key={i}>Guest {p.id + 1}</th>
+                  <th key={i}>Player {p.id + 1}</th>
                 ),
               )}
               <th>Winner</th>

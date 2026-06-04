@@ -12,6 +12,10 @@ const Helper = styled.p`
   color: #7a5c42;
 `;
 
+/*
+   TODO: The backend has been merged into `dev`. Fetch it and add in the 
+   requests.
+*/
 function ResetPassword() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');

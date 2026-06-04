@@ -1,39 +1,15 @@
-WEBSOCKET FEATURES
-
-routes.tsx contains WebSocket content, that I have commented out for now.
-
-App.tsx calls the socket context now. The page that used to call this context 
-no longer exists, but note that it used to call other socket components as well 
-like so:
-```
-<SocketProvider accessToken={user.accessToken}>
-  <Lobby />
-  <DM />
-</SocketProvider>
-```
-
---------------------------------------------------------------------------------
-
 CONNECTION TO THE BACKEND
-- The backend has harmonized its return types, so you gotta check that you 
-still receive what you need. Since you modified these return types as well to 
-match your needs, you might have to modify them once more.
-- WebSockets (without the game).
 - Lobby & DMs: The frontend has been created in isolation. Make use of the 
 backend and remove the placeholder content.
+- Merge pages/chat/Lobby_WS.tsx and pages/chat/Lobby.tsx.
+- Merge pages/chat/DM_WS.tsx and pages/chat/DM.tsx.
 
-- pages/auth/ResetPassword.tsx: I don't have the backend yet.
-- Chat timeout toggle.
-- Request to extract lobby in JSON format (for msg sender, omit the avatar), 
-but only if the user has posted at least one msg (even if this msg is 
-moderated, and even if the user is currently timed out from writing to chat).
-- Same lobby request, but in CSV.
-- Request to extract an individual DM thread in JSON. Omit the avatars from msg 
-senders. Do extract even if the thread is empty.
-- Same DM request, but in CSV.
 - Finish whatever TODOs are present in the frontend.
 
 GAME
+- Currently, the local version of the game gets lost if you switch to a 
+different page. You could store it in the local storage. It doesn't matter if 
+you're logged in or not, as only player indexes are stored.
 - Black Crown tables.
 - Online mode with WebSockets.
 - ...

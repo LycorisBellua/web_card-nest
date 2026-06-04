@@ -78,8 +78,11 @@ function DataExtraction() {
   /*
     TODO
     - For the lobby, only make it selectable if the user has posted at least 
-    one message.
-    - Add the requests to extract the lobby and individual DM threads as well.
+    one message (even if this message is marked as moderated, or even if the 
+    user is currently in time out).
+    - Add the requests to extract the lobby and individual DM threads as well. 
+    Do extract a DM thread even if empty, or specify in the Privacy Policy that 
+    it's not extracted if empty.
     - Explain in the Privacy Policy that the avatar is omitted from user 
     extractions (you and friends for example), because it'd be too heavy.
   */
