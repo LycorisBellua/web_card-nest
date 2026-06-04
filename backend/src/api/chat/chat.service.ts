@@ -62,14 +62,22 @@ export class ChatService {
     chatId: string,
     senderId: string,
     message: string,
-  ): Promise<DMMessage> {
+  ): Promise<DMHistory[number]> {
     await this.participantCheck(senderId, chatId);
     try {
-      return await this.createDMMessage({
-        chatId: chatId,
-        senderId: senderId,
-        message: message,
+      const raw = await this.prisma.dMMessage.create({
+        data: { chatId, senderId, message },
+        include: dMMessageInclude,
       });
+      return {
+        ...raw,
+        sender: {
+          ...raw.sender,
+          avatar: raw.sender.avatar
+            ? Buffer.from(raw.sender.avatar).toString('base64')
+            : null,
+        },
+      };
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         this.handleErrors(err);
@@ -95,10 +103,24 @@ export class ChatService {
   async saveLobbyMessage(
     senderId: string,
     message: string,
-  ): Promise<LobbyMessage> {
+  ): Promise<LobbyHistory[number]> {
     await this.banCheck(senderId);
     try {
-      return this.createLobbyMessage({ senderId, message });
+      const raw = await this.prisma.lobbyMessage.create({
+        data: { senderId, message },
+        include: lobbyMessageInclude,
+      });
+      return {
+        ...raw,
+        sender: raw.sender
+          ? {
+              ...raw.sender,
+              avatar: raw.sender.avatar
+                ? Buffer.from(raw.sender.avatar).toString('base64')
+                : null,
+            }
+          : null,
+      };
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         this.handleErrors(err);
@@ -107,7 +129,7 @@ export class ChatService {
     }
   }
 
-  async guestSaveLobbyMessage(message: string): Promise<LobbyMessage> {
+  async guestSaveLobbyMessage(message: string): Promise<LobbyHistory[number]> {
     return this.saveLobbyMessage('Guest', message);
   }
 

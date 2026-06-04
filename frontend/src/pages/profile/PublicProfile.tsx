@@ -101,7 +101,6 @@ function PublicProfile() {
           rank: data.rank,
           registered: new Date(data.date),
           desc: data.desc,
-          isOnline: false,
           friends: [],
         } as OtherUserOrGuest;
         const friendData = (await FetchOtherFriendListRequest(

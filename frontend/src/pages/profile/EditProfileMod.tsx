@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, OtherUser } from 'context/Types';
 import { useUser } from 'context/useUser';
+import { useSocket } from 'context/useSocket';
 import {
   sanitizeUsername,
   sanitizeDescription,
@@ -69,7 +70,11 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
   const [username, setUsername] = useState<string>('');
   const [desc, setDesc] = useState<string>('');
 
-  if (!user || !otherUser || !CanDisciplineThisUser(user, otherUser))
+  if (
+    !user ||
+    !otherUser ||
+    !CanDisciplineThisUser(user?.rank ?? '', otherUser?.rank ?? '')
+  )
     return <></>;
 
   const hasPendingChanges =
@@ -283,6 +288,8 @@ function UpdateAvatar({
   onChange: (f: File | '') => void;
   errors: string[];
 }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!otherUser && onlineUsers.has(otherUser.id);
   const imgInputRef = useRef<HTMLInputElement | null>(null);
 
   const previewUrl = useMemo(() => {
@@ -306,7 +313,7 @@ function UpdateAvatar({
       <AvatarBig
         src={avatarSrc ?? ''}
         rank={otherUser.rank}
-        isOnline={otherUser.isOnline}
+        isOnline={isOnline}
       />
       <div className="btn">
         <BtnDefault onClick={() => imgInputRef.current?.click()}>

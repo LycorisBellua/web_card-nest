@@ -49,7 +49,8 @@ export class UserController {
   @Get('me')
   async getOwnProfile(@Req() req: ExpressRequest): Promise<OwnProfile> {
     const user = req['user'] as JwtPayload;
-    return this.userService.getOwnProfile(user.id);
+    const result = await this.userService.getOwnProfile(user.id);
+    return result;
   }
 
   @UseGuards(AuthGuard, RankGuard)

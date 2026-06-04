@@ -6,17 +6,11 @@ App.tsx calls the socket context now. The page that used to call this context
 no longer exists, but note that it used to call other socket components as well 
 like so:
 ```
-<SocketProvider userId={userId}>
-  <Chat />
-  <FriendList />
-  <Room />
+<SocketProvider accessToken={user.accessToken}>
+  <Lobby />
+  <DM />
 </SocketProvider>
 ```
-
---------------------------------------------------------------------------------
-
-- Ideally, you don't just see the online status of your friends, but of 
-everyone.
 
 --------------------------------------------------------------------------------
 

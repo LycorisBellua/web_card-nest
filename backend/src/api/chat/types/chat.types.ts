@@ -31,13 +31,14 @@ export type DMHistory = {
   id: string;
   senderId: string;
   message: string;
+  date: Date;
   chatId: string;
   sender: {
     id: string;
     username: string;
     avatar: string | null;
-    rank: Ranks;
     desc: string | null;
+    rank: Ranks;
   };
 }[];
 
@@ -64,12 +65,13 @@ export type LobbyHistory = {
   id: string;
   senderId: string | null;
   message: string;
+  date: Date;
   moderated: boolean;
   sender: {
     id: string;
     username: string;
-    desc: string | null;
     avatar: string | null;
+    desc: string | null;
     rank: Ranks;
   } | null;
 }[];

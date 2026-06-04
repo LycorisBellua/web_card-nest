@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useSocket } from 'tmp-ws/useSocket';
-import type { Message } from 'tmp-ws/Socket';
+import { useSocket } from 'context/useSocket';
+import type { PublicMsg } from 'context/Types';
 
 const Lobby = () => {
-  const socket = useSocket();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const { socket } = useSocket();
+  const [messages, setMessages] = useState<PublicMsg[]>([]);
+  const [input, setInput] = useState<string>('');
 
   useEffect(() => {
     socket.emit('FetchLobbyHistory', (data) => {
@@ -26,7 +26,6 @@ const Lobby = () => {
   const sendMessage = () => {
     if (!input.trim()) return;
     socket.emit('PublicMessage', input);
-    setMessages((prev) => [...prev, { Sender: 'me', message: input }]);
     setInput('');
   };
 
@@ -39,7 +38,7 @@ const Lobby = () => {
       <div style={{ border: '1px solid #ccc', height: 200, overflowY: 'auto' }}>
         {messages.map((msg, idx) => (
           <div key={idx}>
-            <strong>{msg.Sender}: </strong>
+            <strong>{msg.sender?.username ?? 'Guest'}: </strong>
             {msg.message}
           </div>
         ))}

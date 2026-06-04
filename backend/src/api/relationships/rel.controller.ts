@@ -76,7 +76,8 @@ export class RelController {
   @Get('friend')
   async fetchFriends(@Req() req: ExpressRequest): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
-    return await this.relService.fetchFriends(user.id);
+    const result = await this.relService.fetchFriends(user.id);
+    return result;
   }
 
   @Get('friend/sent')

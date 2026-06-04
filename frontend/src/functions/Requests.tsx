@@ -74,7 +74,6 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
     rank: data.rank,
     registered: new Date(data.date),
     desc: data.desc,
-    isOnline: false,
     email: data.email,
     email_unverified: data.email_unverified,
     accessToken: accessToken,

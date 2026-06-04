@@ -1,18 +1,21 @@
+/*
 import React, { useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUser } from 'context/useUser';
-import type { Msg } from 'context/Types';
+import { useSocket } from 'context/useSocket';
+import type { PrivateMsg } from 'context/Types';
 import NotFound from 'pages/NotFound';
 import ChatPage from 'components/chat/ChatPage';
 import ChatHead from 'components/chat/ChatHead';
 import ChatMsgArea from 'components/chat/ChatMsgArea';
 import ChatDate from 'components/chat/ChatDate';
-import ChatMsg from 'components/chat/ChatMsg';
+import { PrivateChatMsg } from 'components/chat/ChatMsg';
 import ChatInput from 'components/chat/ChatInput';
 
 function DM() {
   const { username } = useParams<{ username: string }>();
-  const { user, friends, threads, postMessage } = useUser();
+  const { user, friends } = useUser();
+  const { onlineUsers } = useSocket();
 
   // TODO: Fetch the DM thread using `username`. In the meantime, use the context.
   const friend = friends.find(
@@ -21,12 +24,10 @@ function DM() {
   //
   const thread_name = `thread_dm_${friend?.username?.toLowerCase()}`;
   const thread = threads.find((t) => thread_name === t.id);
-  // TODO: `isOnline` doesn't exist on type LimitedUser (relationships would
-  // need to return OtherUser isntead of LimitedUser)
-  const nbr_online = 0; //friend?.isOnline ? 2 : 1;
+  const nbr_online = onlineUsers.has(friend?.id) ? 2 : 1;
   const lastMsg = thread?.messages.at(-1);
   const grouped =
-    thread?.messages.reduce<Record<string, Msg[]>>((acc, msg) => {
+    thread?.messages.reduce<Record<string, PrivateMsg[]>>((acc, msg) => {
       const day = msg.created.toDateString();
       if (!acc[day]) acc[day] = [];
       acc[day].push(msg);
@@ -57,7 +58,7 @@ function DM() {
           <React.Fragment key={day}>
             <ChatDate date={new Date(day)} />
             {msgs.map((msg) => (
-              <ChatMsg key={msg.id} msg={msg} />
+              <PrivateChatMsg key={msg.id} msg={msg} />
             ))}
           </React.Fragment>
         ))}
@@ -66,6 +67,13 @@ function DM() {
       <ChatInput onSend={(content) => postMessage(thread_name, content)} />
     </ChatPage>
   );
+}
+
+export default DM;
+*/
+
+function DM() {
+  return <div></div>;
 }
 
 export default DM;

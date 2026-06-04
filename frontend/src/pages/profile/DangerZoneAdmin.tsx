@@ -42,7 +42,7 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
     !user ||
     !otherUser ||
     user.rank.toLowerCase() != 'admin' ||
-    !CanDisciplineThisUser(user, otherUser)
+    !CanDisciplineThisUser(user?.rank ?? '', otherUser?.rank ?? '')
   )
     return <></>;
 

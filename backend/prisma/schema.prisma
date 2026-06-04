@@ -85,22 +85,24 @@ model DMChat {
 }
 
 model DMMessage {
-  id       String @id @default(uuid(7))
-  chat     DMChat @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
+  id       String   @id @default(uuid(7))
+  chat     DMChat   @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
   chatId   String
-  message  String @db.VarChar(500)
-  sender   User   @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  message  String   @db.VarChar(500)
+  date     DateTime @default(now())
+  sender   User     @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
   senderId String
 
   @@index([chatId])
 }
 
 model LobbyMessage {
-  id        String  @id @default(uuid(7))
-  sender    User?   @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
+  id        String   @id @default(uuid(7))
+  sender    User?    @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
   senderId  String?
-  message   String  @db.VarChar(500)
-  moderated Boolean @default(false)
+  message   String   @db.VarChar(500)
+  date      DateTime @default(now())
+  moderated Boolean  @default(false)
 }
 
 model LobbyBan {

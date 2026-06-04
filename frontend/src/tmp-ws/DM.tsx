@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useSocket } from 'tmp-ws/useSocket';
-import type { PrivateMessage } from 'tmp-ws/Socket';
+import { useSocket } from 'context/useSocket';
+import type { PrivateMsg } from 'context/Types';
 
 const DM = () => {
-  const socket = useSocket();
-  const [input, setInput] = useState('');
-  const [targetUserId, setTargetUserId] = useState('');
-  const [messages, setMessages] = useState<PrivateMessage[]>([]);
+  const { socket } = useSocket();
+  const [input, setInput] = useState<string>('');
+  const [targetUserId, setTargetUserId] = useState<string>('');
+  const [messages, setMessages] = useState<PrivateMsg[]>([]);
 
   useEffect(() => {
     if (!targetUserId) return;
@@ -29,7 +29,6 @@ const DM = () => {
   const sendMessage = () => {
     if (!input.trim()) return;
     socket.emit('PrivateMessage', { targetUserId, message: input });
-    setMessages((prev) => [...prev, { senderId: 'me', message: input }]);
     setInput('');
   };
 

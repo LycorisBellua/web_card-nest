@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { User, OtherUserOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
+import { useSocket } from 'context/useSocket';
 import { GetDate } from 'functions/Time';
 import { ResendVerificationEmailRequest } from 'functions/Requests';
 import { AvatarBig } from 'components/btn/Avatar';
@@ -26,10 +27,12 @@ const PublicRightCol = styled.div`
 `;
 
 export function DisplayPublicUserInfo({ user }: { user: OtherUserOrGuest }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!user && onlineUsers.has(user.id);
   if (!user) {
     return (
       <PublicWrapper>
-        <AvatarBig src="" rank="guest" isOnline={false} />
+        <AvatarBig src="" rank="guest" isOnline={isOnline} />
         <PublicRightCol>
           <UsernameBig rank="guest" value="Guest" />
           <RankBadgeBig rank="guest" />
@@ -39,7 +42,7 @@ export function DisplayPublicUserInfo({ user }: { user: OtherUserOrGuest }) {
   }
   return (
     <PublicWrapper>
-      <AvatarBig src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
+      <AvatarBig src={user.avatar} rank={user.rank} isOnline={isOnline} />
       <PublicRightCol>
         <UsernameBig rank={user.rank} value={user.username} />
         <RankBadgeBig rank={user.rank} />

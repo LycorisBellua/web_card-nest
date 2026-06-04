@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useUser } from 'context/useUser';
+import { useSocket } from 'context/useSocket';
 import type { User } from 'context/Types';
 import {
   sanitizeUsername,
@@ -325,6 +326,8 @@ function UpdateAvatar({
   onChange: (f: File | '') => void;
   errors: string[];
 }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!user && onlineUsers.has(user.id);
   const imgInputRef = useRef<HTMLInputElement | null>(null);
 
   const previewUrl = useMemo(() => {
@@ -345,11 +348,7 @@ function UpdateAvatar({
 
   return (
     <div>
-      <AvatarBig
-        src={avatarSrc ?? ''}
-        rank={user.rank}
-        isOnline={user.isOnline}
-      />
+      <AvatarBig src={avatarSrc ?? ''} rank={user.rank} isOnline={isOnline} />
       <div className="btn">
         <BtnDefault onClick={() => imgInputRef.current?.click()}>
           Edit

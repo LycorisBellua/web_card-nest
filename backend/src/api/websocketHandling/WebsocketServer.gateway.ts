@@ -13,14 +13,12 @@ import {
 import { RelService } from '../relationships/rel.service';
 import { ChatService } from '../chat/chat.service';
 import { DMHistory, LobbyHistory } from '../chat/types/chat.types';
-import { UserProfile } from '../user/types/user.types';
 import { DMChat } from 'src/generated/prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 import type { AppSocket } from './types/socket.types';
 import { ConnectionRegistry } from './registry/connection-registry';
 import { Ranks } from 'src/generated/prisma/enums';
-import { send } from 'node:process';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -52,35 +50,30 @@ export class WebsocketServer
 
     if (accessToken) {
       try {
-        const payload = await this.jwtService.verifyAsync<JwtPayload>(accessToken);
+        const payload =
+          await this.jwtService.verifyAsync<JwtPayload>(accessToken);
         client.data.user = payload;
       } catch {
         client.disconnect();
         return;
       }
     } else {
-      client.data.user = { id: 'Guest', rank: Ranks.PENDING } as JwtPayload;
+      client.data.user = { id: 'Guest', rank: Ranks.PENDING };
     }
 
     const userId = client.data.user.id;
-    console.log('User connected:', userId);
-
     if (userId === 'Guest') return;
 
     this.connections.add(userId, client.id);
-    this.emitOnlineList(client);
+    const users = this.connections.getAllUserIds();
+    client.emit('OnlineUsers', users);
+    client.broadcast.emit('OnlineUsers', users);
   }
 
-  async handleDisconnect(client: AppSocket): Promise<void> {
+  handleDisconnect(client: AppSocket): void {
     const userId = this.connections.removeBySocketId(client.id);
-    this.emitOnlineList(client);
-  }
-
-  async emitOnlineList(client: AppSocket): Promise<void> {
-    if (client.data.user.id === 'Guest') {
-      return;
-    }
-    const users = this.connections.getAllOnlineUsers();
+    if (!userId) return;
+    const users = this.connections.getAllUserIds();
     client.broadcast.emit('OnlineUsers', users);
   }
 
@@ -90,7 +83,12 @@ export class WebsocketServer
     @MessageBody() targetUserId: string,
   ): Promise<DMHistory> {
     const senderUserId = this.connections.getUserId(sender.id);
-    if (!senderUserId || !targetUserId || senderUserId === 'Guest' || targetUserId === 'Guest') {
+    if (
+      !senderUserId ||
+      !targetUserId ||
+      senderUserId === 'Guest' ||
+      targetUserId === 'Guest'
+    ) {
       return [];
     }
     const convoId = await this.chatService.getDMId(senderUserId, targetUserId);
@@ -119,8 +117,8 @@ export class WebsocketServer
     const senderUserId = this.connections.getUserId(sender.id);
     let convoId: DMChat;
 
-    this.logger.log('frontside userid : ', payload.targetUserId);
-    this.logger.log('frontside socketid : ', receiverSocketId);
+    this.logger.log('frontside userid: ', payload.targetUserId);
+    this.logger.log('frontside socketid: ', receiverSocketId);
     if (!senderUserId) {
       return;
     }
@@ -131,15 +129,13 @@ export class WebsocketServer
           payload.targetUserId,
         );
 
-        await this.chatService.saveDM(
+        const full = await this.chatService.saveDM(
           convoId.id,
           senderUserId,
           payload.message,
         );
-        this.server.to(receiverSocketId).emit('receiveMessage', {
-          senderId: sender.id,
-          message: payload.message,
-        });
+        this.server.to(receiverSocketId).emit('receiveMessage', full);
+        sender.emit('receiveMessage', full);
       } catch {
         return;
       }
@@ -155,15 +151,15 @@ export class WebsocketServer
     if (!senderUserId) {
       return;
     }
-
     if (sender.data.user.id === 'Guest') {
-      await this.chatService.guestSaveLobbyMessage(message);
-      return;
+      const full = await this.chatService.guestSaveLobbyMessage(message);
+      this.server.emit('PublicMessage', full);
+    } else {
+      const full = await this.chatService.saveLobbyMessage(
+        senderUserId,
+        message,
+      );
+      this.server.emit('PublicMessage', full);
     }
-    await this.chatService.saveLobbyMessage(senderUserId, message);
-    sender.broadcast.emit('PublicMessage', {
-      sender: senderUserId,
-      message: message,
-    });
   }
 }

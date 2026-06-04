@@ -6,7 +6,7 @@ import { BtnDefault } from 'components/btn/Btn';
 function ToggleChatTimeout({ otherUser }: { otherUser: OtherUserOrGuest }) {
   const { user } = useUser();
 
-  if (!CanDisciplineThisUser(user, otherUser)) {
+  if (!CanDisciplineThisUser(user?.rank ?? '', otherUser?.rank ?? '')) {
     return <></>;
   }
 

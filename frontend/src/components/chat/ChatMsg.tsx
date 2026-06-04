@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import type { /*OtherUserOrGuest,*/ Msg } from 'context/Types';
+import type { PublicMsg, PrivateMsg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
+import { useSocket } from 'context/useSocket';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import styled, { css } from 'styled-components';
 import { Avatar } from 'components/btn/Avatar';
@@ -111,17 +112,18 @@ const TextModerated = styled(Text)`
   font-style: italic;
 `;
 
-function ChatMsg({ msg }: { msg: Msg }) {
+export function PublicChatMsg({ msg }: { msg: PublicMsg }) {
   const { user } = useUser();
-  //TODO
-  //const author = users.find((u) => u.id === msg.authorId) ?? null;
-  const can_discipline = CanDisciplineThisUser(user, null); //author);
-
-  const avatar = /*author?.avatar ??*/ '';
-  const isOnline = /*author?.isOnline ??*/ false;
-  const rank = /*author?.rank ??*/ 'guest';
-  const username = /*author?.username ??*/ 'Guest';
+  const { onlineUsers } = useSocket();
   const is_logged_in = !!user && user.rank.toLowerCase() != 'pending';
+  const can_discipline = CanDisciplineThisUser(
+    user?.rank ?? '',
+    msg.sender?.rank ?? '',
+  );
+  const isOnline = !!msg.sender && onlineUsers.has(msg.sender.id);
+  const avatar = msg.sender?.avatar ?? '';
+  const username = msg.sender?.username ?? 'Guest';
+  const rank = (msg.sender?.rank ?? 'guest').toLowerCase();
 
   // TODO: When clicking on Moderate, make the msg content empty, and switch
   // the `moderated` field to true
@@ -147,17 +149,43 @@ function ChatMsg({ msg }: { msg: Msg }) {
             )}
             <RankBadge rank={rank} />
           </NameWrap>
-          <Time>{GetTime(msg.created)}</Time>
+          <Time>{GetTime(msg.date)}</Time>
           {can_discipline && <BtnIcon title="Moderate">x</BtnIcon>}
         </Meta>
         {msg.moderated ? (
           <TextModerated>Moderated message</TextModerated>
         ) : (
-          <Text>{msg.content}</Text>
+          <Text>{msg.message}</Text>
         )}
       </Body>
     </Row>
   );
 }
 
-export default ChatMsg;
+export function PrivateChatMsg({ msg }: { msg: PrivateMsg }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!msg.sender && onlineUsers.has(msg.sender.id);
+  const avatar = msg.sender.avatar ?? '';
+  const username = msg.sender.username;
+  const rank = msg.sender.rank.toLowerCase();
+
+  return (
+    <Row $rank={rank}>
+      <Link to={`/user/${username}`}>
+        <Avatar src={avatar} rank={rank} isOnline={isOnline} />
+      </Link>
+      <Body>
+        <Meta>
+          <NameWrap $rank={rank}>
+            <Link to={`/user/${username}`}>
+              <Username rank={rank} value={username} />
+            </Link>
+            <RankBadge rank={rank} />
+          </NameWrap>
+          <Time>{GetTime(msg.date)}</Time>
+        </Meta>
+        <Text>{msg.message}</Text>
+      </Body>
+    </Row>
+  );
+}
