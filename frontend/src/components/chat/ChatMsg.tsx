@@ -114,7 +114,7 @@ const TextModerated = styled(Text)`
 
 export function PublicChatMsg({ msg }: { msg: PublicMsg }) {
   const { user } = useUser();
-  const { onlineUsers } = useSocket();
+  const { socket, onlineUsers } = useSocket();
   const is_logged_in = !!user && user.rank.toLowerCase() != 'pending';
   const can_discipline = CanDisciplineThisUser(
     user?.rank ?? '',
@@ -125,8 +125,10 @@ export function PublicChatMsg({ msg }: { msg: PublicMsg }) {
   const username = msg.sender?.username ?? 'Guest';
   const rank = (msg.sender?.rank ?? 'guest').toLowerCase();
 
-  // TODO: When clicking on Moderate, make the msg content empty, and switch
-  // the `moderated` field to true
+  function handleModerate() {
+    if (!user || !can_discipline) return;
+    socket.emit('ModerateLobbyMessage', msg.id);
+  }
 
   return (
     <Row $rank={rank}>
@@ -150,7 +152,11 @@ export function PublicChatMsg({ msg }: { msg: PublicMsg }) {
             <RankBadge rank={rank} />
           </NameWrap>
           <Time>{GetTime(msg.date)}</Time>
-          {can_discipline && <BtnIcon title="Moderate">x</BtnIcon>}
+          {can_discipline && !msg.moderated && (
+            <BtnIcon title="Moderate" onClick={() => handleModerate()}>
+              x
+            </BtnIcon>
+          )}
         </Meta>
         {msg.moderated ? (
           <TextModerated>Moderated message</TextModerated>

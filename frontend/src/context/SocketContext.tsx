@@ -6,6 +6,7 @@ export type ServerToClientEvents = {
   PublicMessage: (data: PublicMsg) => void;
   receiveMessage: (data: PrivateMsg) => void;
   OnlineUsers: (data: string[]) => void;
+  messageModerated: (data: { messageId: string }) => void;
 };
 
 export type ClientToServerEvents = {
@@ -16,6 +17,7 @@ export type ClientToServerEvents = {
     targetUserId: string,
     callback: (data: PrivateMsg[]) => void,
   ) => void;
+  ModerateLobbyMessage: (messageId: string) => void;
 };
 
 export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;

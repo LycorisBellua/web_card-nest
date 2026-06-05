@@ -70,6 +70,20 @@ function Lobby() {
     };
   }, [socket]);
 
+  useEffect(() => {
+    socket.on('messageModerated', ({ messageId }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, moderated: true, message: '' } : msg,
+        ),
+      );
+    });
+
+    return () => {
+      socket.off('messageModerated');
+    };
+  }, [socket]);
+
   return (
     <ChatPage>
       <ChatHead is_dm={false} title="the lobby" nbr_online={onlineUsers.size} />

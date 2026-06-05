@@ -1,6 +1,19 @@
 CONNECTION TO THE BACKEND
 - Finish whatever TODOs are present in the frontend.
 
+- Lobby chat timeout:
+```
+GET /api/admin/ban/user/target_user_id
+GET /api/admin/ban/guest
+
+both return a LobbyBan object if it is found or null if it isnt
+
+LobbyBan = {
+    userId: string;
+    date: Date;
+}
+```
+
 GAME
 - Currently, the local version of the game gets lost if you switch to a 
 different page. You could store it in the local storage. It doesn't matter if 

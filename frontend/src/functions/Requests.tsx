@@ -588,7 +588,7 @@ export async function FetchOtherFriendListRequest(
   return { accessToken: accessToken, users: prefixed };
 }
 
-export async function ExtractProfileData(
+export async function ExtractProfileDataRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; data: object }> {
   let res = await fetch('/api/gdpr/exportJSON', {
