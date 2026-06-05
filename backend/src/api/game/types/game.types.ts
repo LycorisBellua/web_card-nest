@@ -23,7 +23,12 @@ export interface Card {
 
 export type Controller =
   | { type: 'human'; id: string }
-  | { type: 'bot'; id: null };
+  | { type: 'bot'; id: 'bot' };
+
+export type Timeout = {
+  oldController: Controller;
+  timeout: number;
+};
 
 export type Status = 'active' | 'waiting' | 'stood' | 'bust';
 
@@ -32,12 +37,14 @@ export type PlayerState = {
   hand: Card[];
   status: Status;
   controller: Controller;
-  score: number;
+  timeout: Timeout | null;
 };
 
 export type GameState = {
   gameId: string;
   seats: number;
+  humans: number;
   players: PlayerState[];
   turnIndex: number;
+  leader: string;
 };

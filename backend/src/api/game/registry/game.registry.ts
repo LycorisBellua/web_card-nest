@@ -1,6 +1,11 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { v7 } from 'uuid'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { v7 } from 'uuid';
 import type { GameState, PlayerState } from '../types/game.types';
+import { GameErr } from '../errors/game.errors';
 
 @Injectable()
 export class GameRegistry {
@@ -8,25 +13,121 @@ export class GameRegistry {
   private userId_gameId = new Map<string, string>();
 
   createGame(userId: string, seats: number): GameState {
-    if (this.userId_gameId.get(userId)) {
-      throw new BadRequestException('User is already in a game');
+    if (seats < 1 || seats > 4) {
+      throw new BadRequestException(GameErr.SEATS);
     }
-    game = new t();
+    if (this.userId_gameId.has(userId)) {
+      throw new BadRequestException(GameErr.ALREADY_IN_GAME);
+    }
+
+    const game = this.newGame(seats);
+    game.players.push(this.newPlayer(userId, 0));
+    game.leader = userId;
+    game.humans++;
+
+    for (let i = 1; i < seats; i++) {
+      game.players.push(this.newBot(i));
+    }
+
+    this.gameId_gameState.set(game.gameId, game);
+    this.userId_gameId.set(userId, game.gameId);
+    return game;
   }
 
-  private createGame(seats: number): GameState {
+  removePlayer(userId: string): void {
+    const gameId = this.userId_gameId.get(userId);
+    if (!gameId) {
+      throw new NotFoundException(GameErr.NOT_IN_GAME);
+    }
+    this.userId_gameId.delete(userId);
+    const game = this.gameId_gameState.get(gameId);
+    if (game && game.humans > 1) {
+      this.convertPlayerToBot(game, userId);
+      this.updateLeader(game);
+    } else {
+      this.gameId_gameState.delete(gameId);
+    }
+  }
+
+  rejoinGame(userId: string): GameState {
+    const gameId = this.userId_gameId.get(userId);
+    if (!gameId) {
+      throw new NotFoundException(GameErr.NOT_IN_GAME);
+    }
+    const game = this.gameId_gameState.get(gameId);
+    if (!game) {
+      throw new NotFoundException(GameErr.NOT_IN_GAME);
+    }
+    return game;
+  }
+
+  private updateLeader(game: GameState): void {
+    for (const player of game.players) {
+      if (player.controller.type === 'human') {
+        game.leader = player.controller.id;
+        return;
+      }
+    }
+  }
+
+  private convertPlayerToBot(game: GameState, userId: string) {
+    for (const player of game.players) {
+      if (player.controller.id === userId) {
+        player.timeout = {
+          oldController: player.controller,
+          timeout: Date.now() + 30_000,
+        };
+        player.controller = { type: 'bot', id: 'bot' };
+        game.humans--;
+        break;
+      }
+    }
+  }
+
+  private convertBotToReconnectedPlayer(userId: string, game: GameState): void {
+    for (const player of game.players) {
+      if (player.timeout) {
+        if (player.timeout.oldController.id === userId) {
+          if (player.timeout.timeout < Date.now()) {
+            player.controller = player.timeout.oldController;
+            player.timeout = null;
+            game.humans++;
+          } else {
+            player.timeout = null;
+          }
+        }
+      }
+    }
+  }
+
+  private newGame(seats: number): GameState {
     return {
-        gameId: new v7();
-    }
+      gameId: v7(),
+      seats: seats,
+      humans: 0,
+      players: [],
+      turnIndex: 0,
+      leader: '',
+    };
   }
 
-  private createPlayer(userId: string, seat: number): PlayerState {
+  private newPlayer(userId: string, seat: number): PlayerState {
     return {
       seat: seat,
       hand: [],
       status: 'waiting',
       controller: { type: 'human', id: userId },
-      score: 0,
+      timeout: null,
+    };
+  }
+
+  private newBot(seat: number): PlayerState {
+    return {
+      seat: seat,
+      hand: [],
+      status: 'waiting',
+      controller: { type: 'bot', id: 'bot' },
+      timeout: null,
     };
   }
 }
