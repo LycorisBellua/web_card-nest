@@ -1,23 +1,17 @@
 CONNECTION TO THE BACKEND
+- It would be great to know that we have been timed out. And also in real-time. 
+I have <DisabledChatInput /> ready for the lobby.
 - Finish whatever TODOs are present in the frontend.
 
-- Lobby chat timeout:
-```
-GET /api/admin/ban/user/target_user_id
-GET /api/admin/ban/guest
-
-both return a LobbyBan object if it is found or null if it isnt
-
-LobbyBan = {
-    userId: string;
-    date: Date;
-}
-```
-
 GAME
+- Simplify the game without losing features. Maybe it should be divided into 
+more files.
 - Currently, the local version of the game gets lost if you switch to a 
 different page. You could store it in the local storage. It doesn't matter if 
 you're logged in or not, as only player indexes are stored.
-- Black Crown tables.
+- Black Crown tables: opening, closing, invitations. Player 1 is the one to 
+invite others before a game. If Player 1 leaves, the table is closed. It's okay 
+to play with bots if you don't want to bother waiting for a real player or if 
+someone left mid-game (under 30s, they could come back, otherwise they're 
+kicked from the table and have to be invited again).
 - Online mode with WebSockets.
-- ...

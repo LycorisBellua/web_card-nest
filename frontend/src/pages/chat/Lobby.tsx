@@ -8,7 +8,7 @@ import ChatHead from 'components/chat/ChatHead';
 import ChatMsgArea from 'components/chat/ChatMsgArea';
 import ChatDate from 'components/chat/ChatDate';
 import { PublicChatMsg } from 'components/chat/ChatMsg';
-import ChatInput from 'components/chat/ChatInput';
+import { ChatInput } from 'components/chat/ChatInput';
 
 function Lobby() {
   const { user } = useUser();

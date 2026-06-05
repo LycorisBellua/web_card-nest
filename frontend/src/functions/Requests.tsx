@@ -612,3 +612,164 @@ export async function ExtractProfileDataRequest(
   const data = (await res.json()) as object;
   return { accessToken: accessToken, data: data };
 }
+
+export async function EnableLobbyTimeoutRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch('/api/admin/ban/user', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      targetId: userId,
+    }),
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/admin/ban/user', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        targetId: userId,
+      }),
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function EnableGuestLobbyTimeoutRequest(
+  accessToken: string,
+): Promise<string> {
+  let res = await fetch('/api/admin/ban/guest', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/admin/ban/guest', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function DisableLobbyTimeoutRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch(`/api/admin/ban/user/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch(`/api/admin/ban/user/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function DisableGuestLobbyTimeoutRequest(
+  accessToken: string,
+): Promise<string> {
+  let res = await fetch('/api/admin/ban/guest', {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/admin/ban/guest', {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function GetLobbyTimeoutStateRequest(
+  accessToken: string,
+  userId: string,
+): Promise<{ accessToken: string; enabled: boolean }> {
+  let res = await fetch(`/api/admin/ban/user/${userId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', enabled: false };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', enabled: false };
+    res = await fetch(`/api/admin/ban/user/${userId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', enabled: false };
+  }
+  // Note: For some reason, the frontend kept crashing with `res.json()`
+  const text = await res.text();
+  const enabled = !!text;
+  return { accessToken: accessToken, enabled: enabled };
+}
+
+export async function GetGuestLobbyTimeoutStateRequest(
+  accessToken: string,
+): Promise<{ accessToken: string; enabled: boolean }> {
+  let res = await fetch('/api/admin/ban/guest', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', enabled: false };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', enabled: false };
+    res = await fetch('/api/admin/ban/guest', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', enabled: false };
+  }
+  // Note: For some reason, the frontend kept crashing with `res.json()`
+  const text = await res.text();
+  const enabled = !!text;
+  return { accessToken: accessToken, enabled: enabled };
+}
