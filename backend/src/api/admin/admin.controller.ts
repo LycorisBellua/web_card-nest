@@ -131,6 +131,7 @@ export class AdminController {
     );
   }
 
+  // A WebSockets request is used instead
   @Patch('moderate')
   async moderateLobbyMessage(
     @Req() req: ExpressRequest,

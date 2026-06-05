@@ -8,7 +8,7 @@ import ChatHead from 'components/chat/ChatHead';
 import ChatMsgArea from 'components/chat/ChatMsgArea';
 import ChatDate from 'components/chat/ChatDate';
 import { PublicChatMsg } from 'components/chat/ChatMsg';
-import ChatInput from 'components/chat/ChatInput';
+import { ChatInput } from 'components/chat/ChatInput';
 
 function Lobby() {
   const { user } = useUser();
@@ -67,6 +67,20 @@ function Lobby() {
 
     return () => {
       socket.off('PublicMessage');
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    socket.on('messageModerated', ({ messageId }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, moderated: true, message: '' } : msg,
+        ),
+      );
+    });
+
+    return () => {
+      socket.off('messageModerated');
     };
   }, [socket]);
 

@@ -11,11 +11,11 @@ import {
 } from '@nestjs/websockets';
 import { ChatService } from '../chat/chat.service';
 import { DMHistory, LobbyHistory } from '../chat/types/chat.types';
-import { DMChat } from 'src/generated/prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 import type { AppSocket } from './types/socket.types';
 import { ConnectionRegistry } from './registry/connection-registry';
+import { AdminService } from '../admin/admin.service';
 import { Ranks } from 'src/generated/prisma/enums';
 
 @Injectable()
@@ -32,6 +32,7 @@ export class WebsocketServer
     private readonly connections: ConnectionRegistry,
     private readonly jwtService: JwtService,
     private readonly chatService: ChatService,
+    private readonly adminService: AdminService,
   ) {}
 
   private readonly logger = new Logger(WebSocketServer.name);
@@ -104,35 +105,30 @@ export class WebsocketServer
     @ConnectedSocket() sender: AppSocket,
     @MessageBody() payload: { targetUserId: string; message: string },
   ): Promise<void> {
-    if (sender.data.user.id === 'Guest') {
-      return;
-    }
-    const receiverSocketId = this.connections.getSocketId(payload.targetUserId);
+    if (sender.data.user.id === 'Guest') return;
+
     const senderUserId = this.connections.getUserId(sender.id);
-    let convoId: DMChat;
+    if (!senderUserId) return;
 
-    this.logger.log('frontside userid: ', payload.targetUserId);
-    this.logger.log('frontside socketid: ', receiverSocketId);
-    if (!senderUserId) {
-      return;
-    }
-    if (receiverSocketId) {
-      try {
-        convoId = await this.chatService.getDMId(
-          senderUserId,
-          payload.targetUserId,
-        );
+    const receiverSocketId = this.connections.getSocketId(payload.targetUserId);
 
-        const full = await this.chatService.saveDM(
-          convoId.id,
-          senderUserId,
-          payload.message,
-        );
+    try {
+      const convoId = await this.chatService.getDMId(
+        senderUserId,
+        payload.targetUserId,
+      );
+      const full = await this.chatService.saveDM(
+        convoId.id,
+        senderUserId,
+        payload.message,
+      );
+
+      if (receiverSocketId) {
         this.server.to(receiverSocketId).emit('receiveMessage', full);
-        sender.emit('receiveMessage', full);
-      } catch {
-        return;
       }
+      sender.emit('receiveMessage', full);
+    } catch {
+      return;
     }
   }
 
@@ -154,5 +150,26 @@ export class WebsocketServer
     }
     const full = await this.chatService.saveLobbyMessage(senderUserId, message);
     this.server.emit('PublicMessage', full);
+  }
+
+  @SubscribeMessage('ModerateLobbyMessage')
+  async ModerateLobbyMessage(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() messageId: string,
+  ): Promise<void> {
+    const user = sender.data.user;
+    if (user.rank !== Ranks.MODERATOR && user.rank !== Ranks.ADMIN) {
+      return;
+    }
+    try {
+      const updated = await this.adminService.moderateLobbyMessage(
+        user.id,
+        user.rank,
+        messageId,
+      );
+      this.server.emit('messageModerated', { messageId: updated.id });
+    } catch {
+      return;
+    }
   }
 }

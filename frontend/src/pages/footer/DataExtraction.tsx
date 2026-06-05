@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { User } from 'context/Types';
 import { useUser } from 'context/useUser';
-import { ExtractProfileData } from 'functions/Requests';
+import { ExtractProfileDataRequest } from 'functions/Requests';
 import { ScrollablePage } from 'components/general/Scrollable';
 import Checkbox from 'components/misc/Checkbox';
 import Spinner from 'components/misc/Spinner';
@@ -57,7 +57,7 @@ function DataExtraction() {
       setDisplaySpinner(true);
       let accessToken = user!.accessToken;
       if (profileSelected) {
-        const profileJson = await ExtractProfileData(accessToken);
+        const profileJson = await ExtractProfileDataRequest(accessToken);
         accessToken = profileJson.accessToken;
         if (!accessToken.length) {
           setMessage('Error with: User profile extraction');

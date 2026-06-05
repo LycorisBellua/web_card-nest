@@ -10,7 +10,7 @@ import ChatHead from 'components/chat/ChatHead';
 import ChatMsgArea from 'components/chat/ChatMsgArea';
 import ChatDate from 'components/chat/ChatDate';
 import { PrivateChatMsg } from 'components/chat/ChatMsg';
-import ChatInput from 'components/chat/ChatInput';
+import { ChatInput } from 'components/chat/ChatInput';
 
 function DM() {
   const { username } = useParams<{ username: string }>();
