@@ -77,3 +77,13 @@ ALTER TABLE "Block" ADD CONSTRAINT "Block_blockerId_fkey" FOREIGN KEY ("blockerI
 
 -- AddForeignKey
 ALTER TABLE "Block" ADD CONSTRAINT "Block_blockedId_fkey" FOREIGN KEY ("blockedId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "User" ADD COLUMN "loginAttempts" INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE "User" ADD COLUMN "loginLockedUntil" TIMESTAMP(3);
+
+ALTER TABLE "User" ADD COLUMN "resetToken" TEXT;
+
+ALTER TABLE "User" ADD COLUMN "resetTimeout" TIMESTAMP(3);
+
+CREATE UNIQUE INDEX "User_resetToken_key" ON "User"("resetToken");
