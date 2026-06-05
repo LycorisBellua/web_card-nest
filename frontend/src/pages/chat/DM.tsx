@@ -1,9 +1,9 @@
-/*
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUser } from 'context/useUser';
 import { useSocket } from 'context/useSocket';
 import type { PrivateMsg } from 'context/Types';
+import { addAvatarPrefix } from 'functions/UserValidation';
 import NotFound from 'pages/NotFound';
 import ChatPage from 'components/chat/ChatPage';
 import ChatHead from 'components/chat/ChatHead';
@@ -15,26 +15,38 @@ import ChatInput from 'components/chat/ChatInput';
 function DM() {
   const { username } = useParams<{ username: string }>();
   const { user, friends } = useUser();
-  const { onlineUsers } = useSocket();
+  const { socket, onlineUsers } = useSocket();
+  const [messages, setMessages] = useState<PrivateMsg[]>([]);
 
-  // TODO: Fetch the DM thread using `username`. In the meantime, use the context.
   const friend = friends.find(
     (u) => u.username.toLowerCase() === username?.toLowerCase(),
   );
-  //
-  const thread_name = `thread_dm_${friend?.username?.toLowerCase()}`;
-  const thread = threads.find((t) => thread_name === t.id);
-  const nbr_online = onlineUsers.has(friend?.id) ? 2 : 1;
-  const lastMsg = thread?.messages.at(-1);
+  const nbr_online = onlineUsers.has(friend?.id ?? '') ? 2 : 1;
+  const lastMsg = messages.at(-1);
   const grouped =
-    thread?.messages.reduce<Record<string, PrivateMsg[]>>((acc, msg) => {
-      const day = msg.created.toDateString();
+    messages.reduce<Record<string, PrivateMsg[]>>((acc, msg) => {
+      const day = msg.date.toDateString();
       if (!acc[day]) acc[day] = [];
       acc[day].push(msg);
       return acc;
     }, {}) ?? {};
-
   const msgsEndRef = useRef<HTMLDivElement>(null);
+  const accessAllowed =
+    !!user && user.rank.toLowerCase() != 'pending' && !!friend;
+
+  const sendMessage = (input: string) => {
+    if (!accessAllowed || !input) return;
+    socket.emit('PrivateMessage', { targetUserId: friend.id, message: input });
+  };
+
+  const normalizeMsg = (msg: PrivateMsg): PrivateMsg => ({
+    ...msg,
+    date: new Date(msg.date),
+    sender: {
+      ...msg.sender,
+      avatar: msg.sender.avatar ? addAvatarPrefix(msg.sender.avatar) : null,
+    },
+  });
 
   useEffect(() => {
     msgsEndRef.current?.scrollIntoView({ behavior: 'instant' });
@@ -46,7 +58,25 @@ function DM() {
     }
   }, [user?.id, lastMsg]);
 
-  if (!user || user.rank.toLowerCase() == 'pending' || !friend || !thread) {
+  useEffect(() => {
+    if (!accessAllowed) return;
+    socket.emit('FetchConvoHistory', friend.id, (data: PrivateMsg[]) => {
+      setMessages(data.map(normalizeMsg));
+    });
+  }, [socket, friend?.id, accessAllowed]);
+
+  useEffect(() => {
+    if (!accessAllowed) return;
+    socket.on('receiveMessage', (data: PrivateMsg) => {
+      setMessages((prev) => [...prev, normalizeMsg(data)]);
+    });
+
+    return () => {
+      socket.off('receiveMessage');
+    };
+  }, [socket, accessAllowed]);
+
+  if (!accessAllowed) {
     return <NotFound />;
   }
 
@@ -64,16 +94,9 @@ function DM() {
         ))}
         <div ref={msgsEndRef} />
       </ChatMsgArea>
-      <ChatInput onSend={(content) => postMessage(thread_name, content)} />
+      <ChatInput onSend={(input) => sendMessage(input)} />
     </ChatPage>
   );
-}
-
-export default DM;
-*/
-
-function DM() {
-  return <div></div>;
 }
 
 export default DM;
