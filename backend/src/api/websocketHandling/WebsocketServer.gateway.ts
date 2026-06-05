@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
-import { PrismaService } from '../../prisma/prisma.service';
 import {
   ConnectedSocket,
   MessageBody,
@@ -10,7 +9,6 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { RelService } from '../relationships/rel.service';
 import { ChatService } from '../chat/chat.service';
 import { DMHistory, LobbyHistory } from '../chat/types/chat.types';
 import { DMChat } from 'src/generated/prisma/client';
@@ -19,7 +17,6 @@ import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
 import type { AppSocket } from './types/socket.types';
 import { ConnectionRegistry } from './registry/connection-registry';
 import { Ranks } from 'src/generated/prisma/enums';
-import { UserService } from '../user/user.service';
 
 @Injectable()
 @WebSocketGateway({
@@ -32,11 +29,8 @@ export class WebsocketServer
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly connections: ConnectionRegistry,
     private readonly jwtService: JwtService,
-    private readonly relService: RelService,
-    private readonly userService: UserService,
     private readonly chatService: ChatService,
   ) {}
 
@@ -147,19 +141,18 @@ export class WebsocketServer
     @ConnectedSocket() sender: AppSocket,
     @MessageBody() message: string,
   ): Promise<void> {
+    const isGuest = sender.data.user.id === 'Guest';
+    if (isGuest) {
+      const full = await this.chatService.guestSaveLobbyMessage(message);
+      this.server.emit('PublicMessage', full);
+      return;
+    }
+
     const senderUserId = this.connections.getUserId(sender.id);
     if (!senderUserId) {
       return;
     }
-    if (sender.data.user.id === 'Guest') {
-      const full = await this.chatService.guestSaveLobbyMessage(message);
-      this.server.emit('PublicMessage', full);
-    } else {
-      const full = await this.chatService.saveLobbyMessage(
-        senderUserId,
-        message,
-      );
-      this.server.emit('PublicMessage', full);
-    }
+    const full = await this.chatService.saveLobbyMessage(senderUserId, message);
+    this.server.emit('PublicMessage', full);
   }
 }

@@ -30,46 +30,33 @@ function Lobby() {
     socket.emit('PublicMessage', input);
   };
 
+  const normalizeMsg = (msg: PublicMsg): PublicMsg => ({
+    ...msg,
+    date: new Date(msg.date),
+    sender:
+      msg.sender && msg.sender.id !== 'Guest'
+        ? {
+            ...msg.sender,
+            avatar: msg.sender.avatar
+              ? addAvatarPrefix(msg.sender.avatar)
+              : null,
+          }
+        : null,
+  });
+
   useEffect(() => {
     msgsEndRef.current?.scrollIntoView({ behavior: 'instant' });
   }, []);
 
   useEffect(() => {
     socket.emit('FetchLobbyHistory', (data: PublicMsg[]) => {
-      setMessages(
-        data.map((msg) => ({
-          ...msg,
-          date: new Date(msg.date),
-          sender: msg.sender
-            ? {
-                ...msg.sender,
-                avatar: msg.sender.avatar
-                  ? addAvatarPrefix(msg.sender.avatar)
-                  : null,
-              }
-            : null,
-        })),
-      );
+      setMessages(data.map(normalizeMsg));
     });
   }, [socket]);
 
   useEffect(() => {
     socket.on('PublicMessage', (data: PublicMsg) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...data,
-          date: new Date(data.date),
-          sender: data.sender
-            ? {
-                ...data.sender,
-                avatar: data.sender.avatar
-                  ? addAvatarPrefix(data.sender.avatar)
-                  : null,
-              }
-            : null,
-        },
-      ]);
+      setMessages((prev) => [...prev, normalizeMsg(data)]);
     });
 
     return () => {
