@@ -1,5 +1,4 @@
 CONNECTION TO THE BACKEND
-- DM: Merge pages/chat/DM_WS.tsx and pages/chat/DM.tsx.
 - Finish whatever TODOs are present in the frontend.
 
 GAME

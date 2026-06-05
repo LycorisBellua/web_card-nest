@@ -49,6 +49,12 @@ function Lobby() {
   }, []);
 
   useEffect(() => {
+    if (lastMsg?.sender?.id === user?.id) {
+      msgsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [user?.id, lastMsg]);
+
+  useEffect(() => {
     socket.emit('FetchLobbyHistory', (data: PublicMsg[]) => {
       setMessages(data.map(normalizeMsg));
     });
@@ -63,12 +69,6 @@ function Lobby() {
       socket.off('PublicMessage');
     };
   }, [socket]);
-
-  useEffect(() => {
-    if (lastMsg?.sender?.id === user?.id) {
-      msgsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [user?.id, lastMsg]);
 
   return (
     <ChatPage>
