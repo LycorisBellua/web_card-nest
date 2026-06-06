@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -34,7 +35,27 @@ export class GameRegistry {
     return game;
   }
 
-  removePlayer(userId: string): void {
+  joinGame(joinerId: string, senderId: string): GameState {
+    const existingGame = this.userId_gameId.get(joinerId);
+    if (existingGame) {
+      throw new ForbiddenException(GameErr.ALREADY_IN_GAME);
+    }
+    const gameId = this.userId_gameId.get(senderId);
+    if (!gameId) {
+      throw new NotFoundException(GameErr.GAME_NOT_FOUND);
+    }
+    const game = this.gameId_gameState.get(gameId);
+    if (!game) {
+      throw new NotFoundException(GameErr.GAME_NOT_FOUND);
+    }
+    if (game && game.humans >= game.seats) {
+      throw new ForbiddenException(GameErr.NO_SEAT_AVAILABLE);
+    }
+    this.convertBotToNewPlayer(joinerId, game);
+    return game;
+  }
+
+  leaveGame(userId: string): void {
     const gameId = this.userId_gameId.get(userId);
     if (!gameId) {
       throw new NotFoundException(GameErr.NOT_IN_GAME);
@@ -42,7 +63,22 @@ export class GameRegistry {
     this.userId_gameId.delete(userId);
     const game = this.gameId_gameState.get(gameId);
     if (game && game.humans > 1) {
-      this.convertPlayerToBot(game, userId);
+      this.convertPlayerToBot(game, userId, false);
+      this.updateLeader(game);
+    } else {
+      this.gameId_gameState.delete(gameId);
+    }
+  }
+
+  disconnectPlayer(userId: string): void {
+    const gameId = this.userId_gameId.get(userId);
+    if (!gameId) {
+      throw new NotFoundException(GameErr.NOT_IN_GAME);
+    }
+    this.userId_gameId.delete(userId);
+    const game = this.gameId_gameState.get(gameId);
+    if (game && game.humans > 1) {
+      this.convertPlayerToBot(game, userId, true);
       this.updateLeader(game);
     } else {
       this.gameId_gameState.delete(gameId);
@@ -58,6 +94,8 @@ export class GameRegistry {
     if (!game) {
       throw new NotFoundException(GameErr.NOT_IN_GAME);
     }
+    this.convertBotToReconnectedPlayer(userId, game);
+    this.updateLeader(game);
     return game;
   }
 
@@ -70,16 +108,32 @@ export class GameRegistry {
     }
   }
 
-  private convertPlayerToBot(game: GameState, userId: string) {
+  private convertPlayerToBot(
+    game: GameState,
+    userId: string,
+    timeout: boolean,
+  ) {
     for (const player of game.players) {
       if (player.controller.id === userId) {
-        player.timeout = {
-          oldController: player.controller,
-          timeout: Date.now() + 30_000,
-        };
+        if (timeout) {
+          player.timeout = {
+            oldController: player.controller,
+            timeout: Date.now() + 30_000,
+          };
+        }
         player.controller = { type: 'bot', id: 'bot' };
         game.humans--;
         break;
+      }
+    }
+  }
+
+  private convertBotToNewPlayer(userId: string, game: GameState): void {
+    for (const player of game.players) {
+      if (player.controller.type === 'bot') {
+        player.controller = { type: 'human', id: userId };
+        game.humans++;
+        return;
       }
     }
   }
