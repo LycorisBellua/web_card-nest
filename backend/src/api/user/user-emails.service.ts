@@ -23,7 +23,41 @@ export class UserEmailsService {
     );
   }
 
-  async sendVerificationSuccess(address: string) {
+  async sendPasswordResetUnverifiedEmail(
+    userId: string,
+    address: string,
+    token: string,
+  ): Promise<void> {
+    const url = process.env.HOME_URL;
+    if (url === undefined) {
+      throw new InternalServerErrorException('Unable to verify Card Nest URL');
+    }
+    const verify_url = url + '/api/auth/' + userId + '/' + token + '/verify';
+    const cancel_url = verify_url + '/cancel';
+    await this.sendMailService.sendMail(
+      address,
+      EmailContents.PWD_RESET_UNVERIFIED_OBJ,
+      EmailContents.PWD_RESET_UNVERIFIED_MSG.replace(
+        'VERIFY_URL',
+        verify_url,
+      ).replace('CANCEL_URL', cancel_url),
+    );
+  }
+
+  async sendPasswordResetEmail(address: string, token: string): Promise<void> {
+    const url = process.env.HOME_URL;
+    if (url === undefined) {
+      throw new InternalServerErrorException('Unable to verify Card Nest URL');
+    }
+    const link = `${url}/reset-pwd?email=${encodeURIComponent(address)}&token=${token}`;
+    await this.sendMailService.sendMail(
+      address,
+      EmailContents.PWD_RESET_OBJ,
+      EmailContents.PWD_RESET_MSG.replace('RESET_URL', link),
+    );
+  }
+
+  async sendVerificationSuccess(address: string): Promise<void> {
     const url = process.env.HOME_URL;
     if (url === undefined) {
       return;
@@ -56,6 +90,16 @@ export class UserEmailsService {
       address,
       EmailContents.DEL_OBJ,
       EmailContents.DEL_MSG,
+    );
+  }
+
+  async sendPasswordResetSuccess(address: string): Promise<void> {
+    const url = process.env.HOME_URL;
+    if (url === undefined) return;
+    await this.sendMailService.sendMail(
+      address,
+      EmailContents.PWD_RESET_SUCCESS_OBJ,
+      EmailContents.PWD_RESET_SUCCESS_MSG.replace('URL', url),
     );
   }
 }

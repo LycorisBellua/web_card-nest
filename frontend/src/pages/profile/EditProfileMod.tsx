@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import type { User } from 'context/Types';
+import type { User, OtherUser } from 'context/Types';
+import { useUser } from 'context/useUser';
+import { useSocket } from 'context/useSocket';
 import {
   sanitizeUsername,
   sanitizeDescription,
@@ -8,7 +10,15 @@ import {
   validateUsername,
   validateDescription,
   validateAvatar,
+  addAvatarPrefix,
 } from 'functions/UserValidation';
+import {
+  RefreshTokenRequest,
+  FetchSelfBlockedListRequest,
+  FetchSelfFriendListRequest,
+  FetchSelfSentListRequest,
+  FetchSelfReceivedListRequest,
+} from 'functions/Requests';
 import { CanDisciplineThisUser } from 'functions/Ranks';
 import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
 import { AvatarBig } from 'components/btn/Avatar';
@@ -20,33 +30,86 @@ import styled from 'styled-components';
 type FieldErrors = {
   avatar: string[];
   username: string[];
-  description: string[];
+  desc: string[];
   server: string[];
 };
 
 const emptyFieldErrors = (): FieldErrors => ({
   avatar: [],
   username: [],
-  description: [],
+  desc: [],
   server: [],
 });
 
-function EditProfileMod({ user }: { user: NonNullable<User> }) {
-  const [displaySpinner, setDisplaySpinner] = useState(false);
+interface Props {
+  otherUser: OtherUser;
+  setOtherUser: (e: OtherUser) => void;
+}
+
+function EditProfileMod({ otherUser, setOtherUser }: Props) {
+  const {
+    user,
+    setUser,
+    blocked,
+    setBlocked,
+    friends,
+    setFriends,
+    sentFriends,
+    setSentFriends,
+    receivedFriends,
+    setReceivedFriends,
+  } = useUser();
+  const [displaySpinner, setDisplaySpinner] = useState<boolean>(false);
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>(emptyFieldErrors());
-  const [successMessage, setSuccessMessage] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [resetKey, setResetKey] = useState(0);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [resetKey, setResetKey] = useState<number>(0);
 
   const [avatar, setAvatar] = useState<File | '' | undefined>(undefined);
-  const [username, setUsername] = useState('');
-  const [description, setDescription] = useState('');
+  const [username, setUsername] = useState<string>('');
+  const [desc, setDesc] = useState<string>('');
 
-  if (!CanDisciplineThisUser(user)) return <></>;
+  if (
+    !user ||
+    !otherUser ||
+    !CanDisciplineThisUser(user?.rank ?? '', otherUser?.rank ?? '')
+  )
+    return <></>;
 
   const hasPendingChanges =
-    avatar !== undefined || username !== '' || description !== '';
+    avatar !== undefined || username !== '' || desc !== '';
+
+  async function updateRelationships(accessToken: string): Promise<string> {
+    const inBlocked = blocked.some((u) => u.id === otherUser.id);
+    const inFriends = friends.some((u) => u.id === otherUser.id);
+    const inSentFriends = sentFriends.some((u) => u.id === otherUser.id);
+    const inReceivedFriends = receivedFriends.some(
+      (u) => u.id === otherUser.id,
+    );
+    if (inBlocked) {
+      const data = await FetchSelfBlockedListRequest(accessToken);
+      if (!data.accessToken.length) return '';
+      accessToken = data.accessToken;
+      setBlocked(data.users);
+    } else if (inFriends) {
+      const data = await FetchSelfFriendListRequest(accessToken);
+      if (!data.accessToken.length) return '';
+      accessToken = data.accessToken;
+      setFriends(data.users);
+    } else if (inSentFriends) {
+      const data = await FetchSelfSentListRequest(accessToken);
+      if (!data.accessToken.length) return '';
+      accessToken = data.accessToken;
+      setSentFriends(data.users);
+    } else if (inReceivedFriends) {
+      const data = await FetchSelfReceivedListRequest(accessToken);
+      if (!data.accessToken.length) return '';
+      accessToken = data.accessToken;
+      setReceivedFriends(data.users);
+    }
+    return accessToken;
+  }
 
   async function handleSave() {
     if (!hasPendingChanges || isSaving) return;
@@ -57,8 +120,7 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
     setIsSaving(true);
 
     const sanitizedUsername = username !== '' ? sanitizeUsername(username) : '';
-    const sanitizedDescription =
-      description !== '' ? sanitizeDescription(description) : '';
+    const sanitizedDescription = desc !== '' ? sanitizeDescription(desc) : '';
 
     const nextErrors: FieldErrors = emptyFieldErrors();
     if (avatar instanceof File)
@@ -66,16 +128,15 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
     if (sanitizedUsername !== '')
       nextErrors.username.push(...validateUsername(sanitizedUsername));
     if (sanitizedDescription !== '')
-      nextErrors.description.push(...validateDescription(sanitizedDescription));
+      nextErrors.desc.push(...validateDescription(sanitizedDescription));
 
     const hasFieldErrors = Object.values(nextErrors).some((e) => e.length > 0);
     if (hasFieldErrors) {
+      setDisplaySpinner(false);
       setFieldErrors(nextErrors);
       setIsSaving(false);
       return;
     }
-
-    const requests: Promise<Response>[] = [];
 
     const body: Record<string, unknown> = {};
     if (avatar !== undefined) {
@@ -92,40 +153,84 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
         });
       }
     }
-    if (sanitizedUsername !== '') body.username = sanitizedUsername;
-    if (sanitizedDescription !== '') body.description = sanitizedDescription;
 
-    if (Object.keys(body).length > 0) {
-      requests.push(
-        fetch(`/api/users/${user.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-type': 'application/json' },
-          body: JSON.stringify(body),
-        }),
-      );
+    if (sanitizedUsername !== '' && sanitizedUsername != otherUser.username) {
+      body.username = sanitizedUsername;
+    }
+    if (sanitizedDescription !== '' && sanitizedDescription != otherUser.desc) {
+      body.desc = sanitizedDescription;
     }
 
-    const responses = await Promise.all(requests);
-    const failed = responses.filter((r) => !r.ok);
-    if (failed.length > 0) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        server: failed.map((r) => `Error ${r.status}: ${r.statusText}`),
-      }));
+    try {
+      const tmpOtherUser = { ...otherUser };
+      let token = user!.accessToken;
+
+      if (Object.keys(body).length > 0) {
+        body.targetId = otherUser.id;
+        let res = await fetch('/api/admin/modify', {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (res.status === 401) {
+          token = await RefreshTokenRequest(token);
+          if (token.length) {
+            res = await fetch('/api/admin/modify', {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(body),
+            });
+          }
+        }
+
+        if (!res.ok) {
+          const data = (await res.json().catch(() => null)) as {
+            message: string;
+          } | null;
+          setFieldErrors((prev) => ({
+            ...prev,
+            server: [
+              ...prev.server,
+              data?.message ?? `Error ${res.status}: ${res.statusText}`,
+            ],
+          }));
+          setIsSaving(false);
+          setDisplaySpinner(false);
+          return;
+        }
+
+        const updated = (await res.json()) as Partial<NonNullable<OtherUser>>;
+        if (updated.username) tmpOtherUser.username = updated.username;
+        if (updated.desc) tmpOtherUser.desc = updated.desc;
+        tmpOtherUser.avatar = addAvatarPrefix(updated.avatar ?? '');
+      }
+
+      if (token.length) {
+        setOtherUser(tmpOtherUser);
+        token = await updateRelationships(token);
+        if (token.length) {
+          setUser((prev) => ({ ...prev, accessToken: token }) as User);
+        }
+        if (sanitizedUsername) {
+          window.history.replaceState(null, '', `/user/${sanitizedUsername}`);
+        }
+      }
+    } catch {
       setIsSaving(false);
       setDisplaySpinner(false);
       return;
     }
 
-    if (Object.keys(body).length > 0) {
-      //const updated = (await responses[0].json()) as Partial<NonNullable<User>>;
-      //setUser((old) => (old ? { ...old, ...updated } : null));
-      //TODO: This other user is modified. Is the change immediate on the front?
-    }
-
     setAvatar(undefined);
     setUsername('');
-    setDescription('');
+    setDesc('');
     setResetKey((k) => k + 1);
     setSuccessMessage('Changes saved successfully.');
     setIsSaving(false);
@@ -139,7 +244,7 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
       <h2>Edit Profile As A Mod</h2>
       <UpdateAvatar
         key={`avatar-${resetKey}`}
-        user={user}
+        otherUser={otherUser}
         pendingAvatar={avatar}
         onChange={setAvatar}
         errors={fieldErrors.avatar}
@@ -147,15 +252,15 @@ function EditProfileMod({ user }: { user: NonNullable<User> }) {
       <div className="main">
         <UpdateUsername
           key={`username-${resetKey}`}
-          user={user}
+          otherUser={otherUser}
           onChange={setUsername}
           errors={fieldErrors.username}
         />
         <UpdateDescription
-          key={`description-${resetKey}`}
-          user={user}
-          onChange={setDescription}
-          errors={fieldErrors.description}
+          key={`desc-${resetKey}`}
+          otherUser={otherUser}
+          onChange={setDesc}
+          errors={fieldErrors.desc}
         />
         {fieldErrors.server.map((err, i) => (
           <div key={i}>{err}</div>
@@ -173,16 +278,18 @@ const HiddenAvatarInput = styled.input`
 `;
 
 function UpdateAvatar({
-  user,
+  otherUser,
   pendingAvatar,
   onChange,
   errors,
 }: {
-  user: NonNullable<User>;
+  otherUser: OtherUser;
   pendingAvatar: File | '' | undefined;
   onChange: (f: File | '') => void;
   errors: string[];
 }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!otherUser && onlineUsers.has(otherUser.id);
   const imgInputRef = useRef<HTMLInputElement | null>(null);
 
   const previewUrl = useMemo(() => {
@@ -199,14 +306,14 @@ function UpdateAvatar({
       ? undefined
       : pendingAvatar instanceof File
         ? previewUrl
-        : user.avatar;
+        : otherUser.avatar;
 
   return (
     <div>
       <AvatarBig
         src={avatarSrc ?? ''}
-        rank={user.rank}
-        isOnline={user.isOnline}
+        rank={otherUser.rank}
+        isOnline={isOnline}
       />
       <div className="btn">
         <BtnDefault onClick={() => imgInputRef.current?.click()}>
@@ -236,15 +343,15 @@ function UpdateAvatar({
 }
 
 function UpdateUsername({
-  user,
+  otherUser,
   onChange,
   errors,
 }: {
-  user: NonNullable<User>;
+  otherUser: OtherUser;
   onChange: (v: string) => void;
   errors: string[];
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
 
   function updateValue(e: React.ChangeEvent<HTMLInputElement>) {
     setValue(e.target.value);
@@ -257,7 +364,7 @@ function UpdateUsername({
       id="username"
       name="username"
       label="New username"
-      placeholder={user.username}
+      placeholder={otherUser.username}
       value={value}
       onChange={(e) => updateValue(e)}
       autoComplete="off"
@@ -268,15 +375,15 @@ function UpdateUsername({
 }
 
 function UpdateDescription({
-  user,
+  otherUser,
   onChange,
   errors,
 }: {
-  user: NonNullable<User>;
+  otherUser: OtherUser;
   onChange: (v: string) => void;
   errors: string[];
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
 
   function updateValue(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setValue(e.target.value);
@@ -286,10 +393,10 @@ function UpdateDescription({
   return (
     <div>
       <TextareaField
-        id="user-description"
-        name="user-description"
+        id="user-desc"
+        name="user-desc"
         label="New description"
-        placeholder={user.description}
+        placeholder={otherUser.desc}
         rows={4}
         wrap="soft"
         value={value ?? ''}

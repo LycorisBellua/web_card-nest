@@ -1,33 +1,52 @@
-export type UserLimited = {
+export type LimitedUser = {
   id: string;
   username: string;
   avatar: string;
   rank: string;
+};
+
+export type OtherUser = LimitedUser & {
   registered: Date;
-  description: string;
-  isOnline: boolean;
+  desc: string;
+  friends: LimitedUser[];
 };
 
 export type User =
-  | (UserLimited & {
+  | (OtherUser & {
       email: string;
-      unverifiedEmail: string;
+      email_unverified: string;
       accessToken: string;
     })
   | null;
 
-export type UserLimitedOrGuest = UserLimited | null;
+export type OtherUserOrGuest = OtherUser | null;
 
-export type Msg = {
+export type PublicMsg = {
   id: string;
-  authorId: string | null;
-  created: Date;
-  content: string;
+  senderId: string | null;
+  message: string;
+  date: Date;
   moderated: boolean;
+  sender: {
+    id: string;
+    username: string;
+    avatar: string | null;
+    desc: string | null;
+    rank: string;
+  } | null;
 };
 
-export type Thread = {
+export type PrivateMsg = {
   id: string;
-  type: 'group' | 'dm';
-  messages: Msg[];
+  senderId: string;
+  message: string;
+  date: Date;
+  chatId: string;
+  sender: {
+    id: string;
+    username: string;
+    avatar: string | null;
+    desc: string | null;
+    rank: string;
+  };
 };

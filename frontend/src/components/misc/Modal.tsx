@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { BtnDefault, BtnDanger } from 'components/btn/Btn';
 
 /*
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   <Modal
     isOpen={isModalOpen}

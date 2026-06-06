@@ -1,7 +1,7 @@
-import type { GameState } from './types';
-import { giveCard } from './deck';
+import type { GameState } from 'game/logic/types';
+import { giveCard } from 'game/logic/deck';
 import { nextPlayer } from 'game/engine/gameEngine';
-import { checkWinner } from './rules';
+import { checkWinner } from 'game/logic/rules';
 
 export function hit(currentPlayerIdx: number, gameState: GameState) {
   const next = structuredClone(gameState);

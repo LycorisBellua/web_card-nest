@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { User, UserLimitedOrGuest } from 'context/Types';
+import type { User, OtherUserOrGuest } from 'context/Types';
+import { useUser } from 'context/useUser';
+import { useSocket } from 'context/useSocket';
 import { GetDate } from 'functions/Time';
+import {
+  ResendVerificationEmailRequest,
+  CancelEmailVerificationRequest,
+} from 'functions/Requests';
 import { AvatarBig } from 'components/btn/Avatar';
 import { BtnDefault } from 'components/btn/Btn';
 import { UsernameBig } from 'components/btn/Username';
@@ -23,11 +29,13 @@ const PublicRightCol = styled.div`
   align-items: flex-start;
 `;
 
-export function DisplayPublicUserInfo({ user }: { user: UserLimitedOrGuest }) {
+export function DisplayPublicUserInfo({ user }: { user: OtherUserOrGuest }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!user && onlineUsers.has(user.id);
   if (!user) {
     return (
       <PublicWrapper>
-        <AvatarBig src="" rank="guest" isOnline={false} />
+        <AvatarBig src="" rank="guest" isOnline={isOnline} />
         <PublicRightCol>
           <UsernameBig rank="guest" value="Guest" />
           <RankBadgeBig rank="guest" />
@@ -37,12 +45,12 @@ export function DisplayPublicUserInfo({ user }: { user: UserLimitedOrGuest }) {
   }
   return (
     <PublicWrapper>
-      <AvatarBig src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
+      <AvatarBig src={user.avatar} rank={user.rank} isOnline={isOnline} />
       <PublicRightCol>
         <UsernameBig rank={user.rank} value={user.username} />
         <RankBadgeBig rank={user.rank} />
         <p>Registered: {GetDate(user.registered)}</p>
-        <p>Description: {user.description}</p>
+        <p>Description: {user.desc}</p>
       </PublicRightCol>
     </PublicWrapper>
   );
@@ -53,27 +61,52 @@ export function DisplayPrivateUserInfo({ user }: { user: NonNullable<User> }) {
     <div>
       <h2>Private Info</h2>
       <p>Email: {user.email ?? '[None / Pending verification]'}</p>
-      {user.unverifiedEmail && <VerifyEmail user={user} />}
+      {user.email_unverified && <VerifyEmail user={user} />}
+      <Link to="/data-extraction">
+        <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
+      </Link>
     </div>
   );
 }
 
 function VerifyEmail({ user }: { user: NonNullable<User> }) {
-  const [message, setMessage] = useState('');
+  const { setUser } = useUser();
+  const [message, setMessage] = useState<string>('');
   const [errors, setErrors] = useState<string[]>([]);
 
   async function handleVerifyEmail() {
     try {
-      const res = await fetch(`/api/users/${user.id}/verify_email`, {
-        method: 'POST',
-        headers: { 'Content-type': 'application/json' },
-        body: JSON.stringify({ unverifiedEmail: user.unverifiedEmail }),
-      });
-      if (!res.ok) {
-        setErrors([`Error ${res.status} : ${res.statusText}`]);
+      const newaccessToken = await ResendVerificationEmailRequest(
+        user.accessToken,
+      );
+      if (!newaccessToken.length) {
+        setErrors(['Error occurred']);
         return;
       }
+      setUser((prev) => ({ ...prev, accessToken: newaccessToken }) as User);
       setMessage("You'll receive a verification link shortly...");
+    } catch {
+      setErrors(['Error occurred']);
+    }
+  }
+
+  async function cancelVerifyEmail() {
+    try {
+      const newaccessToken = await CancelEmailVerificationRequest(
+        user.accessToken,
+      );
+      if (!newaccessToken.length) {
+        setErrors(['Error occurred']);
+        return;
+      }
+      setUser(
+        (prev) =>
+          ({
+            ...prev,
+            accessToken: newaccessToken,
+            email_unverified: '',
+          }) as User,
+      );
     } catch {
       setErrors(['Error occurred']);
     }
@@ -82,18 +115,20 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
   return (
     <div>
       <div>
-        <p>Unverified email: {user.unverifiedEmail}</p>
+        <p>Unverified email: {user.email_unverified}</p>
         <BtnDefault onClick={() => void handleVerifyEmail()}>
-          Verify Email
+          Resend Verification Email
         </BtnDefault>
+        {!!user.email && (
+          <BtnDefault onClick={() => void cancelVerifyEmail()}>
+            Cancel New Email
+          </BtnDefault>
+        )}
       </div>
       {errors.map((err, i) => (
         <div key={i}>{err}</div>
       ))}
       {message && <p>{message}</p>}
-      <Link to="/data-extraction">
-        <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
-      </Link>
     </div>
   );
 }

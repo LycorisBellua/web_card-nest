@@ -2,7 +2,7 @@ import {
   Body,
   Controller,
   Get,
-  InternalServerErrorException,
+  Delete,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -21,6 +21,9 @@ import type { Request as ExpressRequest } from 'express';
 import type { Response as ExpressResponse } from 'express';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { LoginDto } from '../user/dto/login.dto';
+import { ForgotPasswordDto } from '../user/dto/forgot-password.dto';
+import { ResetPasswordDto } from '../user/dto/reset-password.dto';
+import { JWT, RedirectURL, ReturnMessage } from './types/auth.types';
 
 @Controller('/api/auth')
 export class AuthController {
@@ -30,39 +33,51 @@ export class AuthController {
   async addUser(
     @Body() dto: CreateUserDto,
     @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
+  ): Promise<JWT> {
     await this.authService.signup(dto);
-    const login = await this.authService.login(
+    const tokens = await this.authService.login(
       dto.email_unverified,
       dto.password,
     );
-    res.cookie('refresh_token', login.refreshToken, {
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: login.timeout.getTime() - Date.now(),
+      maxAge: timeout,
     });
-    const accessToken = login.accessToken;
-    return { accessToken };
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
-    const result = await this.authService.login(
+  ): Promise<JWT> {
+    const tokens = await this.authService.login(
       loginDto.email,
       loginDto.password,
     );
-    res.cookie('refresh_token', result.refreshToken, {
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: result.timeout.getTime() - Date.now(),
+      maxAge: timeout,
     });
-    const accessToken = result.accessToken;
-    return { accessToken };
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @UseGuards(AuthGuard)
@@ -70,7 +85,7 @@ export class AuthController {
   async logout(
     @Req() req: ExpressRequest,
     @Res({ passthrough: true }) res: ExpressResponse,
-  ) {
+  ): Promise<ReturnMessage> {
     const user = req['user'] as JwtPayload;
     await this.authService.logout(user.id);
     res.cookie('refresh_token', '', {
@@ -79,28 +94,50 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: 0,
     });
+    res.cookie('dummy_refresh', '', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 0,
+    });
     return { message: 'Logged out' };
   }
 
   @Post('refresh')
-  async refresh(@Req() req: ExpressRequest) {
-    const [type, jwtToken] = req.headers.authorization?.split(' ') ?? [];
+  async refresh(@Req() req: ExpressRequest): Promise<JWT> {
     const refreshToken = req.cookies['refresh_token'] as string | undefined;
-    if (type !== 'Bearer' || !refreshToken) {
+    if (!refreshToken) {
       throw new UnauthorizedException();
     }
-    const accessToken = await this.authService.refresh(jwtToken, refreshToken);
-    return { accessToken };
+    return await this.authService.refresh(refreshToken);
   }
 
   @UseGuards(AuthGuard)
   @Patch('password')
   async updatePassword(
     @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: ExpressResponse,
     @Body() updatePasswordDto: UpdatePasswordDto,
-  ) {
+  ): Promise<JWT> {
     const user = req['user'] as JwtPayload;
-    return await this.authService.updatePassword(user.id, updatePasswordDto);
+    const tokens = await this.authService.updatePassword(
+      user.id,
+      updatePasswordDto,
+    );
+    const timeout = tokens.refreshTimeout.getTime() - Date.now();
+    res.cookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    res.cookie('dummy_refresh', 'true', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: timeout,
+    });
+    return { accessToken: tokens.accessToken };
   }
 
   @Get('/:userId/:token/verify')
@@ -108,7 +145,7 @@ export class AuthController {
   async verifyEmail(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('token') token: string,
-  ) {
+  ): Promise<RedirectURL> {
     return await this.authService.verifyEmail(userId, token);
   }
 
@@ -117,14 +154,43 @@ export class AuthController {
   async cancelVerificationRequest(
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('token') token: string,
-  ) {
-    return await this.authService.cancelVerification(userId, token);
+  ): Promise<ReturnMessage> {
+    await this.authService.cancelVerification(userId, token);
+    return { message: 'Success' };
   }
 
   @UseGuards(AuthGuard)
-  @Get('resend')
-  async resendVerificationEmail(@Req() req: ExpressRequest) {
+  @Get('verify/resend')
+  async resendVerificationEmail(
+    @Req() req: ExpressRequest,
+  ): Promise<ReturnMessage> {
     const user = req['user'] as JwtPayload;
-    return this.authService.resendVerificationEmail(user.id);
+    await this.authService.resendVerificationEmail(user.id);
+    return { message: 'Success' };
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete('/verify/cancel')
+  async cancelEmailVerification(@Req() req: ExpressRequest): Promise<boolean> {
+    const user = req['user'] as JwtPayload;
+    return await this.authService.cancelVerificationBase(user.id);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<ReturnMessage> {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<ReturnMessage> {
+    return this.authService.resetPassword(
+      resetPasswordDto.email,
+      resetPasswordDto.token,
+      resetPasswordDto.newPassword,
+    );
   }
 }

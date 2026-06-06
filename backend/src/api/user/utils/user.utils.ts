@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { Ranks } from 'src/generated/prisma/enums';
+import { UserProfile, UserProfileRaw } from '../types/user.types';
+import { createHash as sha } from 'crypto';
 
 export function getToken(): string {
   return randomBytes(32).toString('hex');
@@ -18,39 +19,41 @@ export function getCurrentTime(): Date {
   return new Date();
 }
 
-export async function createHash(plain: string): Promise<string> {
+export async function createPasswordHash(plain: string): Promise<string> {
   return await bcrypt.hash(plain, 12);
 }
 
-export async function compareHash(
+export async function comparePasswordHash(
   plain: string,
   hashed: string,
 ): Promise<boolean> {
   return await bcrypt.compare(plain, hashed);
 }
 
-export function encodeSingleAvatar(found: {
-  id: string;
-  username: string;
-  rank: Ranks;
-  avatar: Uint8Array<ArrayBuffer> | null;
-  email?: string | null;
-  email_unverified?: string | null;
-}) {
+export function decodeAvatar(value: string): Uint8Array<ArrayBuffer> {
+  const raw = value.includes(',') ? value.split(',')[1] : value;
+  const buf = Buffer.from(raw, 'base64');
+  return Uint8Array.from(buf);
+}
+
+export function createTokenHash(token: string): string {
+  return sha('sha256').update(token).digest('hex');
+}
+
+export function compareTokenHash(token: string, stored: string): boolean {
+  return createTokenHash(token) === stored;
+}
+
+export function encodeSingleAvatar(profile: UserProfileRaw): UserProfile {
   return {
-    ...found,
-    avatar: found.avatar ? Buffer.from(found.avatar).toString('base64') : null,
+    ...profile,
+    avatar: profile.avatar
+      ? Buffer.from(profile.avatar).toString('base64')
+      : null,
   };
 }
 
-export function encodeMultipleAvatars(
-  users: {
-    id: string;
-    username: string;
-    rank: Ranks;
-    avatar: Uint8Array<ArrayBuffer> | null;
-  }[],
-) {
+export function encodeMultipleAvatars(users: UserProfileRaw[]): UserProfile[] {
   return users.map(encodeSingleAvatar);
 }
 

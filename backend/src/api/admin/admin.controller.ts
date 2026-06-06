@@ -21,6 +21,9 @@ import { RankGuard } from '../auth/guards/auth.rankguard';
 import { UpdateRankDto } from './dto/update-rank.dto';
 import { AdmUuidDto } from './dto/adm-uuid.dto';
 import { MessageUuidDto } from './dto/message.dto';
+import { UserProfile } from '../user/types/user.types';
+import { LobbyBan, LobbyMessage } from 'src/generated/prisma/client';
+import { ReturnMessage } from '../auth/types/auth.types';
 
 @UseGuards(AuthGuard, RankGuard)
 @RequiredRank(Ranks.MODERATOR)
@@ -32,7 +35,7 @@ export class AdminController {
   async adminModifyUser(
     @Req() req: ExpressRequest,
     @Body() adminUpdateUserDto: AdminUpdateUserDto,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.adminModifyUser(
       user.id,
@@ -45,7 +48,7 @@ export class AdminController {
   async adminModifyRank(
     @Req() req: ExpressRequest,
     @Body() dto: UpdateRankDto,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.adminModifyRank(
       user.id,
@@ -59,17 +62,21 @@ export class AdminController {
   async adminRemoveUser(
     @Req() req: ExpressRequest,
     @Param('userId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<ReturnMessage> {
     const user = req['user'] as JwtPayload;
-    return await this.adminService.adminRemoveUser(
+    await this.adminService.adminRemoveUser(
       user.id,
       user.rank as Ranks,
       targetId,
     );
+    return { message: 'User Account Deleted' };
   }
 
-  @Post('ban')
-  async lobbyChatBan(@Req() req: ExpressRequest, @Body() dto: AdmUuidDto) {
+  @Post('ban/user')
+  async lobbyChatBan(
+    @Req() req: ExpressRequest,
+    @Body() dto: AdmUuidDto,
+  ): Promise<LobbyBan> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.lobbyChatBan(
       user.id,
@@ -78,11 +85,16 @@ export class AdminController {
     );
   }
 
-  @Delete('ban/:targetId')
+  @Post('ban/guest')
+  async guestLobbyChatBan(): Promise<LobbyBan> {
+    return await this.adminService.guestLobbyChatBan();
+  }
+
+  @Delete('ban/user/:targetId')
   async lobbyChatUnban(
     @Req() req: ExpressRequest,
     @Param('targetId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<LobbyBan> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.lobbyChatUnban(
       user.id,
@@ -91,17 +103,40 @@ export class AdminController {
     );
   }
 
-  @Get('ban')
-  async fetchBanList(@Req() req: ExpressRequest) {
-    const user = req['user'] as JwtPayload;
-    return await this.adminService.fetchBanList(user.id, user.rank as Ranks);
+  @Delete('ban/guest')
+  async guestLobbyChatUnban(): Promise<LobbyBan> {
+    return await this.adminService.guestLobbyChatUnban();
   }
 
+  @Get('ban/user/:targetId')
+  async fetchBan(
+    @Req() req: ExpressRequest,
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ): Promise<LobbyBan | null> {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.fetchBan(
+      user.id,
+      user.rank as Ranks,
+      targetId,
+    );
+  }
+
+  @Get('ban/guest')
+  async fetchGuestBan(@Req() req: ExpressRequest): Promise<LobbyBan | null> {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.fetchBan(
+      user.id,
+      user.rank as Ranks,
+      'Guest',
+    );
+  }
+
+  // A WebSockets request is used instead
   @Patch('moderate')
   async moderateLobbyMessage(
     @Req() req: ExpressRequest,
     @Body() dto: MessageUuidDto,
-  ) {
+  ): Promise<LobbyMessage> {
     const user = req['user'] as JwtPayload;
     return this.adminService.moderateLobbyMessage(
       user.id,

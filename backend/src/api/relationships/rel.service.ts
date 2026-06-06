@@ -2,38 +2,30 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { ErrorMessages } from './error_messages/ErrorMessages';
-import { Friend } from 'src/generated/prisma/browser';
-// import { WebsocketServer } from '../websocketGateway/websocket.gateway';
-import { Block, FriendStatus, Ranks } from 'src/generated/prisma/client';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
-  blockInclude,
-  BlockWithUsers,
-  friendshipInclude,
-  FriendshipWithUsers,
-  FriendUser,
+  Block,
+  Friend,
+  FriendStatus,
+  Ranks,
+} from 'src/generated/prisma/client';
+import {
+  blockListInclude,
+  BlockListWithUserData,
+  friendListInclude,
+  FriendListWithUserData,
 } from './types/rel.types';
+import { UserProfile } from '../user/types/user.types';
+import { encodeMultipleAvatars } from '../user/utils/user.utils';
 
 @Injectable()
 export class RelService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
-    private eventEmitter: EventEmitter2,
-    // private  WebsocketServer: WebsocketServer,
   ) {}
 
-  // async UpdateFriendListDisplay(originId: string, targetId: string)
-  // {
-  //   const friendListOid = await this.fetchFriendsListUserService(originId);
-  //   const friendListTargid = await this.fetchFriendsListUserService(targetId);
-
-  //   this.WebsocketServer.emitFriendList({TargetUserId: targetId,  Friends: friendListTargid.FriendsList});
-  //   this.WebsocketServer.emitFriendList({TargetUserId: originId, Friends: friendListOid.FriendsList});
-  // }
-
   // FRIEND MANAGEMENT
-  async addFriend(originId: string, targetId: string) {
+  async addFriend(originId: string, targetId: string): Promise<Friend> {
     await this.userChecks(originId, targetId);
     if (await this.findBlock(originId, targetId)) {
       throw new BadRequestException(ErrorMessages.ADD_UNBLOCK);
@@ -54,33 +46,26 @@ export class RelService {
     return await this.createFriendship(originId, targetId);
   }
 
-  async removeFriend(originId: string, targetId: string) {
+  async removeFriend(originId: string, targetId: string): Promise<Friend> {
     await this.userChecks(originId, targetId);
     const existing = await this.findFriendship(originId, targetId);
-    const related_ids = [originId, targetId];
-    if (!existing || existing.status === 'PENDING') {
+    if (!existing || existing.status === FriendStatus.PENDING) {
       throw new BadRequestException(ErrorMessages.NOT_FRIENDS);
     }
-    // this.userService.UpdateFriendFriendlist
-    await this.deleteFriendship(existing);
-    await this.eventEmitter.emit('UpdateFriendList', related_ids);
-    return;
+    return await this.deleteFriendship(existing);
   }
 
-  async acceptRequest(originId: string, targetId: string) {
+  async acceptRequest(originId: string, targetId: string): Promise<Friend> {
     await this.userChecks(originId, targetId);
     const blocked = await this.findBlock(originId, targetId);
     const found = await this.findFriendshipAsAddressee(originId, targetId);
-    const related_ids = [originId, targetId];
-
     if (blocked || !found || found.status === FriendStatus.ACCEPTED) {
       throw new BadRequestException(ErrorMessages.REQ_NOT_FOUND);
     }
-    await this.eventEmitter.emit('UpdateFriendList', related_ids);
     return await this.statusAccept(found);
   }
 
-  async rejectRequest(originId: string, targetId: string) {
+  async rejectRequest(originId: string, targetId: string): Promise<Friend> {
     await this.userChecks(originId, targetId);
     const blocked = await this.findBlock(originId, targetId);
     const found = await this.findFriendshipAsAddressee(originId, targetId);
@@ -90,7 +75,7 @@ export class RelService {
     return await this.deleteFriendship(found);
   }
 
-  async cancelRequest(originId: string, targetId: string) {
+  async cancelRequest(originId: string, targetId: string): Promise<Friend> {
     await this.userChecks(originId, targetId);
     const found = await this.findFriendshipAsRequester(originId, targetId);
     if (!found || found.status === FriendStatus.ACCEPTED) {
@@ -99,28 +84,32 @@ export class RelService {
     return await this.deleteFriendship(found);
   }
 
-  async fetchFriends(originId: string) {
+  async fetchFriends(originId: string): Promise<UserProfile[]> {
     await this.userService.userExistsOrThrow(originId);
-    const accepted: FriendshipWithUsers = await this.findAccepted(originId);
+    const accepted = await this.findAccepted(originId);
     const friends = this.buildFriendList(originId, accepted);
-    return friends.sort((a, b) => a.username.localeCompare(b.username));
+    const data = friends.sort((a, b) => a.username.localeCompare(b.username));
+    return data;
   }
 
-  async fetchSentRequests(originId: string) {
+  async fetchSentRequests(originId: string): Promise<UserProfile[]> {
     await this.userService.userExistsOrThrow(originId);
     const sent = await this.findSentPending(originId);
     return this.buildFriendList(originId, sent);
   }
 
-  async fetchReceivedRequests(originId: string) {
+  async fetchReceivedRequests(originId: string): Promise<UserProfile[]> {
     await this.userService.userExistsOrThrow(originId);
     const received = await this.findReceivedPending(originId);
     return this.buildFriendList(originId, received);
   }
 
   // FRIEND DB ACTIONS
-  async findFriendshipAsRequester(originId: string, targetId: string) {
-    return await this.userService.prisma.friend.findUnique({
+  private async findFriendshipAsRequester(
+    originId: string,
+    targetId: string,
+  ): Promise<Friend | null> {
+    return await this.prisma.friend.findUnique({
       where: {
         requesterId_addresseeId: {
           requesterId: originId,
@@ -130,7 +119,10 @@ export class RelService {
     });
   }
 
-  private async findFriendshipAsAddressee(originId: string, targetId: string) {
+  private async findFriendshipAsAddressee(
+    originId: string,
+    targetId: string,
+  ): Promise<Friend | null> {
     return await this.prisma.friend.findUnique({
       where: {
         requesterId_addresseeId: {
@@ -141,7 +133,10 @@ export class RelService {
     });
   }
 
-  private async findFriendship(originId: string, targetId: string) {
+  private async findFriendship(
+    originId: string,
+    targetId: string,
+  ): Promise<Friend | null> {
     return await this.prisma.friend.findFirst({
       where: {
         OR: [
@@ -152,7 +147,10 @@ export class RelService {
     });
   }
 
-  private async createFriendship(originId: string, targetId: string) {
+  private async createFriendship(
+    originId: string,
+    targetId: string,
+  ): Promise<Friend> {
     return await this.prisma.friend.create({
       data: {
         requesterId: originId,
@@ -161,7 +159,7 @@ export class RelService {
     });
   }
 
-  private async deleteFriendship(friend: Friend) {
+  private async deleteFriendship(friend: Friend): Promise<Friend> {
     return await this.prisma.friend.delete({
       where: {
         requesterId_addresseeId: {
@@ -172,7 +170,7 @@ export class RelService {
     });
   }
 
-  private async statusAccept(friend: Friend) {
+  private async statusAccept(friend: Friend): Promise<Friend> {
     return await this.prisma.friend.update({
       where: {
         requesterId_addresseeId: {
@@ -184,48 +182,51 @@ export class RelService {
     });
   }
 
-  private async findAccepted(originId: string): Promise<FriendshipWithUsers> {
+  private async findAccepted(
+    originId: string,
+  ): Promise<FriendListWithUserData> {
     return await this.prisma.friend.findMany({
       where: {
         status: FriendStatus.ACCEPTED,
         OR: [{ requesterId: originId }, { addresseeId: originId }],
       },
-      include: friendshipInclude,
+      include: friendListInclude,
     });
   }
 
   private async findSentPending(
     originId: string,
-  ): Promise<FriendshipWithUsers> {
+  ): Promise<FriendListWithUserData> {
     return await this.prisma.friend.findMany({
       where: {
         requesterId: originId,
         status: FriendStatus.PENDING,
       },
-      include: friendshipInclude,
+      include: friendListInclude,
       orderBy: { addressee: { username: 'asc' } },
     });
   }
 
-  private async findReceivedPending(originId: string) {
+  private async findReceivedPending(
+    originId: string,
+  ): Promise<FriendListWithUserData> {
     const blocked = await this.findBlockedUsers(originId);
     const blockedIds = blocked.map((blockedId) => blockedId.blockedId);
-    return await this.userService.prisma.friend.findMany({
+    return await this.prisma.friend.findMany({
       where: {
         addresseeId: originId,
         status: FriendStatus.PENDING,
         requesterId: { notIn: blockedIds },
       },
-      include: friendshipInclude,
+      include: friendListInclude,
       orderBy: { requester: { username: 'asc' } },
     });
   }
 
   // BLOCK MANAGEMENT
-  async blockUser(originId: string, targetId: string) {
+  async blockUser(originId: string, targetId: string): Promise<Block> {
     await this.userChecks(originId, targetId);
     const blocked = await this.findBlock(originId, targetId);
-    const related_ids = [originId, targetId];
     if (blocked) {
       throw new BadRequestException(ErrorMessages.BLOCK_ALREADY);
     }
@@ -236,11 +237,10 @@ export class RelService {
     ) {
       await this.deleteFriendship(friendship);
     }
-    this.eventEmitter.emit('UpdateFriendList', related_ids);
     return await this.createBlock(originId, targetId);
   }
 
-  async unblockUser(originId: string, targetId: string) {
+  async unblockUser(originId: string, targetId: string): Promise<Block> {
     await this.userChecks(originId, targetId);
     const existing = await this.findBlock(originId, targetId);
     if (!existing) {
@@ -249,14 +249,17 @@ export class RelService {
     return await this.deleteBlock(existing);
   }
 
-  async fetchBlocked(originId: string) {
+  async fetchBlocked(originId: string): Promise<UserProfile[]> {
     await this.userService.userExistsOrThrow(originId);
     const blocked = await this.findBlockedUsers(originId);
     return this.buildBlockList(blocked);
   }
 
   // BLOCK DB ACTIONS
-  private async findBlock(blockerId: string, blockedId: string) {
+  private async findBlock(
+    blockerId: string,
+    blockedId: string,
+  ): Promise<Block | null> {
     return await this.prisma.block.findUnique({
       where: {
         blockerId_blockedId: {
@@ -267,7 +270,10 @@ export class RelService {
     });
   }
 
-  private async createBlock(originId: string, targetId: string) {
+  private async createBlock(
+    originId: string,
+    targetId: string,
+  ): Promise<Block> {
     return await this.prisma.block.create({
       data: {
         blockerId: originId,
@@ -276,7 +282,7 @@ export class RelService {
     });
   }
 
-  private async deleteBlock(block: Block) {
+  private async deleteBlock(block: Block): Promise<Block> {
     return await this.prisma.block.delete({
       where: {
         blockerId_blockedId: {
@@ -287,16 +293,18 @@ export class RelService {
     });
   }
 
-  private async findBlockedUsers(originId: string) {
+  private async findBlockedUsers(
+    originId: string,
+  ): Promise<BlockListWithUserData> {
     return await this.prisma.block.findMany({
       where: { blockerId: originId },
-      include: blockInclude,
+      include: blockListInclude,
       orderBy: { blocked: { username: 'asc' } },
     });
   }
 
   // USER LOOKUP
-  private async userChecks(originId: string, targetId: string) {
+  private async userChecks(originId: string, targetId: string): Promise<void> {
     await this.userService.userExistsOrThrow(originId);
     const target = await this.userService.userExistsOrThrow(targetId);
     if (originId === targetId) {
@@ -310,16 +318,18 @@ export class RelService {
   // UTILS
   private buildFriendList(
     originId: string,
-    list: FriendshipWithUsers,
-  ): FriendUser[] {
-    return list.map((l) => {
+    list: FriendListWithUserData,
+  ): UserProfile[] {
+    const raw = list.map((l) => {
       return l.requesterId === originId ? l.addressee : l.requester;
     });
+    return encodeMultipleAvatars(raw);
   }
 
-  private buildBlockList(list: BlockWithUsers): FriendUser[] {
-    return list.map((l) => {
+  private buildBlockList(list: BlockListWithUserData): UserProfile[] {
+    const raw = list.map((l) => {
       return l.blocked;
     });
+    return encodeMultipleAvatars(raw);
   }
 }

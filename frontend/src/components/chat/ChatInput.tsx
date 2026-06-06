@@ -44,11 +44,12 @@ const Field = styled.input`
   }
 `;
 
-function ChatInput({ onSend }: { onSend: (content: string) => void }) {
-  const [value, setValue] = useState('');
+export function ChatInput({ onSend }: { onSend: (content: string) => void }) {
+  const [value, setValue] = useState<string>('');
+  const maxLen = 500;
 
   function handleSubmit() {
-    const sanitized = sanitizeMessage(value);
+    const sanitized = sanitizeMessage(value, maxLen);
     if (!sanitized) return;
     onSend(sanitized);
     setValue('');
@@ -63,6 +64,7 @@ function ChatInput({ onSend }: { onSend: (content: string) => void }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+          maxLength={maxLen}
         />
         <BtnIcon title="Send" onClick={handleSubmit}>
           ➤
@@ -72,4 +74,10 @@ function ChatInput({ onSend }: { onSend: (content: string) => void }) {
   );
 }
 
-export default ChatInput;
+export function DisabledChatInput() {
+  return (
+    <Wrap>
+      <Box>You're in time out. You can't write to the lobby.</Box>
+    </Wrap>
+  );
+}

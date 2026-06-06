@@ -1,4 +1,8 @@
-import { makeCardImg, makeBackImg, fillRoundRect } from './cardTextures';
+import {
+  makeCardImg,
+  makeBackImg,
+  fillRoundRect,
+} from 'game/canvas/cardTextures';
 
 let _backImg: HTMLCanvasElement | null = null;
 

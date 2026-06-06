@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ChatService } from './chat.service';
+import { DMHistory, LobbyHistory } from './types/chat.types';
+import { DMChat, DMMessage, LobbyMessage } from 'src/generated/prisma/client';
 
 @Controller('api/chat')
 export class ChatController {
@@ -9,7 +11,7 @@ export class ChatController {
   async getDMId(
     @Param('sender') sender: string,
     @Param('receiver') receiver: string,
-  ) {
+  ): Promise<DMChat> {
     return await this.chatService.getDMId(sender, receiver);
   }
 
@@ -18,7 +20,7 @@ export class ChatController {
     @Body('chatId') chatId: string,
     @Body('senderId') senderId: string,
     @Body('message') message: string,
-  ) {
+  ): Promise<DMMessage> {
     return await this.chatService.saveDM(chatId, senderId, message);
   }
 
@@ -26,7 +28,7 @@ export class ChatController {
   async getDMHistory(
     @Param('chatId') chatId: string,
     @Param('userId') userId: string,
-  ) {
+  ): Promise<DMHistory> {
     return await this.chatService.getDMHistory(userId, chatId);
   }
 
@@ -34,12 +36,19 @@ export class ChatController {
   async saveLobbyMessage(
     @Body('senderId') senderId: string,
     @Body('message') message: string,
-  ) {
+  ): Promise<LobbyMessage> {
     return await this.chatService.saveLobbyMessage(senderId, message);
   }
 
+  @Post('lobby/guest')
+  async guestSaveLobbyMessage(
+    @Body('message') message: string,
+  ): Promise<LobbyMessage> {
+    return await this.chatService.guestSaveLobbyMessage(message);
+  }
+
   @Get('lobby')
-  async getLobbyHistory() {
+  async getLobbyHistory(): Promise<LobbyHistory> {
     return await this.chatService.getLobbyHistory();
   }
 }

@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom';
-import type { Msg } from 'context/Types';
+import type { PublicMsg, PrivateMsg } from 'context/Types';
 import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
-import {
-  IsLoggedIn,
-  IsPendingUser,
-  CanDisciplineThisUser,
-} from 'functions/Ranks';
+import { useSocket } from 'context/useSocket';
+import { CanDisciplineThisUser } from 'functions/Ranks';
 import styled, { css } from 'styled-components';
 import { Avatar } from 'components/btn/Avatar';
 import { Username } from 'components/btn/Username';
@@ -38,7 +35,7 @@ const Row = styled.div<{ $rank: string }>`
             background: rgba(240, 192, 64, 0.07);
           }
         `;
-      case 'mod':
+      case 'moderator':
         return css`
           background: rgba(212, 160, 112, 0.04);
           box-shadow: inset 2px 0 0 rgba(212, 160, 112, 0.4);
@@ -80,7 +77,7 @@ const NameWrap = styled.div<{ $rank: string }>`
   ${({ $rank }) => {
     switch ($rank) {
       case 'admin':
-      case 'mod':
+      case 'moderator':
         return css`
           display: flex;
           align-items: center;
@@ -115,19 +112,23 @@ const TextModerated = styled(Text)`
   font-style: italic;
 `;
 
-function ChatMsg({ msg }: { msg: Msg }) {
-  const { users } = useUser();
-  const author = users.find((u) => u.id === msg.authorId) ?? null;
-  const can_discipline = CanDisciplineThisUser(author);
+export function PublicChatMsg({ msg }: { msg: PublicMsg }) {
+  const { user } = useUser();
+  const { socket, onlineUsers } = useSocket();
+  const is_logged_in = !!user && user.rank.toLowerCase() != 'pending';
+  const can_discipline = CanDisciplineThisUser(
+    user?.rank ?? '',
+    msg.sender?.rank ?? '',
+  );
+  const isOnline = !!msg.sender && onlineUsers.has(msg.sender.id);
+  const avatar = msg.sender?.avatar ?? '';
+  const username = msg.sender?.username ?? 'Guest';
+  const rank = (msg.sender?.rank ?? 'guest').toLowerCase();
 
-  const avatar = author?.avatar ?? '';
-  const isOnline = author?.isOnline ?? false;
-  const rank = author?.rank ?? 'guest';
-  const username = author?.username ?? 'Guest';
-  const is_logged_in = IsLoggedIn() && !IsPendingUser();
-
-  // TODO: When clicking on Moderate, make the msg content empty, and switch
-  // the `moderated` field to true
+  function handleModerate() {
+    if (!user || !can_discipline) return;
+    socket.emit('ModerateLobbyMessage', msg.id);
+  }
 
   return (
     <Row $rank={rank}>
@@ -150,17 +151,47 @@ function ChatMsg({ msg }: { msg: Msg }) {
             )}
             <RankBadge rank={rank} />
           </NameWrap>
-          <Time>{GetTime(msg.created)}</Time>
-          {can_discipline && <BtnIcon title="Moderate">x</BtnIcon>}
+          <Time>{GetTime(msg.date)}</Time>
+          {can_discipline && !msg.moderated && (
+            <BtnIcon title="Moderate" onClick={() => handleModerate()}>
+              x
+            </BtnIcon>
+          )}
         </Meta>
         {msg.moderated ? (
           <TextModerated>Moderated message</TextModerated>
         ) : (
-          <Text>{msg.content}</Text>
+          <Text>{msg.message}</Text>
         )}
       </Body>
     </Row>
   );
 }
 
-export default ChatMsg;
+export function PrivateChatMsg({ msg }: { msg: PrivateMsg }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!msg.sender && onlineUsers.has(msg.sender.id);
+  const avatar = msg.sender.avatar ?? '';
+  const username = msg.sender.username;
+  const rank = msg.sender.rank.toLowerCase();
+
+  return (
+    <Row $rank={rank}>
+      <Link to={`/user/${username}`}>
+        <Avatar src={avatar} rank={rank} isOnline={isOnline} />
+      </Link>
+      <Body>
+        <Meta>
+          <NameWrap $rank={rank}>
+            <Link to={`/user/${username}`}>
+              <Username rank={rank} value={username} />
+            </Link>
+            <RankBadge rank={rank} />
+          </NameWrap>
+          <Time>{GetTime(msg.date)}</Time>
+        </Meta>
+        <Text>{msg.message}</Text>
+      </Body>
+    </Row>
+  );
+}

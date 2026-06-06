@@ -3,133 +3,87 @@ import { RelService } from '../relationships/rel.service';
 import { UserService } from '../user/user.service';
 import { ErrorMessages } from '../user/error_messages/ErrorMessages';
 import { SendMailService } from '../sendMail/sendMail.service';
+import { ChatService } from '../chat/chat.service';
+import { GDPRProfileData, GDPRLobbyData, GDPRDMData } from './types/gdpr.type';
+import { UserProfile } from '../user/types/user.types';
+import { Ranks } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class GdprService {
   constructor(
-    private readonly RelService: RelService,
-    private readonly UserService: UserService,
-    private readonly SendMailService: SendMailService,
+    private readonly relService: RelService,
+    private readonly userService: UserService,
+    private readonly sendMailService: SendMailService,
+    private readonly chatService: ChatService,
   ) {}
 
-  async GetAllUserData(userid: string) {
-    const user_setting_info = await this.UserService.getOwnProfile(userid);
-    const userFriendSentRequest_info =
-      await this.RelService.fetchSentRequests(userid);
-    const userFriendReceivedRequest_info =
-      await this.RelService.fetchReceivedRequests(userid);
-    const userFriendship = await this.RelService.fetchFriends(userid);
-
-    if (!user_setting_info) {
-      throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
-    }
+  async GetProfileData(userId: string): Promise<GDPRProfileData> {
+    const profile = await this.userService.getOwnProfile(userId);
+    profile.avatar = null;
+    const sentReq = await this.relService.fetchSentRequests(userId);
+    const receivedReq = await this.relService.fetchReceivedRequests(userId);
+    const friends = await this.relService.fetchFriends(userId);
 
     return {
-      user_setting_info,
-      userFriendSentRequest_info,
-      userFriendReceivedRequest_info,
-      userFriendship,
+      userProfile: profile,
+      sentFriendRequests: this.setAvatarToNull(sentReq),
+      receivedFriendRequests: this.setAvatarToNull(receivedReq),
+      friends: this.setAvatarToNull(friends),
     };
   }
 
-  async SendExctractDataConfirmationEmail(userid: string) {
-    const user = await this.UserService.getOwnProfile(userid);
+  async GetLobbyData(userId: string): Promise<GDPRLobbyData> {
+    const messages = await this.chatService.fetchLobbyHistoryGDPR();
+    const hasParticipated = messages.some(
+      (msg) => msg.senderId !== null && msg.senderId === userId,
+    );
+    if (!hasParticipated) return { lobbyMessages: [] };
+    return { lobbyMessages: messages };
+  }
+
+  async GetDMData(userId: string, friendId: string): Promise<GDPRDMData> {
+    const you = await this.userService.getUserById(Ranks.ADMIN, userId);
+    you.avatar = null;
+    const friend = await this.userService.getUserById(Ranks.ADMIN, friendId);
+    friend.avatar = null;
+    const thread = await this.chatService.fetchDMHistoryGDPR(userId, friendId);
+    const chatId = thread.chatId;
+    const messages = thread.messages;
+    return { you, friend, chatId, messages };
+  }
+
+  async FindFriendName(friendId: string): Promise<string> {
+    return await this.userService.findUsername(friendId);
+  }
+
+  private setAvatarToNull(original: UserProfile[]): UserProfile[] {
+    const users = original;
+    for (const user of users) {
+      user.avatar = null;
+    }
+    return users;
+  }
+
+  async SendExtractDataConfirmationEmail(userId: string, categories: string[]) {
+    const user = await this.userService.getOwnProfile(userId);
     const email = user.email ? user.email : user.email_unverified;
     if (!email) {
       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
     }
 
+    const list = categories.map((c) => `<li>${c}</li>`).join('');
     const message =
-      'Dear ' +
+      '<p>Dear ' +
       user.username +
-      ',\n' +
-      'Your personnal data have been successfully exported.\n' +
-      'Best regards,\n' +
-      'Web-Nest-Card Team.\n';
-    await this.SendMailService.sendMail(
+      ',</p>' +
+      '<p>Your personal data has been successfully exported. You have requested:</p>' +
+      `<ul>${list}</ul>` +
+      '<p>Best regards,\nCard Nest.</p>\n';
+
+    await this.sendMailService.sendMail(
       email,
-      'WEB-NEST-CARD DATA EXTRACTION CONFIRMATION',
+      'Card Nest - Data extraction confirmation',
       message,
     );
   }
-
-  // async GetUserPersonalData(userid: string)
-  // {
-  //   // console.log("user_id : ", userid);
-  //   const user_setting_info = await this.UserService.getUserById(userid);
-  //   // const userFriendSentRequest_info = await this.RelService.fetchSentRequests(userid);
-  //   // const userFriendReceivedRequest_info = await this.RelService.fetchReceivedRequests(userid);
-  //   // const userFriendship = await this.RelService.fetchFriends(userid);
-
-  //   if (!user_setting_info) {
-  //       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
-  //   }
-
-  //   return {
-  //       user_setting_info
-  //       // userFriendSentRequest_info,
-  //       // userFriendReceivedRequest_info,
-  //       // userFriendship,
-  //   };
-  // }
-
-  // async GetUserFriendSentRequestData(userid: string)
-  // {
-  //   // console.log("user_id : ", userid);
-  //   // const user_setting_info = await this.UserService.getUserById(userid);
-  //   const userFriendSentRequest_info = await this.RelService.fetchSentRequests(userid);
-  //   // const userFriendReceivedRequest_info = await this.RelService.fetchReceivedRequests(userid);
-  //   // const userFriendship = await this.RelService.fetchFriends(userid);
-
-  //   if (!userFriendSentRequest_info) {
-  //       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
-  //   }
-
-  //   return {
-  //       // user_setting_info,
-  //       userFriendSentRequest_info,
-  //       // userFriendReceivedRequest_info,
-  //       // userFriendship,
-  //   };
-  // }
-
-  // async GetUserFriendReceivedRequestData(userid: string)
-  // {
-  //   // console.log("user_id : ", userid);
-  //   // const user_setting_info = await this.UserService.getUserById(userid);
-  //   // const userFriendSentRequest_info = await this.RelService.fetchSentRequests(userid);
-  //   const userFriendReceivedRequest_info = await this.RelService.fetchReceivedRequests(userid);
-  //   // const userFriendship = await this.RelService.fetchFriends(userid);
-
-  //   if (!userFriendReceivedRequest_info) {
-  //       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
-  //   }
-
-  //   return {
-  //       // user_setting_info,
-  //       // userFriendSentRequest_info,
-  //       userFriendReceivedRequest_info,
-  //       // userFriendship,
-  //   };
-  // }
-
-  // async GetUserFriendshipData(userid: string)
-  // {
-  //   // console.log("user_id : ", userid);
-  //   // const user_setting_info = await this.UserService.getUserById(userid);
-  //   // const userFriendSentRequest_info = await this.RelService.fetchSentRequests(userid);
-  //   // const userFriendReceivedRequest_info = await this.RelService.fetchReceivedRequests(userid);
-  //   const userFriendship = await this.RelService.fetchFriends(userid);
-
-  //   if (!userFriendship) {
-  //       throw new BadRequestException(ErrorMessages.USER_NOT_FOUND);
-  //   }
-
-  //   return {
-  //       // user_setting_info,
-  //       // userFriendSentRequest_info,
-  //       // userFriendReceivedRequest_info,
-  //       userFriendship,
-  //   };
-  // }
 }
