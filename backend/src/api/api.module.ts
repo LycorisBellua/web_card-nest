@@ -19,6 +19,7 @@ import { AdminService } from './admin/admin.service';
 import { ChatController } from './chat/chat.controller';
 import { ChatService } from './chat/chat.service';
 import { ConnectionRegistry } from './websocketHandling/registry/connection-registry';
+import { GameRegistry } from './game/registry/game.registry';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ConnectionRegistry } from './websocketHandling/registry/connection-regi
     ChatService,
     WebsocketServer,
     ConnectionRegistry,
+    GameRegistry,
   ],
 })
 export class ApiModule {}

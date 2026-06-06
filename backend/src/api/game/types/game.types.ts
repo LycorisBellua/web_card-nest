@@ -1,3 +1,16 @@
+export type Game = {
+  gameId: string;
+  seats: number;
+  humans: number;
+  players: Occupant[];
+  invited: Set<string>;
+  leader: string;
+};
+
+export type Occupant =
+  | { type: 'human'; id: string }
+  | { type: 'bot'; id: 'bot' };
+
 export type Suit = 'hearts' | 'diamonds' | 'spades' | 'clubs';
 
 export type Value =
@@ -16,18 +29,9 @@ export type Value =
   | 'Q'
   | 'K';
 
-export interface Card {
+export type Card = {
   suit: Suit;
   value: Value;
-}
-
-export type Controller =
-  | { type: 'human'; id: string }
-  | { type: 'bot'; id: 'bot' };
-
-export type Timeout = {
-  oldController: Controller;
-  timeout: number;
 };
 
 export type Status = 'active' | 'waiting' | 'stood' | 'bust';
@@ -36,15 +40,9 @@ export type PlayerState = {
   seat: number;
   hand: Card[];
   status: Status;
-  controller: Controller;
-  timeout: Timeout | null;
 };
 
 export type GameState = {
-  gameId: string;
-  seats: number;
-  humans: number;
-  players: PlayerState[];
   turnIndex: number;
-  leader: string;
+  players: PlayerState[];
 };

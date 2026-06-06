@@ -5,13 +5,14 @@ export class ConnectionRegistry {
   private readonly userId_socketId = new Map<string, string>();
   private readonly socketId_userId = new Map<string, string>();
 
-  add(userId: string, socketId: string): void {
+  add(userId: string, socketId: string): string | undefined {
     const oldSocketId = this.userId_socketId.get(userId);
     if (oldSocketId && oldSocketId !== socketId) {
       this.socketId_userId.delete(oldSocketId);
     }
     this.socketId_userId.set(socketId, userId);
     this.userId_socketId.set(userId, socketId);
+    return oldSocketId !== socketId ? oldSocketId : undefined;
   }
 
   removeBySocketId(socketId: string): string | undefined {
@@ -34,5 +35,9 @@ export class ConnectionRegistry {
 
   getAllUserIds(): string[] {
     return Array.from(this.userId_socketId.keys());
+  }
+
+  isOnline(userId: string): boolean {
+    return this.userId_socketId.has(userId);
   }
 }

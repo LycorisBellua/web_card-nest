@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Server } from 'socket.io';
 import {
   ConnectedSocket,
@@ -17,6 +22,8 @@ import type { AppSocket } from './types/socket.types';
 import { ConnectionRegistry } from './registry/connection-registry';
 import { AdminService } from '../admin/admin.service';
 import { Ranks } from 'src/generated/prisma/enums';
+import { GameRegistry } from '../game/registry/game.registry';
+import { Game } from '../game/types/game.types';
 
 @Injectable()
 @WebSocketGateway({
@@ -30,6 +37,7 @@ export class WebsocketServer
 {
   constructor(
     private readonly connections: ConnectionRegistry,
+    private readonly games: GameRegistry,
     private readonly jwtService: JwtService,
     private readonly chatService: ChatService,
     private readonly adminService: AdminService,
@@ -59,7 +67,10 @@ export class WebsocketServer
     const userId = client.data.user.id;
     if (userId === 'Guest') return;
 
-    this.connections.add(userId, client.id);
+    const oldSocket = this.connections.add(userId, client.id);
+    if (oldSocket) {
+      this.server.sockets.sockets.get(oldSocket)?.disconnect(true);
+    }
     const users = this.connections.getAllUserIds();
     client.emit('OnlineUsers', users);
     client.broadcast.emit('OnlineUsers', users);
@@ -67,7 +78,9 @@ export class WebsocketServer
 
   handleDisconnect(client: AppSocket): void {
     const userId = this.connections.removeBySocketId(client.id);
-    if (!userId) return;
+    if (!userId) {
+      return;
+    }
     const users = this.connections.getAllUserIds();
     client.broadcast.emit('OnlineUsers', users);
   }
@@ -171,5 +184,105 @@ export class WebsocketServer
     } catch {
       return;
     }
+  }
+
+  // ********** GAME HANDLING **********
+
+  @SubscribeMessage('CreateGame')
+  createGame(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: { seats: number },
+  ): void {
+    try {
+      const game = this.games.createGame({
+        userId: sender.data.user.id,
+        seats: payload.seats,
+      });
+      sender.emit('GameState', game);
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  @SubscribeMessage('JoinGame')
+  joinGame(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: { gameId: string },
+  ): void {
+    try {
+      const game = this.games.joinGame({
+        joinerId: sender.data.user.id,
+        gameId: payload.gameId,
+      });
+      this.sendToAllPlayers(game);
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  @SubscribeMessage('LeaveGame')
+  leaveGame(@ConnectedSocket() sender: AppSocket): void {
+    try {
+      const game = this.games.leaveGame({
+        userId: sender.data.user.id,
+      });
+      this.sendToAllPlayers(game);
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  @SubscribeMessage('GameInvite')
+  inviteToGame(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: { gameId: string; invitedId: string },
+  ): void {
+    try {
+      const socket = this.connections.getSocketId(payload.invitedId);
+      if (!socket) {
+        throw new BadRequestException('The user is offline or does not exist.');
+      }
+      const game = this.games.inviteToGame({
+        leaderId: sender.data.user.id,
+        gameId: payload.gameId,
+        invitedId: payload.invitedId,
+      });
+      this.server.to(socket).emit('GameInvite', payload.gameId);
+      this.sendToAllPlayers(game);
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  @SubscribeMessage('GameReject')
+  rejectInvite(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: { gameId: string },
+  ): void {
+    try {
+      const game = this.games.rejectInvite({
+        joinerId: sender.data.user.id,
+        gameId: payload.gameId,
+      });
+      this.sendToAllPlayers(game);
+      sender.emit('Invited Rejected');
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  private sendToAllPlayers(game: Game) {
+    for (const player of game.players) {
+      if (player.type === 'human') {
+        const socket = this.connections.getSocketId(player.id);
+        if (socket) {
+          this.server.to(socket).emit('GameInfo', game);
+        }
+      }
+    }
+  }
+
+  private errorHandler(err: unknown): string {
+    return err instanceof HttpException ? err.message : 'Unexpected Error';
   }
 }

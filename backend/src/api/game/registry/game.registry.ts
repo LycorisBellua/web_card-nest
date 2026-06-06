@@ -5,183 +5,169 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { v7 } from 'uuid';
-import type { GameState, PlayerState } from '../types/game.types';
+import type { Game, Occupant } from '../types/game.types';
 import { GameErr } from '../errors/game.errors';
+import { CreateGameDto } from '../dto/creategame.dto';
+import { JoinGameDto } from '../dto/joingame.dto';
+import { LeaveGameDto } from '../dto/leavegame.dto';
+import { InviteGameDto } from '../dto/invitegame.dto';
 
 @Injectable()
 export class GameRegistry {
-  private gameId_gameState = new Map<string, GameState>();
+  private gameId_game = new Map<string, Game>();
   private userId_gameId = new Map<string, string>();
 
-  createGame(userId: string, seats: number): GameState {
+  createGame(dto: CreateGameDto): Game {
+    const seats = dto.seats;
+    const userId = dto.userId;
     if (seats < 1 || seats > 4) {
       throw new BadRequestException(GameErr.SEATS);
     }
-    if (this.userId_gameId.has(userId)) {
-      throw new BadRequestException(GameErr.ALREADY_IN_GAME);
+    if (this.getGameId(userId)) {
+      throw new ForbiddenException(GameErr.ALREADY_IN_GAME);
     }
 
     const game = this.newGame(seats);
-    game.players.push(this.newPlayer(userId, 0));
+    game.players.push(this.newPlayer(userId));
     game.leader = userId;
     game.humans++;
 
     for (let i = 1; i < seats; i++) {
-      game.players.push(this.newBot(i));
+      game.players.push(this.newBot());
     }
 
-    this.gameId_gameState.set(game.gameId, game);
+    this.gameId_game.set(game.gameId, game);
     this.userId_gameId.set(userId, game.gameId);
     return game;
   }
 
-  joinGame(joinerId: string, senderId: string): GameState {
-    const existingGame = this.userId_gameId.get(joinerId);
-    if (existingGame) {
+  joinGame(dto: JoinGameDto): Game {
+    const joinerId = dto.joinerId;
+    const gameId = dto.gameId;
+    if (this.getGameId(joinerId)) {
       throw new ForbiddenException(GameErr.ALREADY_IN_GAME);
     }
-    const gameId = this.userId_gameId.get(senderId);
-    if (!gameId) {
-      throw new NotFoundException(GameErr.GAME_NOT_FOUND);
-    }
-    const game = this.gameId_gameState.get(gameId);
+    const game = this.getGameState(gameId);
     if (!game) {
       throw new NotFoundException(GameErr.GAME_NOT_FOUND);
     }
-    if (game && game.humans >= game.seats) {
+    if (!game.invited.has(joinerId)) {
+      throw new ForbiddenException(GameErr.NOT_INVITED);
+    }
+    if (game.humans === game.seats) {
       throw new ForbiddenException(GameErr.NO_SEAT_AVAILABLE);
     }
     this.convertBotToNewPlayer(joinerId, game);
+    this.userId_gameId.set(joinerId, gameId);
     return game;
   }
 
-  leaveGame(userId: string): void {
-    const gameId = this.userId_gameId.get(userId);
+  leaveGame(dto: LeaveGameDto): Game {
+    const userId = dto.userId;
+    const gameId = this.getGameId(userId);
     if (!gameId) {
       throw new NotFoundException(GameErr.NOT_IN_GAME);
     }
     this.userId_gameId.delete(userId);
-    const game = this.gameId_gameState.get(gameId);
-    if (game && game.humans > 1) {
-      this.convertPlayerToBot(game, userId, false);
-      this.updateLeader(game);
-    } else {
-      this.gameId_gameState.delete(gameId);
-    }
-  }
-
-  disconnectPlayer(userId: string): void {
-    const gameId = this.userId_gameId.get(userId);
-    if (!gameId) {
-      throw new NotFoundException(GameErr.NOT_IN_GAME);
-    }
-    this.userId_gameId.delete(userId);
-    const game = this.gameId_gameState.get(gameId);
-    if (game && game.humans > 1) {
-      this.convertPlayerToBot(game, userId, true);
-      this.updateLeader(game);
-    } else {
-      this.gameId_gameState.delete(gameId);
-    }
-  }
-
-  rejoinGame(userId: string): GameState {
-    const gameId = this.userId_gameId.get(userId);
-    if (!gameId) {
-      throw new NotFoundException(GameErr.NOT_IN_GAME);
-    }
-    const game = this.gameId_gameState.get(gameId);
+    const game = this.getGameState(gameId);
     if (!game) {
-      throw new NotFoundException(GameErr.NOT_IN_GAME);
+      throw new NotFoundException(GameErr.GAME_NOT_FOUND);
     }
-    this.convertBotToReconnectedPlayer(userId, game);
-    this.updateLeader(game);
+    if (game.humans > 1) {
+      const wasLeader = game.leader === userId;
+      this.convertPlayerToBot(game, userId);
+      if (wasLeader) {
+        this.updateLeader(game);
+      }
+    } else {
+      this.gameId_game.delete(gameId);
+    }
     return game;
   }
 
-  private updateLeader(game: GameState): void {
+  inviteToGame(dto: InviteGameDto): Game {
+    const leaderId = dto.leaderId;
+    const invitedId = dto.invitedId;
+    const game = this.getGameState(dto.gameId);
+    if (!game || leaderId !== game.leader) {
+      throw new ForbiddenException(GameErr.ONLY_LEADER_INVITE);
+    }
+    if (game.humans === game.seats) {
+      throw new BadRequestException(GameErr.NO_SEAT_AVAILABLE);
+    }
+    game.invited.add(invitedId);
+    return game;
+  }
+
+  rejectInvite(dto: JoinGameDto): Game {
+    const joinerId = dto.joinerId;
+    const gameId = dto.gameId;
+    const game = this.getGameState(gameId);
+    if (!game) {
+      throw new NotFoundException(GameErr.GAME_NOT_FOUND);
+    }
+    if (!game.invited.has(joinerId)) {
+      throw new BadRequestException(GameErr.NOT_INVITED);
+    }
+    game.invited.delete(joinerId);
+    return game;
+  }
+
+  private getGameId(userId: string): string | undefined {
+    return this.userId_gameId.get(userId);
+  }
+
+  private getGameState(gameId: string): Game | undefined {
+    return this.gameId_game.get(gameId);
+  }
+
+  private updateLeader(game: Game): void {
     for (const player of game.players) {
-      if (player.controller.type === 'human') {
-        game.leader = player.controller.id;
+      if (player.type === 'human') {
+        game.leader = player.id;
         return;
       }
     }
   }
 
-  private convertPlayerToBot(
-    game: GameState,
-    userId: string,
-    timeout: boolean,
-  ) {
-    for (const player of game.players) {
-      if (player.controller.id === userId) {
-        if (timeout) {
-          player.timeout = {
-            oldController: player.controller,
-            timeout: Date.now() + 30_000,
-          };
-        }
-        player.controller = { type: 'bot', id: 'bot' };
+  private convertPlayerToBot(game: Game, userId: string) {
+    for (let player of game.players) {
+      if (player.id === userId) {
+        player = this.newBot();
         game.humans--;
         break;
       }
     }
   }
 
-  private convertBotToNewPlayer(userId: string, game: GameState): void {
-    for (const player of game.players) {
-      if (player.controller.type === 'bot') {
-        player.controller = { type: 'human', id: userId };
+  private convertBotToNewPlayer(userId: string, game: Game): void {
+    for (let player of game.players) {
+      if (player.type === 'bot') {
+        player = this.newPlayer(userId);
+        game.invited.delete(userId);
         game.humans++;
         return;
       }
     }
+    throw new ForbiddenException(GameErr.NO_SEAT_AVAILABLE);
   }
 
-  private convertBotToReconnectedPlayer(userId: string, game: GameState): void {
-    for (const player of game.players) {
-      if (player.timeout) {
-        if (player.timeout.oldController.id === userId) {
-          if (player.timeout.timeout < Date.now()) {
-            player.controller = player.timeout.oldController;
-            player.timeout = null;
-            game.humans++;
-          } else {
-            player.timeout = null;
-          }
-        }
-      }
-    }
-  }
-
-  private newGame(seats: number): GameState {
+  private newGame(seats: number): Game {
     return {
       gameId: v7(),
       seats: seats,
       humans: 0,
       players: [],
-      turnIndex: 0,
+      invited: new Set<string>(),
       leader: '',
     };
   }
 
-  private newPlayer(userId: string, seat: number): PlayerState {
-    return {
-      seat: seat,
-      hand: [],
-      status: 'waiting',
-      controller: { type: 'human', id: userId },
-      timeout: null,
-    };
+  private newPlayer(userId: string): Occupant {
+    return { type: 'human', id: userId };
   }
 
-  private newBot(seat: number): PlayerState {
-    return {
-      seat: seat,
-      hand: [],
-      status: 'waiting',
-      controller: { type: 'bot', id: 'bot' },
-      timeout: null,
-    };
+  private newBot(): Occupant {
+    return { type: 'bot', id: 'bot' };
   }
 }
