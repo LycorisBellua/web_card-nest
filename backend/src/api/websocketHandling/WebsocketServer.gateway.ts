@@ -23,7 +23,7 @@ import { ConnectionRegistry } from './registry/connection-registry';
 import { AdminService } from '../admin/admin.service';
 import { Ranks } from 'src/generated/prisma/enums';
 import { GameRegistry } from '../game/registry/game.registry';
-import { Game } from '../game/types/game.types';
+import { Game, Occupant } from '../game/types/game.types';
 
 @Injectable()
 @WebSocketGateway({
@@ -198,7 +198,7 @@ export class WebsocketServer
         userId: sender.data.user.id,
         seats: payload.seats,
       });
-      sender.emit('GameState', game);
+      sender.emit('GameInfo', game);
     } catch (err) {
       sender.emit('GameError', this.errorHandler(err));
     }
@@ -214,7 +214,7 @@ export class WebsocketServer
         joinerId: sender.data.user.id,
         gameId: payload.gameId,
       });
-      this.sendToAllPlayers(game);
+      this.broadcastGameInfo(game);
     } catch (err) {
       sender.emit('GameError', this.errorHandler(err));
     }
@@ -226,13 +226,13 @@ export class WebsocketServer
       const game = this.games.leaveGame({
         userId: sender.data.user.id,
       });
-      this.sendToAllPlayers(game);
+      this.broadcastGameInfo(game);
     } catch (err) {
       sender.emit('GameError', this.errorHandler(err));
     }
   }
 
-  @SubscribeMessage('GameInvite')
+  @SubscribeMessage('InviteGame')
   inviteToGame(
     @ConnectedSocket() sender: AppSocket,
     @MessageBody() payload: { gameId: string; invitedId: string },
@@ -248,13 +248,13 @@ export class WebsocketServer
         invitedId: payload.invitedId,
       });
       this.server.to(socket).emit('GameInvite', payload.gameId);
-      this.sendToAllPlayers(game);
+      this.broadcastGameInfo(game);
     } catch (err) {
       sender.emit('GameError', this.errorHandler(err));
     }
   }
 
-  @SubscribeMessage('GameReject')
+  @SubscribeMessage('RejectGame')
   rejectInvite(
     @ConnectedSocket() sender: AppSocket,
     @MessageBody() payload: { gameId: string },
@@ -264,14 +264,37 @@ export class WebsocketServer
         joinerId: sender.data.user.id,
         gameId: payload.gameId,
       });
-      this.sendToAllPlayers(game);
-      sender.emit('Invited Rejected');
+      this.broadcastGameInfo(game);
+      sender.emit('GameRejected');
     } catch (err) {
       sender.emit('GameError', this.errorHandler(err));
     }
   }
 
-  private sendToAllPlayers(game: Game) {
+  @SubscribeMessage('SyncGame')
+  syncGameState(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: unknown,
+  ): void {
+    const senderId = sender.data.user.id;
+    let players: Occupant[];
+    try {
+      players = this.games.syncGameState(senderId);
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+      return;
+    }
+    for (const player of players) {
+      if (player.type === 'human' && player.id !== senderId) {
+        const socket = this.connections.getSocketId(player.id);
+        if (socket) {
+          this.server.to(socket).emit('GameState', payload);
+        }
+      }
+    }
+  }
+
+  private broadcastGameInfo(game: Game) {
     for (const player of game.players) {
       if (player.type === 'human') {
         const socket = this.connections.getSocketId(player.id);

@@ -1,10 +1,10 @@
-import { isUUID, IsUUID } from 'class-validator';
+import { IsUUID } from 'class-validator';
 
 export class InviteGameDto {
-  @isUUID('7')
+  @IsUUID('7')
   leaderId: string;
 
-  @isUUID('7')
+  @IsUUID('7')
   gameId: string;
 
   @IsUUID('7')
