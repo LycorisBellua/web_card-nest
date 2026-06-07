@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useUser } from 'context/useUser';
 import type { User } from 'context/Types';
-import { ChangeRankRequest, DeleteSelfRequest } from 'functions/Requests';
+import { changeRankRequest, deleteSelfRequest } from 'functions/Requests';
 import { BtnDanger } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
 
@@ -23,15 +23,12 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
     closeModals();
     try {
       const newRank = 'user';
-      const newaccessToken = await ChangeRankRequest(
+      const newaccessToken = await changeRankRequest(
         user.accessToken,
         user.id,
         newRank,
       );
-      if (!newaccessToken.length) {
-        setError('Error occurred');
-        return;
-      }
+      if (!newaccessToken.length) throw new Error();
       setUser(
         (prev) =>
           ({ ...prev, accessToken: newaccessToken, rank: newRank }) as User,
@@ -44,12 +41,8 @@ function DangerZone({ user }: { user: NonNullable<User> }) {
   async function handleDelete() {
     closeModals();
     try {
-      const newaccessToken = await DeleteSelfRequest(user.accessToken);
-      if (!newaccessToken.length) {
-        setError('Error occurred');
-        return;
-      }
-      setUser(null);
+      const newaccessToken = await deleteSelfRequest(user.accessToken);
+      if (!newaccessToken.length) throw new Error();
       window.location.href = '/';
     } catch {
       setError('Error occurred');

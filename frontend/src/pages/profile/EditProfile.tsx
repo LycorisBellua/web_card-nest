@@ -16,7 +16,7 @@ import {
   validateAvatar,
   addAvatarPrefix,
 } from 'functions/UserValidation';
-import { RefreshTokenRequest } from 'functions/Requests';
+import { refreshTokenRequest } from 'functions/Requests';
 import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
 import { AvatarBig } from 'components/btn/Avatar';
 import InputField from 'components/misc/InputField';
@@ -147,7 +147,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         });
 
         if (res.status === 401) {
-          token = await RefreshTokenRequest(token);
+          token = await refreshTokenRequest(token);
           if (token.length) {
             res = await fetch('/api/user/update', {
               method: 'PATCH',
@@ -171,9 +171,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
               data?.message ?? `Error ${res.status}: ${res.statusText}`,
             ],
           }));
-          setIsSaving(false);
-          setDisplaySpinner(false);
-          return;
+          throw new Error();
         }
 
         const updated = (await res.json()) as Partial<NonNullable<User>>;
@@ -198,7 +196,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         });
 
         if (res.status === 401) {
-          token = await RefreshTokenRequest(token);
+          token = await refreshTokenRequest(token);
           if (token.length) {
             res = await fetch('/api/auth/password', {
               method: 'PATCH',
@@ -225,9 +223,7 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
               data?.message ?? `Error ${res.status}: ${res.statusText}`,
             ],
           }));
-          setIsSaving(false);
-          setDisplaySpinner(false);
-          return;
+          throw new Error();
         }
 
         const data = (await res.json()) as { accessToken: string };
@@ -239,9 +235,10 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
         setUser(tmpUser);
       }
     } catch {
+      return;
+    } finally {
       setIsSaving(false);
       setDisplaySpinner(false);
-      return;
     }
 
     setAvatar(undefined);
@@ -252,8 +249,6 @@ function EditProfile({ user }: { user: NonNullable<User> }) {
     setNewPassword('');
     setResetKey((k) => k + 1);
     setSuccessMessage('Changes saved successfully.');
-    setIsSaving(false);
-    setDisplaySpinner(false);
   }
 
   const SaveButton = hasPendingChanges && !isSaving ? BtnDefault : BtnDisabled;

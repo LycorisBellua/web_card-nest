@@ -1,14 +1,8 @@
 import { useState, useEffect } from 'react';
 import { UserContext } from 'context/UserContext';
 import type { User, LimitedUser } from 'context/Types';
-import { RefreshTokenRequest, FetchSelfRequest } from 'functions/Requests';
-
-function getCookie(name: string): string | undefined {
-  return document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(`${name}=`))
-    ?.split('=')[1];
-}
+import { getCookieValue } from 'functions/Cookies';
+import { refreshTokenRequest, fetchSelfRequest } from 'functions/Requests';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
@@ -20,11 +14,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const automaticLogin = async () => {
       try {
-        const dummyCookie = getCookie('dummy_refresh');
-        if (!dummyCookie) return;
-        const accessToken = await RefreshTokenRequest('');
-        if (!accessToken.length) return;
-        const data = await FetchSelfRequest(accessToken);
+        const dummyCookie = getCookieValue('dummy_refresh');
+        if (!dummyCookie) throw new Error();
+        const accessToken = await refreshTokenRequest('');
+        if (!accessToken.length) throw new Error();
+        const data = await fetchSelfRequest(accessToken);
         setUser(data.user);
         setBlocked(data.blocked);
         setFriends(data.friends);

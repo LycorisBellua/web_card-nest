@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from 'context/useUser';
-import { FetchSelfRequest } from 'functions/Requests';
+import { fetchSelfRequest } from 'functions/Requests';
 import { sanitizeEmail, sanitizePassword } from 'functions/UserSanitation';
 import { validateEmail } from 'functions/UserValidation';
 import { BtnDefault } from 'components/btn/Btn';
@@ -57,14 +57,14 @@ function LogIn() {
         return;
       }
       const dataLogin = (await res.json()) as { accessToken: string };
-      const dataSelf = await FetchSelfRequest(dataLogin.accessToken);
+      const dataSelf = await fetchSelfRequest(dataLogin.accessToken);
       setUser(dataSelf.user);
       setBlocked(dataSelf.blocked);
       setFriends(dataSelf.friends);
       setSentFriends(dataSelf.sentFriends);
       setReceivedFriends(dataSelf.receivedFriends);
       if (!dataSelf.user) {
-        setErrors(['Internal error']);
+        throw new Error();
       } else {
         setMessage('Login success! Redirecting to your profile...');
         setLogMail('');

@@ -3,19 +3,19 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { User, OtherUserOrGuest, LimitedUser } from 'context/Types';
 import { useUser } from 'context/useUser';
 import {
-  RefreshTokenRequest,
-  FetchSelfBlockedListRequest,
-  FetchSelfFriendListRequest,
-  FetchSelfSentListRequest,
-  FetchSelfReceivedListRequest,
-  RemoveFriendshipRequest,
-  AskFriendshipRequest,
-  CancelFriendshipRequest,
-  AcceptFriendshipRequest,
-  RejectFriendshipRequest,
-  UnblockingRequest,
-  BlockingRequest,
-  FetchOtherFriendListRequest,
+  refreshTokenRequest,
+  fetchSelfBlockedListRequest,
+  fetchSelfFriendListRequest,
+  fetchSelfSentListRequest,
+  fetchSelfReceivedListRequest,
+  removeFriendshipRequest,
+  askFriendshipRequest,
+  cancelFriendshipRequest,
+  acceptFriendshipRequest,
+  rejectFriendshipRequest,
+  unblockingRequest,
+  blockingRequest,
+  fetchOtherFriendListRequest,
 } from 'functions/Requests';
 import { addAvatarPrefix } from 'functions/UserValidation';
 import ToggleChatTimeout from 'pages/profile/ToggleChatTimeout';
@@ -73,7 +73,7 @@ function PublicProfile() {
         let accessToken = user.accessToken;
         if (!res.ok) {
           if (res.status != 401) return;
-          accessToken = await RefreshTokenRequest(accessToken);
+          accessToken = await refreshTokenRequest(accessToken);
           if (!accessToken.length) return;
           res = await fetch(`/api/user/username/${username}`, {
             method: 'GET',
@@ -103,7 +103,7 @@ function PublicProfile() {
           desc: data.desc,
           friends: [],
         } as OtherUserOrGuest;
-        const friendData = (await FetchOtherFriendListRequest(
+        const friendData = (await fetchOtherFriendListRequest(
           accessToken,
           tmpUser!.id,
         )) as {
@@ -176,21 +176,15 @@ function PublicProfile() {
 
   async function removeFriendship() {
     try {
-      let accessToken = await RemoveFriendshipRequest(
+      let accessToken = await removeFriendshipRequest(
         user!.accessToken,
         otherUser!.id,
       );
-      if (accessToken.length) {
-        const data = await FetchSelfBlockedListRequest(accessToken);
-        accessToken = data.accessToken;
-        if (accessToken.length) {
-          setFriends(data.users);
-        }
-      }
-      if (!accessToken.length) {
-        setError('Error occurred with "Remove Friendship"');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
+      const data = await fetchSelfBlockedListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setFriends(data.users);
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
     } catch {
       setError('Error occurred with "Remove Friendship"');
@@ -199,21 +193,15 @@ function PublicProfile() {
 
   async function sendFriendRequest() {
     try {
-      let accessToken = await AskFriendshipRequest(
+      let accessToken = await askFriendshipRequest(
         user!.accessToken,
         otherUser!.id,
       );
-      if (accessToken.length) {
-        const data = await FetchSelfSentListRequest(accessToken);
-        accessToken = data.accessToken;
-        if (accessToken.length) {
-          setSentFriends(data.users);
-        }
-      }
-      if (!accessToken.length) {
-        setError('Error occurred with "Send Friend Request"');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
+      const data = await fetchSelfSentListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setSentFriends(data.users);
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
     } catch {
       setError('Error occurred with "Send Friend Request"');
@@ -222,21 +210,15 @@ function PublicProfile() {
 
   async function cancelFriendRequest() {
     try {
-      let accessToken = await CancelFriendshipRequest(
+      let accessToken = await cancelFriendshipRequest(
         user!.accessToken,
         otherUser!.id,
       );
-      if (accessToken.length) {
-        const data = await FetchSelfSentListRequest(accessToken);
-        accessToken = data.accessToken;
-        if (accessToken.length) {
-          setSentFriends(data.users);
-        }
-      }
-      if (!accessToken.length) {
-        setError('Error occurred with "Cancel Friend Request"');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
+      const data = await fetchSelfSentListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setSentFriends(data.users);
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
     } catch {
       setError('Error occurred with "Cancel Friend Request"');
@@ -245,26 +227,19 @@ function PublicProfile() {
 
   async function acceptFriendRequest() {
     try {
-      let accessToken = await AcceptFriendshipRequest(
+      let accessToken = await acceptFriendshipRequest(
         user!.accessToken,
         otherUser!.id,
       );
-      if (accessToken.length) {
-        const data1 = await FetchSelfReceivedListRequest(accessToken);
-        accessToken = data1.accessToken;
-        if (accessToken.length) {
-          setReceivedFriends(data1.users);
-          const data2 = await FetchSelfFriendListRequest(accessToken);
-          accessToken = data2.accessToken;
-          if (accessToken.length) {
-            setFriends(data2.users);
-          }
-        }
-      }
-      if (!accessToken.length) {
-        setError('Error occurred with "Accept Friend Request"');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
+      const data1 = await fetchSelfReceivedListRequest(accessToken);
+      accessToken = data1.accessToken;
+      if (!accessToken.length) throw new Error();
+      setReceivedFriends(data1.users);
+      const data2 = await fetchSelfFriendListRequest(accessToken);
+      accessToken = data2.accessToken;
+      if (!accessToken.length) throw new Error();
+      setFriends(data2.users);
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
     } catch {
       setError('Error occurred with "Accept Friend Request"');
@@ -273,26 +248,19 @@ function PublicProfile() {
 
   async function rejectFriendRequest() {
     try {
-      let accessToken = await RejectFriendshipRequest(
+      let accessToken = await rejectFriendshipRequest(
         user!.accessToken,
         otherUser!.id,
       );
-      if (accessToken.length) {
-        let data = await FetchSelfReceivedListRequest(accessToken);
-        accessToken = data.accessToken;
-        if (accessToken.length) {
-          setReceivedFriends(data.users);
-          data = await FetchSelfFriendListRequest(accessToken);
-          accessToken = data.accessToken;
-          if (accessToken.length) {
-            setFriends(data.users);
-          }
-        }
-      }
-      if (!accessToken.length) {
-        setError('Error occurred with "Reject Friend Request"');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
+      let data = await fetchSelfReceivedListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setReceivedFriends(data.users);
+      data = await fetchSelfFriendListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setFriends(data.users);
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
     } catch {
       setError('Error occurred with "Reject Friend Request"');
@@ -301,21 +269,15 @@ function PublicProfile() {
 
   async function unblockUser() {
     try {
-      let accessToken = await UnblockingRequest(
+      let accessToken = await unblockingRequest(
         user!.accessToken,
         otherUser!.id,
       );
-      if (accessToken.length) {
-        const data = await FetchSelfBlockedListRequest(accessToken);
-        accessToken = data.accessToken;
-        if (accessToken.length) {
-          setBlocked(data.users);
-        }
-      }
-      if (!accessToken.length) {
-        setError('Error occurred with "Unblock User"');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
+      const data = await fetchSelfBlockedListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setBlocked(data.users);
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
     } catch {
       setError('Error occurred with "Unblock User"');
@@ -325,33 +287,24 @@ function PublicProfile() {
   async function blockUser() {
     setIsBlockModalOpen(false);
     try {
-      let accessToken = await BlockingRequest(user!.accessToken, otherUser!.id);
-      if (accessToken.length) {
-        let data = await FetchSelfBlockedListRequest(accessToken);
-        accessToken = data.accessToken;
-        if (accessToken.length) {
-          setBlocked(data.users);
-          data = await FetchSelfFriendListRequest(accessToken);
-          accessToken = data.accessToken;
-          if (accessToken.length) {
-            setFriends(data.users);
-            data = await FetchSelfSentListRequest(accessToken);
-            accessToken = data.accessToken;
-            if (accessToken.length) {
-              setSentFriends(data.users);
-              data = await FetchSelfReceivedListRequest(accessToken);
-              accessToken = data.accessToken;
-              if (accessToken.length) {
-                setReceivedFriends(data.users);
-              }
-            }
-          }
-        }
-      }
-      if (!accessToken.length) {
-        setError('Error occurred with "Block User"');
-        return;
-      }
+      let accessToken = await blockingRequest(user!.accessToken, otherUser!.id);
+      if (!accessToken.length) throw new Error();
+      let data = await fetchSelfBlockedListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setBlocked(data.users);
+      data = await fetchSelfFriendListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setFriends(data.users);
+      data = await fetchSelfSentListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setSentFriends(data.users);
+      data = await fetchSelfReceivedListRequest(accessToken);
+      accessToken = data.accessToken;
+      if (!accessToken.length) throw new Error();
+      setReceivedFriends(data.users);
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
     } catch {
       setError('Error occurred with "Block User"');

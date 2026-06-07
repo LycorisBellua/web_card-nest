@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from 'context/useUser';
-import { FetchSelfRequest } from 'functions/Requests';
+import { fetchSelfRequest } from 'functions/Requests';
 import {
   sanitizeUsername,
   sanitizeEmail,
@@ -79,14 +79,14 @@ function SignUp() {
         return;
       }
       const dataSignup = (await res.json()) as { accessToken: string };
-      const dataSelf = await FetchSelfRequest(dataSignup.accessToken);
+      const dataSelf = await fetchSelfRequest(dataSignup.accessToken);
       setUser(dataSelf.user);
       setBlocked(dataSelf.blocked);
       setFriends(dataSelf.friends);
       setSentFriends(dataSelf.sentFriends);
       setReceivedFriends(dataSelf.receivedFriends);
       if (!dataSelf.user) {
-        setError(['Internal error.']);
+        throw new Error();
       } else {
         setMessage(
           "You've signed up successfully! Redirecting to your profile...",

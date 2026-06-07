@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import type { User, OtherUserOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { useSocket } from 'context/useSocket';
-import { GetDate } from 'functions/Time';
+import { getDate } from 'functions/Time';
 import {
-  ResendVerificationEmailRequest,
-  CancelEmailVerificationRequest,
+  resendVerificationEmailRequest,
+  cancelEmailVerificationRequest,
 } from 'functions/Requests';
 import { AvatarBig } from 'components/btn/Avatar';
 import { BtnDefault } from 'components/btn/Btn';
@@ -49,7 +49,7 @@ export function DisplayPublicUserInfo({ user }: { user: OtherUserOrGuest }) {
       <PublicRightCol>
         <UsernameBig rank={user.rank} value={user.username} />
         <RankBadgeBig rank={user.rank} />
-        <p>Registered: {GetDate(user.registered)}</p>
+        <p>Registered: {getDate(user.registered)}</p>
         <p>Description: {user.desc}</p>
       </PublicRightCol>
     </PublicWrapper>
@@ -76,13 +76,10 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
 
   async function handleVerifyEmail() {
     try {
-      const newaccessToken = await ResendVerificationEmailRequest(
+      const newaccessToken = await resendVerificationEmailRequest(
         user.accessToken,
       );
-      if (!newaccessToken.length) {
-        setErrors(['Error occurred']);
-        return;
-      }
+      if (!newaccessToken.length) throw new Error();
       setUser((prev) => ({ ...prev, accessToken: newaccessToken }) as User);
       setMessage("You'll receive a verification link shortly...");
     } catch {
@@ -92,13 +89,10 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
 
   async function cancelVerifyEmail() {
     try {
-      const newaccessToken = await CancelEmailVerificationRequest(
+      const newaccessToken = await cancelEmailVerificationRequest(
         user.accessToken,
       );
-      if (!newaccessToken.length) {
-        setErrors(['Error occurred']);
-        return;
-      }
+      if (!newaccessToken.length) throw new Error();
       setUser(
         (prev) =>
           ({
