@@ -1,5 +1,5 @@
-FROM ghcr.io/joshw34/dev_containers/transcendence-debian:latest AS dev_base
-###RUN apk add --no-cache bash
+FROM node:24-alpine AS dev_base
+RUN apk add --no-cache bash
 WORKDIR /app
 
 FROM dev_base AS frontend_dev

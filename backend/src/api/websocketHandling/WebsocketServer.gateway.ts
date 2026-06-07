@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   HttpException,
   Injectable,
   Logger,
@@ -71,14 +72,18 @@ export class WebsocketServer
     if (oldSocket) {
       this.server.sockets.sockets.get(oldSocket)?.disconnect(true);
     }
+    this.reconnectGame(userId, client);
     const users = this.connections.getAllUserIds();
     client.emit('OnlineUsers', users);
     client.broadcast.emit('OnlineUsers', users);
   }
 
   handleDisconnect(client: AppSocket): void {
-    this.connections.removeBySocketId(client.id);
-    this.disconnectGame(client.data.user.id);
+    const userId = this.connections.removeBySocketId(client.id);
+    if (!userId) {
+      return;
+    }
+    this.disconnectGame(userId);
     const users = this.connections.getAllUserIds();
     client.broadcast.emit('OnlineUsers', users);
   }
@@ -227,6 +232,17 @@ export class WebsocketServer
       this.broadcastGameInfo(game);
     } catch (err) {
       sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  private reconnectGame(userId: string, client: AppSocket): void {
+    try {
+      const game = this.games.reconnect(userId);
+      this.broadcastGameInfo(game);
+    } catch (err) {
+      if (err instanceof ForbiddenException) {
+        client.emit('GameError', this.errorHandler(err));
+      }
     }
   }
 

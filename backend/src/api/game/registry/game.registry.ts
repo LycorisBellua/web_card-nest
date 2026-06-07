@@ -187,11 +187,14 @@ export class GameRegistry {
       return;
     }
     if (timeout) {
+      const existingLeaderTimeout = game.timeouts.some(
+        (t) => t.leader === true,
+      );
       game.timeouts.push({
         occupant: game.players[i],
         timer: Date.now() + 30000,
         seat: i,
-        leader: game.leader === userId ? true : false,
+        leader: !existingLeaderTimeout && game.leader === userId,
       });
     }
     game.players[i] = this.newBot();
