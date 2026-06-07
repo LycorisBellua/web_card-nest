@@ -1,10 +1,9 @@
+README
+- Write the README. Check the Drive to see if you have missed anything.
+
 BROWSER COMPATIBILITY
 - Fix the CSS border animation on Firefox, or remove it entirely on all 
 browsers.
-
-README
-- Write the README. Check the Drive to see if you have missed anything.
-- Update the technical stack in the team notes.
 
 GAME LOCAL MODE
 - Simplify the game without losing features. Maybe it should be divided into 
@@ -20,4 +19,4 @@ just not fully.
 invite others before a game. If Player 1 leaves, the table is closed. It's okay 
 to play with bots if you don't want to bother waiting for a real player or if 
 someone left mid-game (under 30s, they could come back, otherwise they're 
-kicked from the table and have to be invited again).
+icked from the table and have to be invited again).
