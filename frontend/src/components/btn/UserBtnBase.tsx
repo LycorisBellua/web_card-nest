@@ -1,4 +1,5 @@
 import type { OtherUserOrGuest } from 'context/Types';
+import { useSocket } from 'context/useSocket';
 import { Avatar } from 'components/btn/Avatar';
 import { Username } from 'components/btn/Username';
 import { RankBadge } from 'components/btn/RankBadge';
@@ -26,10 +27,12 @@ function UserBtnBase({
   user: OtherUserOrGuest;
   onClick?: () => void;
 }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!user && onlineUsers.has(user.id);
   if (!user) {
     return (
       <Btn onClick={onClick}>
-        <Avatar src="" rank="guest" isOnline={false} />
+        <Avatar src="" rank="guest" isOnline={isOnline} />
         <Username rank="guest" value="Guest" />
         <RankBadge rank="guest" />
       </Btn>
@@ -37,7 +40,7 @@ function UserBtnBase({
   }
   return (
     <Btn onClick={onClick}>
-      <Avatar src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
+      <Avatar src={user.avatar} rank={user.rank} isOnline={isOnline} />
       <Username rank={user.rank} value={user.username} />
       <RankBadge rank={user.rank} />
     </Btn>

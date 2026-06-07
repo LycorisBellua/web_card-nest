@@ -1,5 +1,5 @@
-import { calculateScore } from './rules';
-import type { Suit, Rank, Player, Card, GameState } from '../logic/types';
+import { calculateScore } from 'game/logic/rules';
+import type { Suit, Rank, Player, Card, GameState } from 'game/logic/types';
 
 // create two decks
 export function createDeck(): Card[] {

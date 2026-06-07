@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useUser } from 'context/useUser';
+import { useSocket } from 'context/useSocket';
 import type { User } from 'context/Types';
 import {
   sanitizeUsername,
@@ -43,19 +44,19 @@ const emptyFieldErrors = (): FieldErrors => ({
 
 function EditProfile({ user }: { user: NonNullable<User> }) {
   const { setUser } = useUser();
-  const [displaySpinner, setDisplaySpinner] = useState(false);
+  const [displaySpinner, setDisplaySpinner] = useState<boolean>(false);
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>(emptyFieldErrors());
-  const [successMessage, setSuccessMessage] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [resetKey, setResetKey] = useState(0);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [resetKey, setResetKey] = useState<number>(0);
 
   const [avatar, setAvatar] = useState<File | '' | undefined>(undefined);
-  const [username, setUsername] = useState('');
-  const [desc, setDesc] = useState('');
-  const [email, setEmail] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [username, setUsername] = useState<string>('');
+  const [desc, setDesc] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [currentPassword, setCurrentPassword] = useState<string>('');
+  const [newPassword, setNewPassword] = useState<string>('');
 
   const hasPendingChanges =
     avatar !== undefined ||
@@ -325,6 +326,8 @@ function UpdateAvatar({
   onChange: (f: File | '') => void;
   errors: string[];
 }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!user && onlineUsers.has(user.id);
   const imgInputRef = useRef<HTMLInputElement | null>(null);
 
   const previewUrl = useMemo(() => {
@@ -345,11 +348,7 @@ function UpdateAvatar({
 
   return (
     <div>
-      <AvatarBig
-        src={avatarSrc ?? ''}
-        rank={user.rank}
-        isOnline={user.isOnline}
-      />
+      <AvatarBig src={avatarSrc ?? ''} rank={user.rank} isOnline={isOnline} />
       <div className="btn">
         <BtnDefault onClick={() => imgInputRef.current?.click()}>
           Edit
@@ -386,7 +385,7 @@ function UpdateUsername({
   onChange: (v: string) => void;
   errors: string[];
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
 
   function updateValue(e: React.ChangeEvent<HTMLInputElement>) {
     setValue(e.target.value);
@@ -418,7 +417,7 @@ function UpdateDescription({
   onChange: (v: string) => void;
   errors: string[];
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
 
   function updateValue(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setValue(e.target.value);
@@ -453,7 +452,7 @@ function UpdateEmail({
   onChange: (v: string) => void;
   errors: string[];
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
 
   function updateValue(e: React.ChangeEvent<HTMLInputElement>) {
     setValue(e.target.value);
@@ -485,10 +484,10 @@ function UpdatePassword({
   onChangeCurrentPassword: (v: string) => void;
   errors: string[];
 }) {
-  const [currentValue, setCurrentValue] = useState('');
-  const [value, setValue] = useState('');
-  const [confirmValue, setConfirmValue] = useState('');
-  const [confirmError, setConfirmError] = useState('');
+  const [currentValue, setCurrentValue] = useState<string>('');
+  const [value, setValue] = useState<string>('');
+  const [confirmValue, setConfirmValue] = useState<string>('');
+  const [confirmError, setConfirmError] = useState<string>('');
 
   function onChangeCurrentValue(e: React.ChangeEvent<HTMLInputElement>) {
     setCurrentValue(e.target.value);
@@ -519,7 +518,15 @@ function UpdatePassword({
   }
 
   return (
-    <>
+    <form>
+      <input
+        type="email"
+        name="username"
+        value="john.doe@email.com"
+        autoComplete="username"
+        readOnly
+        hidden
+      />
       <InputField
         type="password"
         id="current-password"
@@ -554,7 +561,7 @@ function UpdatePassword({
         isError={!!confirmError.length}
         helpers={[confirmError]}
       />
-    </>
+    </form>
   );
 }
 

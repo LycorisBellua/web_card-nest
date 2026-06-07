@@ -8,7 +8,6 @@ export type LimitedUser = {
 export type OtherUser = LimitedUser & {
   registered: Date;
   desc: string;
-  isOnline: boolean;
   friends: LimitedUser[];
 };
 
@@ -22,16 +21,32 @@ export type User =
 
 export type OtherUserOrGuest = OtherUser | null;
 
-export type Msg = {
+export type PublicMsg = {
   id: string;
-  authorId: string | null;
-  created: Date;
-  content: string;
+  senderId: string | null;
+  message: string;
+  date: Date;
   moderated: boolean;
+  sender: {
+    id: string;
+    username: string;
+    avatar: string | null;
+    desc: string | null;
+    rank: string;
+  } | null;
 };
 
-export type Thread = {
+export type PrivateMsg = {
   id: string;
-  type: 'group' | 'dm';
-  messages: Msg[];
+  senderId: string;
+  message: string;
+  date: Date;
+  chatId: string;
+  sender: {
+    id: string;
+    username: string;
+    avatar: string | null;
+    desc: string | null;
+    rank: string;
+  };
 };

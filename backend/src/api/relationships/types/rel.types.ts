@@ -1,29 +1,20 @@
+import { userProfileSelect } from 'src/api/user/types/user.types';
 import { Prisma } from 'src/generated/prisma/client';
 
-export const friendUserSelect = {
-  id: true,
-  username: true,
-  avatar: true,
-  rank: true,
-} satisfies Prisma.UserSelect;
-
-export const friendshipInclude = {
-  requester: { select: friendUserSelect },
-  addressee: { select: friendUserSelect },
+// GET FRIENDSHIP / BLOCK LISTS
+export const friendListInclude = {
+  requester: { select: userProfileSelect },
+  addressee: { select: userProfileSelect },
 } satisfies Prisma.FriendInclude;
 
-export const blockInclude = {
-  blocked: { select: friendUserSelect },
-} satisfies Prisma.BlockInclude;
-
-export type FriendUser = Prisma.UserGetPayload<{
-  select: typeof friendUserSelect;
-}>;
-
-export type FriendshipWithUsers = Prisma.FriendGetPayload<{
-  include: typeof friendshipInclude;
+export type FriendListWithUserData = Prisma.FriendGetPayload<{
+  include: typeof friendListInclude;
 }>[];
 
-export type BlockWithUsers = Prisma.BlockGetPayload<{
-  include: typeof blockInclude;
+export const blockListInclude = {
+  blocked: { select: userProfileSelect },
+} satisfies Prisma.BlockInclude;
+
+export type BlockListWithUserData = Prisma.BlockGetPayload<{
+  include: typeof blockListInclude;
 }>[];

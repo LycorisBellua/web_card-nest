@@ -1,23 +1,25 @@
-CONNECTION TO THE BACKEND
-- The backend has harmonized its return types, so you gotta check that you 
-still receive what you need. Since you modified these return types as well to 
-match your needs, you might have to modify them once more.
-- WebSockets (without the game).
-- Lobby & DMs: The frontend has been created in isolation. Make use of the 
-backend and remove the placeholder content.
+MISC
+- Privacy Policy / Terms of Service: There's an ongoing branch for that.
+    * CSS for tables. Is the rest of the layout clear enough?
+	* Read everything to fix what is not accurate.
+    * Explain in the Privacy Policy that the avatar is omitted from user 
+    extractions (you and friends for example), because it'd be too heavy.
+	* Explain that a DM thread can be extracted even if empty, or that it's not 
+	extracted if empty, depending on how the feature actually is.
+- README: Needs to be done.
 
-- pages/auth/ResetPassword.tsx: I don't have the backend yet.
-- Chat timeout toggle.
-- Request to extract lobby in JSON format (for msg sender, omit the avatar), 
-but only if the user has posted at least one msg (even if this msg is 
-moderated, and even if the user is currently timed out from writing to chat).
-- Same lobby request, but in CSV.
-- Request to extract an individual DM thread in JSON. Omit the avatars from msg 
-senders. Do extract even if the thread is empty.
-- Same DM request, but in CSV.
-- Finish whatever TODOs are present in the frontend.
+GAME LOCAL MODE
+- Simplify the game without losing features. Maybe it should be divided into 
+more files.
+- Currently, the local version of the game gets lost if you switch to a 
+different page. You could store it in the local storage. It doesn't matter if 
+you're logged in or not, as only player indexes are stored.
 
-GAME
-- Black Crown tables.
-- Online mode with WebSockets.
-- ...
+GAME ONLINE MODE
+- Online mode with WebSockets: Even if not done, we can validate the project, 
+just not fully.
+- Black Crown tables: opening, closing, invitations. Player 1 is the one to 
+invite others before a game. If Player 1 leaves, the table is closed. It's okay 
+to play with bots if you don't want to bother waiting for a real player or if 
+someone left mid-game (under 30s, they could come back, otherwise they're 
+kicked from the table and have to be invited again).

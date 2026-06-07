@@ -1,5 +1,4 @@
 import Layout from 'App';
-import Lobby from 'pages/chat/Lobby';
 import Auth from 'pages/auth/Auth';
 import ResetPassword from 'pages/auth/ResetPassword';
 import VerifySuccess from 'pages/auth/VerifySuccess';
@@ -8,6 +7,7 @@ import VerifyCancel from 'pages/auth/VerifyCancel';
 import Users from 'pages/profile/Users';
 import PublicProfile from 'pages/profile/PublicProfile';
 import PrivateProfile from 'pages/profile/PrivateProfile';
+import Lobby from 'pages/chat/Lobby';
 import DM from 'pages/chat/DM';
 import Play from 'game/Play';
 import PrivacyPolicy from 'pages/footer/PrivacyPolicy';

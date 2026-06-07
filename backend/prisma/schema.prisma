@@ -9,23 +9,30 @@ datasource db {
 }
 
 model User {
-  id               String     @id @default(uuid(7))
-  username         String     @unique
-  email            String?    @unique
-  email_unverified String?    @unique
+  id               String         @id @default(uuid(7))
+  username         String         @unique
+  email            String?        @unique
+  email_unverified String?        @unique
   password         String
-  desc             String?    @db.VarChar(200)
+  desc             String?        @db.VarChar(200)
   avatar           Bytes?
-  rank             Ranks      @default(PENDING)
-  date             DateTime   @default(now())
-  verifyToken      String?    @unique
+  rank             Ranks          @default(PENDING)
+  date             DateTime       @default(now())
+  verifyToken      String?        @unique
   verifyTimeout    DateTime?
-  refreshToken     String?    @unique
+  refreshToken     String?        @unique
   refreshTimeout   DateTime?
-  sentRequests     Friend[]   @relation("requester")
-  receivedRequests Friend[]   @relation("addressee")
-  blocked          Block[]    @relation("blocker")
-  blockedBy        Block[]    @relation("blocked")
+  resetToken       String?        @unique
+  resetTimeout     DateTime?
+  sentRequests     Friend[]       @relation("requester")
+  receivedRequests Friend[]       @relation("addressee")
+  blocked          Block[]        @relation("blocker")
+  blockedBy        Block[]        @relation("blocked")
+  dmChatUserA      DMChat[]       @relation("userA")
+  dmChatUserB      DMChat[]       @relation("userB")
+  dMSender         DMMessage[]    @relation("sender")
+  lobbyMessages    LobbyMessage[] @relation("sender")
+  lobbyBan         LobbyBan[]     @relation("user")
 }
 
 enum Ranks {
@@ -36,15 +43,17 @@ enum Ranks {
 }
 
 model Friend {
+  id          String       @id @default(uuid(7))
   requester   User         @relation("requester", fields: [requesterId], references: [id], onDelete: Cascade)
   requesterId String
   addressee   User         @relation("addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
   addresseeId String
   status      FriendStatus @default(PENDING)
   created     DateTime     @default(now())
+  dmChat      DMChat?      @relation("friend")
 
-  @@id([requesterId, addresseeId])
-  @@index([addresseeId])
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, requesterId])
 }
 
 enum FriendStatus {
@@ -61,4 +70,45 @@ model Block {
 
   @@id([blockerId, blockedId])
   @@index([blockedId])
+}
+
+model DMChat {
+  userA    User        @relation("userA", fields: [userAId], references: [id], onDelete: Cascade)
+  userAId  String
+  userB    User        @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
+  userBId  String
+  friend   Friend      @relation("friend", fields: [friendshipId], references: [id], onDelete: Cascade)
+  friendshipId  String @unique
+  messages DMMessage[] @relation("chat")
+  id       String      @id @default(uuid(7))
+
+  @@unique([userAId, userBId])
+  @@index([userBId])
+}
+
+model DMMessage {
+  id       String   @id @default(uuid(7))
+  chat     DMChat   @relation("chat", fields: [chatId], references: [id], onDelete: Cascade)
+  chatId   String
+  message  String   @db.VarChar(500)
+  date     DateTime @default(now())
+  sender   User     @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId String
+
+  @@index([chatId])
+}
+
+model LobbyMessage {
+  id        String   @id @default(uuid(7))
+  sender    User?    @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
+  senderId  String?
+  message   String   @db.VarChar(500)
+  date      DateTime @default(now())
+  moderated Boolean  @default(false)
+}
+
+model LobbyBan {
+  user   User     @relation("user", fields: [userId], references: [id], onDelete: Cascade)
+  userId String   @id
+  date   DateTime @default(now())
 }

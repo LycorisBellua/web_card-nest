@@ -2,8 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { User, OtherUserOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
+import { useSocket } from 'context/useSocket';
 import { GetDate } from 'functions/Time';
-import { ResendVerificationEmailRequest } from 'functions/Requests';
+import {
+  ResendVerificationEmailRequest,
+  CancelEmailVerificationRequest,
+} from 'functions/Requests';
 import { AvatarBig } from 'components/btn/Avatar';
 import { BtnDefault } from 'components/btn/Btn';
 import { UsernameBig } from 'components/btn/Username';
@@ -26,10 +30,12 @@ const PublicRightCol = styled.div`
 `;
 
 export function DisplayPublicUserInfo({ user }: { user: OtherUserOrGuest }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!user && onlineUsers.has(user.id);
   if (!user) {
     return (
       <PublicWrapper>
-        <AvatarBig src="" rank="guest" isOnline={false} />
+        <AvatarBig src="" rank="guest" isOnline={isOnline} />
         <PublicRightCol>
           <UsernameBig rank="guest" value="Guest" />
           <RankBadgeBig rank="guest" />
@@ -39,7 +45,7 @@ export function DisplayPublicUserInfo({ user }: { user: OtherUserOrGuest }) {
   }
   return (
     <PublicWrapper>
-      <AvatarBig src={user.avatar} rank={user.rank} isOnline={user.isOnline} />
+      <AvatarBig src={user.avatar} rank={user.rank} isOnline={isOnline} />
       <PublicRightCol>
         <UsernameBig rank={user.rank} value={user.username} />
         <RankBadgeBig rank={user.rank} />
@@ -65,7 +71,7 @@ export function DisplayPrivateUserInfo({ user }: { user: NonNullable<User> }) {
 
 function VerifyEmail({ user }: { user: NonNullable<User> }) {
   const { setUser } = useUser();
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<string>('');
   const [errors, setErrors] = useState<string[]>([]);
 
   async function handleVerifyEmail() {
@@ -84,6 +90,28 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
     }
   }
 
+  async function cancelVerifyEmail() {
+    try {
+      const newaccessToken = await CancelEmailVerificationRequest(
+        user.accessToken,
+      );
+      if (!newaccessToken.length) {
+        setErrors(['Error occurred']);
+        return;
+      }
+      setUser(
+        (prev) =>
+          ({
+            ...prev,
+            accessToken: newaccessToken,
+            email_unverified: '',
+          }) as User,
+      );
+    } catch {
+      setErrors(['Error occurred']);
+    }
+  }
+
   return (
     <div>
       <div>
@@ -91,6 +119,11 @@ function VerifyEmail({ user }: { user: NonNullable<User> }) {
         <BtnDefault onClick={() => void handleVerifyEmail()}>
           Resend Verification Email
         </BtnDefault>
+        {!!user.email && (
+          <BtnDefault onClick={() => void cancelVerifyEmail()}>
+            Cancel New Email
+          </BtnDefault>
+        )}
       </div>
       {errors.map((err, i) => (
         <div key={i}>{err}</div>
