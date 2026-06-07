@@ -77,10 +77,8 @@ export class WebsocketServer
   }
 
   handleDisconnect(client: AppSocket): void {
-    const userId = this.connections.removeBySocketId(client.id);
-    if (!userId) {
-      return;
-    }
+    this.connections.removeBySocketId(client.id);
+    this.disconnectGame(client.data.user.id);
     const users = this.connections.getAllUserIds();
     client.broadcast.emit('OnlineUsers', users);
   }
@@ -229,6 +227,13 @@ export class WebsocketServer
       this.broadcastGameInfo(game);
     } catch (err) {
       sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  private disconnectGame(userId: string): void {
+    const game = this.games.disconnect(userId);
+    if (game) {
+      this.broadcastGameInfo(game);
     }
   }
 

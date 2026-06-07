@@ -3,6 +3,7 @@ export type Game = {
   seats: number;
   humans: number;
   players: Occupant[];
+  timeouts: Timeout[];
   invited: Set<string>;
   leader: string;
 };
@@ -10,6 +11,13 @@ export type Game = {
 export type Occupant =
   | { type: 'human'; id: string }
   | { type: 'bot'; id: 'bot' };
+
+export type Timeout = {
+  occupant: Occupant;
+  timer: number;
+  seat: number;
+  leader: boolean;
+};
 
 export type Suit = 'hearts' | 'diamonds' | 'spades' | 'clubs';
 
