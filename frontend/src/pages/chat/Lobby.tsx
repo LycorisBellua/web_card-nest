@@ -1,57 +1,109 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useUser } from 'context/useUser';
-import type { Msg } from 'context/Types';
+import { useSocket } from 'context/useSocket';
+import type { PublicMsg } from 'context/Types';
+import { addAvatarPrefix } from 'functions/UserValidation';
 import ChatPage from 'components/chat/ChatPage';
 import ChatHead from 'components/chat/ChatHead';
 import ChatMsgArea from 'components/chat/ChatMsgArea';
 import ChatDate from 'components/chat/ChatDate';
-import ChatMsg from 'components/chat/ChatMsg';
-import ChatInput from 'components/chat/ChatInput';
+import { PublicChatMsg } from 'components/chat/ChatMsg';
+import { ChatInput, DisabledChatInput } from 'components/chat/ChatInput';
 
 function Lobby() {
-  // TODO: Replace with real time data
-  const { user, threads, postMessage } = useUser();
-  const nbr_online = 0;
-  //const nbr_online = users.filter((u) => u.isOnline).length;
-  const thread = threads.find((t) => t.id === 'thread_group_lobby');
-  const lastMsg = thread?.messages.at(-1);
+  const { user } = useUser();
+  const { socket, onlineUsers } = useSocket();
+  const [isTimedOut, setIsTimedOut] = useState<boolean>(false);
+  const [messages, setMessages] = useState<PublicMsg[]>([]);
+
+  const lastMsg = messages.at(-1);
   const grouped =
-    thread?.messages.reduce<Record<string, Msg[]>>((acc, msg) => {
-      const day = msg.created.toDateString();
+    messages.reduce<Record<string, PublicMsg[]>>((acc, msg) => {
+      const day = msg.date.toDateString();
       if (!acc[day]) acc[day] = [];
       acc[day].push(msg);
       return acc;
     }, {}) ?? {};
-
   const msgsEndRef = useRef<HTMLDivElement>(null);
+
+  const sendMessage = (input: string) => {
+    if (!input) return;
+    socket.emit('PublicMessage', input);
+  };
+
+  const normalizeMsg = (msg: PublicMsg): PublicMsg => ({
+    ...msg,
+    date: new Date(msg.date),
+    sender:
+      msg.sender && msg.sender.id !== 'Guest'
+        ? {
+            ...msg.sender,
+            avatar: msg.sender.avatar
+              ? addAvatarPrefix(msg.sender.avatar)
+              : null,
+          }
+        : null,
+  });
 
   useEffect(() => {
     msgsEndRef.current?.scrollIntoView({ behavior: 'instant' });
   }, []);
 
   useEffect(() => {
-    if (lastMsg?.authorId === user?.id) {
+    if (lastMsg?.sender?.id === user?.id) {
       msgsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [user?.id, lastMsg]);
 
+  useEffect(() => {
+    socket.emit('FetchLobbyHistory', (data: PublicMsg[]) => {
+      setMessages(data.map(normalizeMsg));
+    });
+    socket.emit('GetSelfLobbyTimeoutStatus', (data: boolean) => {
+      setIsTimedOut(data);
+    });
+
+    socket.on('PublicMessage', (data: PublicMsg) => {
+      setMessages((prev) => [...prev, normalizeMsg(data)]);
+    });
+    socket.on('messageModerated', ({ messageId }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, moderated: true, message: '' } : msg,
+        ),
+      );
+    });
+    socket.on('LobbyTimeoutStatus', ({ isBanned, isGuest }) => {
+      if (isGuest && user) return;
+      setIsTimedOut(isBanned);
+    });
+
+    return () => {
+      socket.off('PublicMessage');
+      socket.off('messageModerated');
+      socket.off('LobbyTimeoutStatus');
+    };
+  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <ChatPage>
-      <ChatHead is_dm={false} title="the lobby" nbr_online={nbr_online} />
+      <ChatHead is_dm={false} title="the lobby" nbr_online={onlineUsers.size} />
       <ChatMsgArea>
         {Object.entries(grouped).map(([day, msgs]) => (
           <React.Fragment key={day}>
             <ChatDate date={new Date(day)} />
             {msgs.map((msg) => (
-              <ChatMsg key={msg.id} msg={msg} />
+              <PublicChatMsg key={msg.id} msg={msg} />
             ))}
           </React.Fragment>
         ))}
         <div ref={msgsEndRef} />
       </ChatMsgArea>
-      <ChatInput
-        onSend={(content) => postMessage('thread_group_lobby', content)}
-      />
+      {isTimedOut ? (
+        <DisabledChatInput />
+      ) : (
+        <ChatInput onSend={(input) => sendMessage(input)} />
+      )}
     </ChatPage>
   );
 }

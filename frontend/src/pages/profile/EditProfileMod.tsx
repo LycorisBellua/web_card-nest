@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, OtherUser } from 'context/Types';
 import { useUser } from 'context/useUser';
+import { useSocket } from 'context/useSocket';
 import {
   sanitizeUsername,
   sanitizeDescription,
@@ -58,18 +59,22 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
     receivedFriends,
     setReceivedFriends,
   } = useUser();
-  const [displaySpinner, setDisplaySpinner] = useState(false);
+  const [displaySpinner, setDisplaySpinner] = useState<boolean>(false);
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>(emptyFieldErrors());
-  const [successMessage, setSuccessMessage] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [resetKey, setResetKey] = useState(0);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [resetKey, setResetKey] = useState<number>(0);
 
   const [avatar, setAvatar] = useState<File | '' | undefined>(undefined);
-  const [username, setUsername] = useState('');
-  const [desc, setDesc] = useState('');
+  const [username, setUsername] = useState<string>('');
+  const [desc, setDesc] = useState<string>('');
 
-  if (!user || !otherUser || !CanDisciplineThisUser(user, otherUser))
+  if (
+    !user ||
+    !otherUser ||
+    !CanDisciplineThisUser(user?.rank ?? '', otherUser?.rank ?? '')
+  )
     return <></>;
 
   const hasPendingChanges =
@@ -283,6 +288,8 @@ function UpdateAvatar({
   onChange: (f: File | '') => void;
   errors: string[];
 }) {
+  const { onlineUsers } = useSocket();
+  const isOnline = !!otherUser && onlineUsers.has(otherUser.id);
   const imgInputRef = useRef<HTMLInputElement | null>(null);
 
   const previewUrl = useMemo(() => {
@@ -306,7 +313,7 @@ function UpdateAvatar({
       <AvatarBig
         src={avatarSrc ?? ''}
         rank={otherUser.rank}
-        isOnline={otherUser.isOnline}
+        isOnline={isOnline}
       />
       <div className="btn">
         <BtnDefault onClick={() => imgInputRef.current?.click()}>
@@ -344,7 +351,7 @@ function UpdateUsername({
   onChange: (v: string) => void;
   errors: string[];
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
 
   function updateValue(e: React.ChangeEvent<HTMLInputElement>) {
     setValue(e.target.value);
@@ -376,7 +383,7 @@ function UpdateDescription({
   onChange: (v: string) => void;
   errors: string[];
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState<string>('');
 
   function updateValue(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setValue(e.target.value);

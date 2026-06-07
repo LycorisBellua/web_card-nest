@@ -15,7 +15,7 @@ import {
 } from '../../user/utils/user.validator';
 
 export class AdminUpdateUserDto {
-  @IsUUID()
+  @IsUUID('7')
   targetId: string;
 
   @IsOptional()

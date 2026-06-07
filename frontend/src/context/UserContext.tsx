@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { User, LimitedUser, Thread } from 'context/Types';
+import type { User, LimitedUser } from 'context/Types';
 
 export type UserContextType = {
   user: User;
@@ -12,8 +12,6 @@ export type UserContextType = {
   setSentFriends: React.Dispatch<React.SetStateAction<LimitedUser[]>>;
   receivedFriends: LimitedUser[];
   setReceivedFriends: React.Dispatch<React.SetStateAction<LimitedUser[]>>;
-  threads: Thread[];
-  postMessage: (threadId: string, content: string) => void;
 };
 
 export const UserContext = createContext<UserContextType | undefined>(

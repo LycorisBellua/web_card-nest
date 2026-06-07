@@ -17,6 +17,8 @@ import { Ranks } from 'src/generated/prisma/enums';
 import { RequiredRank } from '../auth/guards/auth.rank-decorator';
 import type { Request as ExpressRequest } from 'express';
 import { JwtPayload } from '../auth/jwt/auth.jwt-payload';
+import { OwnProfile, UserProfile } from './types/user.types';
+import { ReturnMessage } from '../auth/types/auth.types';
 
 @Controller('api/user')
 export class UserController {
@@ -24,9 +26,10 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Delete()
-  async removeUser(@Req() req: ExpressRequest) {
+  async removeUser(@Req() req: ExpressRequest): Promise<ReturnMessage> {
     const user = req['user'] as JwtPayload;
-    return await this.userService.removeUser(user.id);
+    await this.userService.removeUser(user.id);
+    return { message: 'User Account Deleted' };
   }
 
   // UPDATE ENTRIES
@@ -36,7 +39,7 @@ export class UserController {
   async updateUser(
     @Req() req: ExpressRequest,
     @Body() updateUserDto: UpdateUserDto,
-  ) {
+  ): Promise<OwnProfile> {
     const user = req['user'] as JwtPayload;
     return await this.userService.updateUser(user.id, updateUserDto);
   }
@@ -44,9 +47,10 @@ export class UserController {
   // FETCH USERS
   @UseGuards(AuthGuard)
   @Get('me')
-  async getOwnProfile(@Req() req: ExpressRequest) {
+  async getOwnProfile(@Req() req: ExpressRequest): Promise<OwnProfile> {
     const user = req['user'] as JwtPayload;
-    return this.userService.getOwnProfile(user.id);
+    const result = await this.userService.getOwnProfile(user.id);
+    return result;
   }
 
   @UseGuards(AuthGuard, RankGuard)
@@ -55,13 +59,9 @@ export class UserController {
   async getUserById(
     @Req() req: ExpressRequest,
     @Param('userId', ParseUUIDPipe) toFind: string,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
-    return await this.userService.getUserById(
-      user.rank as Ranks,
-      user.id,
-      toFind,
-    );
+    return await this.userService.getUserById(user.rank as Ranks, toFind);
   }
 
   @UseGuards(AuthGuard, RankGuard)
@@ -70,19 +70,17 @@ export class UserController {
   async getUserByUsername(
     @Req() req: ExpressRequest,
     @Param('username') toFind: string,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
-    return await this.userService.getUserByUsername(
-      user.rank as Ranks,
-      user.id,
-      toFind,
-    );
+    return await this.userService.getUserByUsername(user.rank as Ranks, toFind);
   }
 
   @UseGuards(AuthGuard, RankGuard)
   @RequiredRank(Ranks.USER)
   @Get('all/username')
-  async getAllSortByUsername(@Req() req: ExpressRequest) {
+  async getAllSortByUsername(
+    @Req() req: ExpressRequest,
+  ): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
     return await this.userService.getAllSortByUsername(user.rank as Ranks);
   }
@@ -90,7 +88,7 @@ export class UserController {
   @UseGuards(AuthGuard, RankGuard)
   @RequiredRank(Ranks.USER)
   @Get('all/date')
-  async getAllSortByDate(@Req() req: ExpressRequest) {
+  async getAllSortByDate(@Req() req: ExpressRequest): Promise<UserProfile[]> {
     const user = req['user'] as JwtPayload;
     return await this.userService.getAllSortByDate(user.rank as Ranks);
   }

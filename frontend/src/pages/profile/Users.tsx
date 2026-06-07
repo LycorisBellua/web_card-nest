@@ -35,7 +35,8 @@ function Users() {
           if (!res.ok) return;
         }
         const data = (await res.json()) as OtherUser[];
-        const prefixed = data.map((u) => ({
+        const withoutDummyGuest = data.filter((e) => e.username !== 'Guest');
+        const prefixed = withoutDummyGuest.map((u) => ({
           ...u,
           avatar: addAvatarPrefix(u.avatar),
         }));

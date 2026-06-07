@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -17,18 +19,23 @@ import { AdminService } from './admin.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RankGuard } from '../auth/guards/auth.rankguard';
 import { UpdateRankDto } from './dto/update-rank.dto';
+import { AdmUuidDto } from './dto/adm-uuid.dto';
+import { MessageUuidDto } from './dto/message.dto';
+import { UserProfile } from '../user/types/user.types';
+import { LobbyBan, LobbyMessage } from 'src/generated/prisma/client';
+import { ReturnMessage } from '../auth/types/auth.types';
 
+@UseGuards(AuthGuard, RankGuard)
+@RequiredRank(Ranks.MODERATOR)
 @Controller('api/admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @UseGuards(AuthGuard, RankGuard)
-  @RequiredRank(Ranks.MODERATOR)
   @Patch('modify')
   async adminModifyUser(
     @Req() req: ExpressRequest,
     @Body() adminUpdateUserDto: AdminUpdateUserDto,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.adminModifyUser(
       user.id,
@@ -37,13 +44,11 @@ export class AdminController {
     );
   }
 
-  @UseGuards(AuthGuard, RankGuard)
-  @RequiredRank(Ranks.MODERATOR)
   @Patch('rank')
   async adminModifyRank(
     @Req() req: ExpressRequest,
     @Body() dto: UpdateRankDto,
-  ) {
+  ): Promise<UserProfile> {
     const user = req['user'] as JwtPayload;
     return await this.adminService.adminModifyRank(
       user.id,
@@ -52,18 +57,91 @@ export class AdminController {
     );
   }
 
-  @UseGuards(AuthGuard, RankGuard)
   @RequiredRank(Ranks.ADMIN)
   @Delete(':userId')
   async adminRemoveUser(
     @Req() req: ExpressRequest,
     @Param('userId', ParseUUIDPipe) targetId: string,
-  ) {
+  ): Promise<ReturnMessage> {
     const user = req['user'] as JwtPayload;
-    return await this.adminService.adminRemoveUser(
+    await this.adminService.adminRemoveUser(
       user.id,
       user.rank as Ranks,
       targetId,
+    );
+    return { message: 'User Account Deleted' };
+  }
+
+  @Post('ban/user')
+  async lobbyChatBan(
+    @Req() req: ExpressRequest,
+    @Body() dto: AdmUuidDto,
+  ): Promise<LobbyBan> {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.lobbyChatBan(
+      user.id,
+      user.rank as Ranks,
+      dto.targetId,
+    );
+  }
+
+  @Post('ban/guest')
+  async guestLobbyChatBan(): Promise<LobbyBan> {
+    return await this.adminService.guestLobbyChatBan();
+  }
+
+  @Delete('ban/user/:targetId')
+  async lobbyChatUnban(
+    @Req() req: ExpressRequest,
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ): Promise<LobbyBan> {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.lobbyChatUnban(
+      user.id,
+      user.rank as Ranks,
+      targetId,
+    );
+  }
+
+  @Delete('ban/guest')
+  async guestLobbyChatUnban(): Promise<LobbyBan> {
+    return await this.adminService.guestLobbyChatUnban();
+  }
+
+  @Get('ban/user/:targetId')
+  async fetchBan(
+    @Req() req: ExpressRequest,
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ): Promise<LobbyBan | null> {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.fetchBan(
+      user.id,
+      user.rank as Ranks,
+      targetId,
+    );
+  }
+
+  @Get('ban/guest')
+  async fetchGuestBan(@Req() req: ExpressRequest): Promise<LobbyBan | null> {
+    const user = req['user'] as JwtPayload;
+    return await this.adminService.fetchBan(
+      user.id,
+      user.rank as Ranks,
+      'Guest',
+    );
+  }
+
+  // A WebSockets request is used instead
+  @Patch('moderate')
+  async moderateLobbyMessage(
+    @Req() req: ExpressRequest,
+    @Body() dto: MessageUuidDto,
+  ): Promise<LobbyMessage> {
+    const user = req['user'] as JwtPayload;
+    return this.adminService.moderateLobbyMessage(
+      user.id,
+      user.rank as Ranks,
+      dto.messageId,
     );
   }
 }

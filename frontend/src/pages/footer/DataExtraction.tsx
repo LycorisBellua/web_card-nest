@@ -1,10 +1,8 @@
-import { useState } from 'react';
-import type { User } from 'context/Types';
+import { useState, useEffect } from 'react';
+import type { User, PublicMsg } from 'context/Types';
 import { useUser } from 'context/useUser';
-import {
-  ExtractProfileDataJSON,
-  ExtractProfileDataCSV,
-} from 'functions/Requests';
+import { useSocket } from 'context/useSocket';
+import { ExtractAllDataRequest } from 'functions/Requests';
 import { ScrollablePage } from 'components/general/Scrollable';
 import Checkbox from 'components/misc/Checkbox';
 import Spinner from 'components/misc/Spinner';
@@ -17,28 +15,21 @@ const ShiftBox = styled.div`
 
 function DataExtraction() {
   const { user, setUser, friends } = useUser();
+  const { socket } = useSocket();
+  const [hasPostedInLobby, setHasPostedInLobby] = useState<boolean>(false);
   const [profileSelected, setProfileSelected] = useState<boolean>(false);
   const [lobbySelected, setLobbySelected] = useState<boolean>(false);
   const [dmSelected, setDmSelected] = useState<boolean[]>(() =>
     Array.from({ length: friends.length }, () => false),
   );
-  const [jsonSelected, setJsonSelected] = useState<boolean>(false);
-  const [csvSelected, setCsvSelected] = useState<boolean>(false);
   const [displaySpinner, setDisplaySpinner] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
 
   const allDmsSelected = dmSelected.length > 0 && dmSelected.every(Boolean);
 
-  if (!user) {
-    return (
-      <ScrollablePage>
-        <h1>Personal Data Extraction</h1>
-        <p>You must be logged in to request data extraction.</p>
-      </ScrollablePage>
-    );
-  }
-
-  const handleDownloadJSON = (data: object, filename = 'data.json') => {
+  /*
+  // For individual JSON file:
+  const handleDownload = (data: object, filename = 'card_nest_data.json') => {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json',
     });
@@ -49,9 +40,10 @@ function DataExtraction() {
     a.click();
     URL.revokeObjectURL(url);
   };
+  */
 
-  const handleDownloadCSV = (data: string, filename = 'data.csv') => {
-    const blob = new Blob([data], { type: 'text/csv' });
+  // For the ZIP file:
+  const handleDownload = (blob: Blob, filename = 'card_nest_data.zip') => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -64,41 +56,25 @@ function DataExtraction() {
     try {
       const anyDataSelected =
         profileSelected || lobbySelected || dmSelected.some(Boolean);
-      const anyFormatSelected = jsonSelected || csvSelected;
       if (!anyDataSelected) {
         setMessage('No data has been selected.');
-        return;
-      } else if (!anyFormatSelected) {
-        setMessage('No format has been selected.');
         return;
       }
       setMessage('');
       setDisplaySpinner(true);
       let accessToken = user!.accessToken;
-      if (jsonSelected) {
-        if (profileSelected) {
-          const profileJson = await ExtractProfileDataJSON(accessToken);
-          accessToken = profileJson.accessToken;
-          if (!accessToken.length) {
-            setMessage('Error with: JSON - User profile');
-            setDisplaySpinner(false);
-            return;
-          }
-          handleDownloadJSON(profileJson.data, 'profile.json');
-        }
+      const result = await ExtractAllDataRequest(accessToken, {
+        profile: profileSelected,
+        lobby: lobbySelected,
+        friendIds: friends.filter((_, i) => dmSelected[i]).map((f) => f.id),
+      });
+      accessToken = result.accessToken;
+      if (!accessToken.length || !result.blob) {
+        setMessage('Error with data extraction');
+        setDisplaySpinner(false);
+        return;
       }
-      if (csvSelected) {
-        if (profileSelected) {
-          const profileCsv = await ExtractProfileDataCSV(accessToken);
-          accessToken = profileCsv.accessToken;
-          if (!accessToken.length) {
-            setMessage('Error with: CSV - User profile');
-            setDisplaySpinner(false);
-            return;
-          }
-          handleDownloadCSV(profileCsv.data, 'profile.csv');
-        }
-      }
+      handleDownload(result.blob, 'card_nest_data.zip');
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
       setMessage('');
       setDisplaySpinner(false);
@@ -108,14 +84,30 @@ function DataExtraction() {
     }
   }
 
-  /*
-    TODO
-    - For the lobby, only make it selectable if the user has posted at least 
-    one message.
-    - Add the requests to extract the lobby and individual DM threads as well.
-    - Explain in the Privacy Policy that the avatar is omitted from user 
-    extractions (you and friends for example), because it'd be too heavy.
-  */
+  useEffect(() => {
+    socket.emit('FetchLobbyHistory', (data: PublicMsg[]) => {
+      const posted = data.some(
+        (msg) => msg.senderId !== null && msg.senderId === user?.id,
+      );
+      setHasPostedInLobby(posted);
+    });
+  }, [socket, user?.id]);
+
+  useEffect(() => {
+    function InitDmSelector() {
+      setDmSelected(Array.from({ length: friends.length }, () => false));
+    }
+    InitDmSelector();
+  }, [friends.length]);
+
+  if (!user) {
+    return (
+      <ScrollablePage>
+        <h1>Personal Data Extraction</h1>
+        <p>You must be logged in to request data extraction.</p>
+      </ScrollablePage>
+    );
+  }
 
   return (
     <ScrollablePage>
@@ -126,11 +118,13 @@ function DataExtraction() {
         checked={profileSelected}
         onChange={setProfileSelected}
       />
-      <Checkbox
-        label="Chat: Lobby"
-        checked={lobbySelected}
-        onChange={setLobbySelected}
-      />
+      {hasPostedInLobby && (
+        <Checkbox
+          label="Chat: Lobby"
+          checked={lobbySelected}
+          onChange={setLobbySelected}
+        />
+      )}
       {!friends.length ? (
         <></>
       ) : (
@@ -160,13 +154,6 @@ function DataExtraction() {
           </ShiftBox>
         </>
       )}
-      <h2>Select format</h2>
-      <Checkbox
-        label="JSON"
-        checked={jsonSelected}
-        onChange={setJsonSelected}
-      />
-      <Checkbox label="CSV" checked={csvSelected} onChange={setCsvSelected} />
       <BtnAccent onClick={() => void handleExtract()}>Extract</BtnAccent>
       {displaySpinner && <Spinner label="Extracting..." />}
       {message && <p>{message}</p>}

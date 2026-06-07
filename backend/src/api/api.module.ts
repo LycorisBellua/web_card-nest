@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { HelloController } from './hello/hello.controller';
-import { HelloService } from './hello/hello.service';
 import { SendMailController } from './sendMail/sendMail.controller';
 import { SendMailService } from './sendMail/sendMail.service';
 import { UserController } from './user/user.controller';
@@ -11,13 +9,16 @@ import { RelController } from './relationships/rel.controller';
 import { RelService } from './relationships/rel.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
-import { WebsocketServer } from './websocketHandling/server/WebsocketServer.gateway';
+import { WebsocketServer } from './websocketHandling/WebsocketServer.gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './auth/jwt/auth.jwt-secret';
 import { GdprController } from './gdpr/gdpr.controller';
 import { GdprService } from './gdpr/gdpr.service';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
+import { ChatController } from './chat/chat.controller';
+import { ChatService } from './chat/chat.service';
+import { ConnectionRegistry } from './websocketHandling/registry/connection-registry';
 
 @Module({
   imports: [
@@ -28,16 +29,15 @@ import { AdminService } from './admin/admin.service';
     }),
   ],
   controllers: [
-    HelloController,
     SendMailController,
     UserController,
     RelController,
     AuthController,
     GdprController,
     AdminController,
+    ChatController,
   ],
   providers: [
-    HelloService,
     SendMailService,
     UserService,
     UserTasksService,
@@ -46,6 +46,9 @@ import { AdminService } from './admin/admin.service';
     AuthService,
     GdprService,
     AdminService,
+    ChatService,
+    WebsocketServer,
+    ConnectionRegistry,
   ],
 })
 export class ApiModule {}

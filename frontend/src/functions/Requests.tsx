@@ -74,7 +74,6 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
     rank: data.rank,
     registered: new Date(data.date),
     desc: data.desc,
-    isOnline: false,
     email: data.email,
     email_unverified: data.email_unverified,
     accessToken: accessToken,
@@ -140,7 +139,7 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
 export async function ResendVerificationEmailRequest(
   accessToken: string,
 ): Promise<string> {
-  let res = await fetch('/api/auth/resend', {
+  let res = await fetch('/api/auth/verify/resend', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -150,7 +149,7 @@ export async function ResendVerificationEmailRequest(
     if (res.status != 401) return '';
     accessToken = await RefreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
-    res = await fetch('/api/auth/resend', {
+    res = await fetch('/api/auth/verify/resend', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -158,6 +157,32 @@ export async function ResendVerificationEmailRequest(
     });
     if (!res.ok) return '';
   }
+  return accessToken;
+}
+
+export async function CancelEmailVerificationRequest(
+  accessToken: string,
+): Promise<string> {
+  let res = await fetch('/api/auth/verify/cancel', {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/auth/verify/cancel', {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  const data = (await res.json()) as boolean;
+  if (!data) return '';
   return accessToken;
 }
 
@@ -589,10 +614,10 @@ export async function FetchOtherFriendListRequest(
   return { accessToken: accessToken, users: prefixed };
 }
 
-export async function ExtractProfileDataJSON(
+export async function ExtractProfileDataRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; data: object }> {
-  let res = await fetch('/api/gdpr/exportJSON', {
+  let res = await fetch('/api/gdpr/export/profile', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -602,7 +627,7 @@ export async function ExtractProfileDataJSON(
     if (res.status != 401) return { accessToken: '', data: {} };
     accessToken = await RefreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', data: {} };
-    res = await fetch('/api/gdpr/exportJSON', {
+    res = await fetch('/api/gdpr/export/profile', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -614,34 +639,244 @@ export async function ExtractProfileDataJSON(
   return { accessToken: accessToken, data: data };
 }
 
-export async function ExtractProfileDataCSV(
+export async function ExtractLobbyDataRequest(
   accessToken: string,
-): Promise<{ accessToken: string; data: string }> {
-  let res = await fetch('/api/gdpr/exportCSV', {
+): Promise<{ accessToken: string; data: object }> {
+  let res = await fetch('/api/gdpr/export/lobby', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
   if (!res.ok) {
-    if (res.status != 401) return { accessToken: '', data: '' };
+    if (res.status != 401) return { accessToken: '', data: {} };
     accessToken = await RefreshTokenRequest(accessToken);
-    if (!accessToken.length) return { accessToken: '', data: '' };
-    res = await fetch('/api/gdpr/exportCSV', {
+    if (!accessToken.length) return { accessToken: '', data: {} };
+    res = await fetch('/api/gdpr/export/lobby', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    if (!res.ok) return { accessToken: '', data: '' };
+    if (!res.ok) return { accessToken: '', data: {} };
   }
-  const data = (await res.json()) as unknown;
-  const objectsToCsv = (data: Record<string, unknown>[]): string => {
-    const headers = Object.keys(data[0]);
-    const rows = data.map((row) =>
-      headers.map((h) => JSON.stringify(row[h] ?? '')).join(','),
-    );
-    return [headers.join(','), ...rows].join('\n');
+  const data = (await res.json()) as object;
+  return { accessToken: accessToken, data: data };
+}
+
+export async function ExtractDMDataRequest(
+  accessToken: string,
+  friendId: string,
+): Promise<{ accessToken: string; data: object }> {
+  let res = await fetch(`/api/gdpr/export/dm/${friendId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', data: {} };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', data: {} };
+    res = await fetch(`/api/gdpr/export/dm/${friendId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', data: {} };
+  }
+  const data = (await res.json()) as object;
+  return { accessToken: accessToken, data: data };
+}
+
+export async function ExtractAllDataRequest(
+  accessToken: string,
+  dto: { profile?: boolean; lobby?: boolean; friendIds?: string[] },
+): Promise<{ accessToken: string; blob: Blob | null }> {
+  const body = JSON.stringify(dto);
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+    'Content-Type': 'application/json',
   };
-  return { accessToken, data: objectsToCsv(data as Record<string, unknown>[]) };
+
+  let res = await fetch('/api/gdpr/export/all', {
+    method: 'POST',
+    headers,
+    body,
+  });
+  if (!res.ok) {
+    if (res.status !== 401) return { accessToken, blob: null };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', blob: null };
+    res = await fetch('/api/gdpr/export/all', {
+      method: 'POST',
+      headers: { ...headers, Authorization: `Bearer ${accessToken}` },
+      body,
+    });
+    if (!res.ok) return { accessToken, blob: null };
+  }
+  const blob = await res.blob();
+  return { accessToken, blob };
+}
+
+export async function EnableLobbyTimeoutRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch('/api/admin/ban/user', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      targetId: userId,
+    }),
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/admin/ban/user', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        targetId: userId,
+      }),
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function EnableGuestLobbyTimeoutRequest(
+  accessToken: string,
+): Promise<string> {
+  let res = await fetch('/api/admin/ban/guest', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/admin/ban/guest', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function DisableLobbyTimeoutRequest(
+  accessToken: string,
+  userId: string,
+): Promise<string> {
+  let res = await fetch(`/api/admin/ban/user/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch(`/api/admin/ban/user/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function DisableGuestLobbyTimeoutRequest(
+  accessToken: string,
+): Promise<string> {
+  let res = await fetch('/api/admin/ban/guest', {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return '';
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return '';
+    res = await fetch('/api/admin/ban/guest', {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return '';
+  }
+  return accessToken;
+}
+
+export async function GetLobbyTimeoutStateRequest(
+  accessToken: string,
+  userId: string,
+): Promise<{ accessToken: string; enabled: boolean }> {
+  let res = await fetch(`/api/admin/ban/user/${userId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', enabled: false };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', enabled: false };
+    res = await fetch(`/api/admin/ban/user/${userId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', enabled: false };
+  }
+  // Note: For some reason, the frontend kept crashing with `res.json()`
+  const text = await res.text();
+  const enabled = !!text;
+  return { accessToken: accessToken, enabled: enabled };
+}
+
+export async function GetGuestLobbyTimeoutStateRequest(
+  accessToken: string,
+): Promise<{ accessToken: string; enabled: boolean }> {
+  let res = await fetch('/api/admin/ban/guest', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!res.ok) {
+    if (res.status != 401) return { accessToken: '', enabled: false };
+    accessToken = await RefreshTokenRequest(accessToken);
+    if (!accessToken.length) return { accessToken: '', enabled: false };
+    res = await fetch('/api/admin/ban/guest', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) return { accessToken: '', enabled: false };
+  }
+  // Note: For some reason, the frontend kept crashing with `res.json()`
+  const text = await res.text();
+  const enabled = !!text;
+  return { accessToken: accessToken, enabled: enabled };
 }

@@ -44,8 +44,8 @@ const Field = styled.input`
   }
 `;
 
-function ChatInput({ onSend }: { onSend: (content: string) => void }) {
-  const [value, setValue] = useState('');
+export function ChatInput({ onSend }: { onSend: (content: string) => void }) {
+  const [value, setValue] = useState<string>('');
   const maxLen = 500;
 
   function handleSubmit() {
@@ -74,4 +74,10 @@ function ChatInput({ onSend }: { onSend: (content: string) => void }) {
   );
 }
 
-export default ChatInput;
+export function DisabledChatInput() {
+  return (
+    <Wrap>
+      <Box>You're in time out. You can't write to the lobby.</Box>
+    </Wrap>
+  );
+}

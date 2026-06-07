@@ -56,7 +56,7 @@ const Content = styled.div`
 `;
 
 function Accordion({ title, content }: { title: string; content: string }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
 
   const toggle = () => setOpen((prev) => !prev);
 

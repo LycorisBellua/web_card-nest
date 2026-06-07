@@ -7,7 +7,7 @@ npm install
 npm run build
 cd /app/backend
 npm install
-npm install i --save @nestjs/websockets @nestjs/platform-socket.io socket.io
+npm install i --save @nestjs/websockets @nestjs/platform-socket.io socket.io @nestjs/event-emitter
 # npx prisma migrate dev 
 npx prisma migrate deploy
 npx prisma studio --port 5555 --browser none &

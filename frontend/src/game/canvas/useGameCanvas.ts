@@ -1,7 +1,7 @@
-import type { GameState } from 'game/logic/types';
 import { useEffect, useRef } from 'react';
-import { CanvasCard } from './CanvasCard';
-import { suitToSymbol } from './cardTextures';
+import type { GameState } from 'game/logic/types';
+import { CanvasCard } from 'game/canvas/CanvasCard';
+import { suitToSymbol } from 'game/canvas/cardTextures';
 
 const DECK_X = 780;
 const DECK_Y = 240;
@@ -154,8 +154,8 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
         const player = gameRef.current!.players[playerIdx];
         const playerName = player.username
           ? `#${playerIdx + 1} ${player.username}`
-          : `#${playerIdx + 1} Guest`;
-        // accroding to gamestatus to get only visible points or total score
+          : `#${playerIdx + 1} Player`;
+        // according to gamestatus to get only visible points or total score
         let label = '';
         const crown = player.hasBlackCrown ? '👑​' : '';
         const isfinished = gameRef.current!.gameStatus === 'finished';

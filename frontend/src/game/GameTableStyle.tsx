@@ -30,11 +30,6 @@ export const Overlay = styled.div`
   z-index: 999;
 `;
 
-export const OverlayStyle = styled.div`
-  color: white;
-  text-align: center;
-`;
-
 export const PlayTableStyle = styled.div`
   position: relative;
   width: 100%;
@@ -59,22 +54,6 @@ export const PlayerCountStyle = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
-`;
-
-export const RecordTableWrapper = styled.div`
-  max-width: 100%;
-  overflow-x: auto;
-  margin-bottom: 20px;
-`;
-
-export const RecordTableStyle = styled.table`
-  border-collapse: collapse;
-  th,
-  td {
-    border: 1px solid;
-    padding: 10px;
-    white-space: nowrap;
-  }
 `;
 
 export const ShowFinishedStyle = styled.div`

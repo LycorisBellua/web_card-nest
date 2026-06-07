@@ -38,6 +38,7 @@ env-file:
 		echo "JWT_SECRET=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
 		echo "DB_ACCESS_USER=db_admin" >> $(ENV_FILE); \
 		echo "DB_ACCESS_PASSWORD=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
+		echo "GUEST_PASSWORD=$$(openssl rand -hex 32)" >> $(ENV_FILE); \
 		cat $(VARIABLE_IMPORTS) >> $(ENV_FILE); \
 		echo "Generated .env file";\
 	fi

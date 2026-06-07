@@ -7,9 +7,11 @@ import Modal from 'components/misc/Modal';
 
 function DangerZone({ user }: { user: NonNullable<User> }) {
   const { setUser } = useUser();
-  const [isDownrankModalOpen, setIsDownrankModalOpen] = useState(false);
-  const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
-  const [error, setError] = useState('');
+  const [isDownrankModalOpen, setIsDownrankModalOpen] =
+    useState<boolean>(false);
+  const [isDeletionModalOpen, setIsDeletionModalOpen] =
+    useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   function closeModals() {
     setIsDownrankModalOpen(false);

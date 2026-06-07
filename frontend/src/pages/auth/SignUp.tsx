@@ -29,12 +29,12 @@ function SignUp() {
     setSentFriends,
     setReceivedFriends,
   } = useUser();
-  const [uname, setUname] = useState('');
-  const [uemail, setUEmail] = useState('');
-  const [upassword, setUPassword] = useState('');
-  const [upwdConfirm, setUPwdConfirm] = useState('');
+  const [uname, setUname] = useState<string>('');
+  const [uemail, setUEmail] = useState<string>('');
+  const [upassword, setUPassword] = useState<string>('');
+  const [upwdConfirm, setUPwdConfirm] = useState<string>('');
   const [errors, setError] = useState<string[]>([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<string>('');
   const navigate = useNavigate();
 
   async function handlerSubmit(e: React.FormEvent<HTMLFormElement>) {

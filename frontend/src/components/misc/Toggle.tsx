@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 /*
-  const [notifications, setNotifications] = useState(true);
+  const [notifications, setNotifications] = useState<boolean>(true);
 
   <Toggle
     label="Lobby notifications"

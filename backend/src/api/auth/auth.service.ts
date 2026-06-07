@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
@@ -12,45 +13,52 @@ import {
   createPasswordHash,
   createTokenHash,
   getCurrentTime,
-  getRefreshTimeout,
   getToken,
   newPasswordContainsEmail,
   newPasswordContainsUsername,
 } from '../user/utils/user.utils';
-import { JwtPayload } from './jwt/auth.jwt-payload';
 import { UpdatePasswordDto } from '../user/dto/update-password.dto';
-import { TokenPair } from './jwt/auth.token-pair';
-import { Ranks } from 'src/generated/prisma/enums';
-import { SendMailService } from '../sendMail/sendMail.service';
+import { ErrorMessages } from '../user/error_messages/ErrorMessages';
+import { JWT, RedirectURL, ReturnMessage, TokenSet } from './types/auth.types';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly mailer: SendMailService,
   ) {}
 
-  async signup(createUserDto: CreateUserDto) {
+  async signup(createUserDto: CreateUserDto): Promise<void> {
     return await this.userService.addUser(createUserDto);
   }
 
-  async login(email: string, password: string): Promise<TokenPair> {
+  async login(email: string, password: string): Promise<TokenSet> {
     const found = await this.userService.userExistsByEmail(email);
     if (
       !found ||
-      (found.email && found.email !== email) ||
+      (found.email && found.email.toLowerCase() !== email?.toLowerCase()) ||
       !(await comparePasswordHash(password, found.password))
     ) {
       throw new UnauthorizedException('Email address or password incorrect.');
     }
-    return this.generateTokenPair(found.id, found.rank);
-  }
-  async logout(userId: string) {
-    return await this.userService.removeRefreshToken(userId);
+    const refresh = await this.userService.generateRefreshToken(found.id);
+    if (!refresh || !refresh.refreshToken || !refresh.refreshTimeout) {
+      throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
+    }
+    const access = await this.generateJwtToken(found.id);
+    return {
+      refreshToken: refresh.refreshToken,
+      refreshTimeout: refresh.refreshTimeout,
+      accessToken: access.accessToken,
+    };
   }
 
-  async refresh(refreshToken: string): Promise<string> {
+  async logout(userId: string): Promise<void> {
+    await this.userService.userExistsOrThrow(userId);
+    await this.userService.removeRefreshToken(userId);
+  }
+
+  async refresh(refreshToken: string): Promise<JWT> {
     const hash = createTokenHash(refreshToken);
     const user = await this.userService.userExistsByRefreshTokenHash(hash);
     if (
@@ -60,15 +68,27 @@ export class AuthService {
     ) {
       throw new UnauthorizedException();
     }
-    return await this.generateJwtToken(user.id, user.rank);
+    return await this.generateJwtToken(user.id);
   }
 
-  async updatePassword(userId: string, dto: UpdatePasswordDto) {
-    const result = await this.userService.updatePassword(userId, dto);
-    return await this.generateTokenPair(userId, result.rank);
+  async updatePassword(
+    userId: string,
+    dto: UpdatePasswordDto,
+  ): Promise<TokenSet> {
+    const refresh = await this.userService.generateRefreshToken(userId);
+    if (!refresh || !refresh.refreshToken || !refresh.refreshTimeout) {
+      throw new InternalServerErrorException(ErrorMessages.REF_TOK_UPD_ERR);
+    }
+    const access = await this.generateJwtToken(userId);
+    await this.userService.updatePassword(userId, dto);
+    return {
+      accessToken: access.accessToken,
+      refreshToken: refresh.refreshToken,
+      refreshTimeout: refresh.refreshTimeout,
+    };
   }
 
-  async verifyEmail(userId: string, token: string) {
+  async verifyEmail(userId: string, token: string): Promise<RedirectURL> {
     const verified = await this.userService.verifyEmail(userId, token);
     if (!verified) {
       return { url: `${process.env.HOME_URL}/verify-error` };
@@ -77,58 +97,31 @@ export class AuthService {
     return { url: `${process.env.HOME_URL}/verify-success` };
   }
 
-  async cancelVerification(userId: string, token: string) {
-    return await this.userService.cancelVerification(userId, token);
+  async cancelVerification(userId: string, token: string): Promise<void> {
+    await this.userService.cancelVerification(userId, token);
   }
 
-  async resendVerificationEmail(userId: string) {
-    return await this.userService.resendVerificationEmail(userId);
+  async cancelVerificationBase(userId: string): Promise<boolean> {
+    return await this.userService.cancelVerificationBase(userId);
   }
 
-  // Generate JWT / Refresh Token
-  async generateTokenPair(userId: string, rank: Ranks): Promise<TokenPair> {
-    const access = await this.generateJwtToken(userId, rank);
-    const refresh = await this.generateRefreshToken(userId);
-    return {
-      accessToken: access,
-      refreshToken: refresh.token,
-      refreshTimeout: refresh.timeout,
-    };
+  async resendVerificationEmail(userId: string): Promise<void> {
+    await this.userService.resendVerificationEmail(userId);
   }
 
-  async generateJwtToken(userId: string, rank: Ranks) {
-    const payload: JwtPayload = {
-      id: userId,
-      rank: rank,
-    };
-    return await this.jwtService.signAsync(payload);
-  }
-
-  async generateRefreshToken(
-    userId: string,
-  ): Promise<{ token: string; timeout: Date }> {
-    const token = getToken();
-    const timeout = getRefreshTimeout();
-    await this.userService.updateRefreshToken(userId, token, timeout);
-    return { token, timeout };
-  }
-
-  async executeForgotPassword(email: string) {
+  async forgotPassword(email: string): Promise<ReturnMessage> {
     const user = await this.userService.userExistsByEmail(email);
+    const generic: ReturnMessage = {
+      message: 'If this email exists, a link has been sent.',
+    };
 
     if (!user) {
-      return {
-        success: true,
-        message: 'If this email exists, a link has been sent.',
-      };
+      return generic;
     }
 
     if (!user.email) {
       await this.userService.sendResetPasswordUnverifiedEmail(user.id);
-      return {
-        success: true,
-        message: 'If this email exists, a link has been sent.',
-      };
+      return generic;
     }
 
     const token = getToken();
@@ -138,22 +131,16 @@ export class AuthService {
       createTokenHash(token),
       expiry,
     );
+    await this.userService.sendResetPasswordEmail(user.email, token);
 
-    const emailInLink = user.email ?? user.email_unverified;
-    const link = `${process.env.HOME_URL}/reset-pwd?email=${emailInLink}&token=${token}`;
-    await this.mailer.sendMail(
-      email,
-      'Password reset',
-      `<p>Click on this link to reset your password:</p><p><a href="${link}">Click here to reset your password</a></p><p>This link expires in 30 minutes.</p>`,
-    );
-
-    return {
-      success: true,
-      message: 'If this email exists, a link has been sent.',
-    };
+    return generic;
   }
 
-  async resetPassword(email: string, token: string, newPassword: string) {
+  async resetPassword(
+    email: string,
+    token: string,
+    newPassword: string,
+  ): Promise<ReturnMessage> {
     const user = await this.userService.userExistsByEmail(email);
     if (
       !user ||
@@ -162,19 +149,29 @@ export class AuthService {
       user.resetTimeout < new Date() ||
       !compareTokenHash(token, user.resetToken)
     ) {
-      return { success: false, message: 'Invalid or expired link.' };
+      return { message: 'Invalid or expired link.' };
     }
     if (
       newPasswordContainsEmail(newPassword, user.email) ||
       newPasswordContainsUsername(newPassword, user.username)
     ) {
       throw new BadRequestException(
-        'New Password may not contain username or email.',
+        'New password may not contain your username or email address.',
       );
     }
     const hashed = await createPasswordHash(newPassword);
-    await this.userService.updatePasswordAndClearToken(user.id, hashed);
+    await this.userService.updatePasswordAndClearResetToken(user.id, hashed);
+    await this.userService.sendPasswordResetSuccessEmail(user.email!);
+    return { message: 'Password updated successfully.' };
+  }
 
-    return { success: true, message: 'Password updated successfully.' };
+  // Generate JWT
+  async generateJwtToken(userId: string): Promise<JWT> {
+    const user = await this.userService.userExistsOrThrow(userId);
+    const payload = {
+      id: userId,
+      rank: user.rank,
+    };
+    return { accessToken: await this.jwtService.signAsync(payload) };
   }
 }

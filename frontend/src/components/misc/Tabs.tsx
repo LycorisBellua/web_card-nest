@@ -63,7 +63,7 @@ const TabPanel = styled.div<{ $active: boolean }>`
 `;
 
 function Tabs({ items }: { items: { label: string; content: string }[] }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
 
   return (
     <div>

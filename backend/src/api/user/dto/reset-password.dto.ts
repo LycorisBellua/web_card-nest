@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { sanitizeEmail, sanitizePassword } from '../utils/user.sanitizer';
 import {
   IsEmailFormatValid,

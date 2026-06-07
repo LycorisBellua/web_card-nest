@@ -23,9 +23,9 @@ function ResetPassword() {
 }
 
 function ResetPasswordQuery() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState<string>('');
   const [errors, setErrors] = useState<string[]>([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<string>('');
 
   async function handlerLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,13 +42,13 @@ function ResetPasswordQuery() {
       return;
     }
     try {
-      const res = await fetch('/api/auth/reset-password1', {
+      const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          uemail: uEmail,
+          email: uEmail,
         }),
       });
       const data = (await res.json()) as { message: string };
@@ -93,9 +93,9 @@ function ResetPasswordQuery() {
 }
 
 function ResetPasswordEdit({ email, token }: { email: string; token: string }) {
-  const [message, setMessage] = useState('');
-  const [uPwd, setUPwd] = useState('');
-  const [uPwdConfirm, setUPwdConfirm] = useState('');
+  const [message, setMessage] = useState<string>('');
+  const [uPwd, setUPwd] = useState<string>('');
+  const [uPwdConfirm, setUPwdConfirm] = useState<string>('');
   const [errors, setErrors] = useState<string[]>([]);
   const navigate = useNavigate();
 
@@ -118,7 +118,7 @@ function ResetPasswordEdit({ email, token }: { email: string; token: string }) {
       return;
     }
     try {
-      const res = await fetch('/api/auth/reset-password2', {
+      const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -127,16 +127,18 @@ function ResetPasswordEdit({ email, token }: { email: string; token: string }) {
           newPassword: userPwd,
         }),
       });
-      if (!res.ok) throw new Error('Password reset failed.');
+      const data = (await res.json()) as { message: string };
+      if (!res.ok) {
+        setErrors([data.message]);
+        return;
+      }
       setMessage('Password reset successfully!');
       setUPwd('');
       setUPwdConfirm('');
       setErrors([]);
-      setTimeout(() => {
-        void navigate('/login');
-      }, 2000);
+      await navigate('/auth');
     } catch {
-      setErrors(['Error occured']);
+      setErrors(['An error occurred']);
     }
   }
 
@@ -149,6 +151,14 @@ function ResetPasswordEdit({ email, token }: { email: string; token: string }) {
           void handleSubmit(e);
         }}
       >
+        <input
+          type="email"
+          name="username"
+          value="john.doe@email.com"
+          autoComplete="username"
+          readOnly
+          hidden
+        />
         <InputField
           id="new-password"
           type="password"

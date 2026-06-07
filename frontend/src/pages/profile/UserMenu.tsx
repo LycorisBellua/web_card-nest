@@ -8,7 +8,7 @@ import { Wrapper, Menu, Option } from 'components/btn/UserMenuStyle';
 
 function UserMenu() {
   const { user, setUser } = useUser();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
