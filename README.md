@@ -81,3 +81,8 @@ TODO
 *- Detailed breakdown of what each team member contributed.*  
 *- Specific features, modules, or components implemented by each person.*  
 *- Any challenges faced and how they were overcome.*  
+
+- Firefox requests favicon.ico. Even though the favicon could be displayed 
+anyway, there was an error in the browser, so I renamed the favicon from 
+"joker.svg" to "favicon.svg" and I've added an .ico alternative.
+- Firefox limitation: The border animation is displayed weirdly.

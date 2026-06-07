@@ -1,12 +1,10 @@
-MISC
-- Privacy Policy / Terms of Service: There's an ongoing branch for that.
-    * CSS for tables. Is the rest of the layout clear enough?
-	* Read everything to fix what is not accurate.
-    * Explain in the Privacy Policy that the avatar is omitted from user 
-    extractions (you and friends for example), because it'd be too heavy.
-	* Explain that a DM thread can be extracted even if empty, or that it's not 
-	extracted if empty, depending on how the feature actually is.
-- README: Needs to be done.
+BROWSER COMPATIBILITY
+- Fix the CSS border animation on Firefox, or remove it entirely on all 
+browsers.
+
+README
+- Write the README. Check the Drive to see if you have missed anything.
+- Update the technical stack in the team notes.
 
 GAME LOCAL MODE
 - Simplify the game without losing features. Maybe it should be divided into 

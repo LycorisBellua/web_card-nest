@@ -5,6 +5,7 @@ import { getCookieValue } from 'functions/Cookies';
 import { refreshTokenRequest, fetchSelfRequest } from 'functions/Requests';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User>(null);
   const [blocked, setBlocked] = useState<LimitedUser[]>([]);
   const [friends, setFriends] = useState<LimitedUser[]>([]);
@@ -30,6 +31,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setFriends([]);
         setSentFriends([]);
         setReceivedFriends([]);
+      } finally {
+        setIsAuthLoading(false);
       }
     };
     void automaticLogin();
@@ -38,6 +41,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   return (
     <UserContext.Provider
       value={{
+        isAuthLoading,
         user,
         setUser,
         blocked,

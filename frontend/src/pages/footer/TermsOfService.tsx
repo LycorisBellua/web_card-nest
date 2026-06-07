@@ -59,7 +59,7 @@ function TermsOfService() {
           </li>
           <li>
             <strong>User accounts</strong> with a username and avatar, used to
-            identify you in the lobby and in multiplayer games.
+            identify you in chat and in multiplayer games.
           </li>
           <li>
             A <strong>friends system</strong> allowing registered users to add
@@ -94,9 +94,7 @@ function TermsOfService() {
 
       <Section>
         <h2>4. User Conduct</h2>
-        <Parag>
-          By using Card Nest, you agree <strong>not</strong> to:
-        </Parag>
+        <Parag>By using Card Nest, you agree not to:</Parag>
         <List>
           <li>
             Post content that is illegal, hateful, discriminatory, threatening,
@@ -138,8 +136,8 @@ function TermsOfService() {
             you from sending messages in the public lobby.
           </li>
           <li>
-            <strong>Message removal or editing</strong>: a moderator may remove
-            or overwrite a lobby message that violates these Terms.
+            <strong>Message editing</strong>: a moderator may overwrite a lobby
+            message that violates these Terms.
           </li>
           <li>
             <strong>Profile modification</strong>: a moderator may modify or
@@ -148,18 +146,18 @@ function TermsOfService() {
             of these Terms.
           </li>
           <li>
-            <strong>Account suspension or termination</strong>: we may suspend
-            or permanently terminate your account at our discretion for serious
-            or repeated violations, without prior notice.
+            <strong>Account termination</strong>: we may permanently delete your
+            account at our discretion for serious or repeated violations,
+            without prior notice.
           </li>
         </List>
 
         <div>
           <Parag>
-            <strong>Profile changes are final.</strong> Moderator modifications
-            to your username, description, or avatar are not subject to reversal
-            at your request. You may contact us to raise a concern, but we are
-            under no obligation to restore the original content.
+            Profile changes are final. Moderator modifications to your username,
+            description, or avatar are not subject to reversal at your request.
+            You may contact us to raise a concern, but we are under no
+            obligation to restore the original content.
           </Parag>
         </div>
 
@@ -176,17 +174,15 @@ function TermsOfService() {
         <Subtitle>6.1 Your responsibility</Subtitle>
         <Parag>
           You are solely responsible for the content you post, including lobby
-          messages, DMs, usernames, and avatars. Do not post content you do not
-          have the right to share.
+          messages, DMs, usernames, profile descriptions, and avatars. Do not
+          post content you do not have the right to share.
         </Parag>
 
         <Subtitle>6.2 Lobby messages are public</Subtitle>
         <Parag>
           The public lobby is visible to all users, including guests who are not
-          logged in.{' '}
-          <strong>
-            Do not share personal or sensitive information in the public lobby.
-          </strong>
+          logged in. Do not share personal or sensitive information in the
+          public lobby.
         </Parag>
 
         <Subtitle>6.3 Data exports by other users</Subtitle>
@@ -198,11 +194,10 @@ function TermsOfService() {
           information.
         </Parag>
 
-        <Subtitle>6.4 Anonymisation on account deletion</Subtitle>
+        <Subtitle>6.4 Anonymization on account deletion</Subtitle>
         <Parag>
-          If you delete your account, your lobby messages will remain visible
-          but attributed to "Guest" rather than your username. They cannot be
-          individually removed at that point.
+          If your account is deleted, your lobby messages will remain visible
+          but attributed to "Guest" rather than your username.
         </Parag>
       </Section>
 
@@ -218,10 +213,9 @@ function TermsOfService() {
       <Section>
         <h2>8. Disclaimer of Warranties</h2>
         <Parag>
-          The Service is provided <strong>"as is"</strong> and{' '}
-          <strong>"as available"</strong> without warranties of any kind,
-          express or implied. We do not guarantee that the Service will be
-          uninterrupted, error-free, or free of harmful components.
+          The Service is provided "as is" and "as available" without warranties
+          of any kind, express or implied. We do not guarantee that the Service
+          will be uninterrupted, error-free, or free of harmful components.
         </Parag>
       </Section>
 

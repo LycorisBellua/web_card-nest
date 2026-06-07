@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { ScrollablePage } from 'components/general/Scrollable';
-import { BtnDefault } from 'components/btn/Btn';
 import styled from 'styled-components';
 
 const Section = styled.section`
@@ -55,8 +54,8 @@ function PrivacyPolicy() {
         <h2>1. Who We Are</h2>
         <Parag>
           Card Nest ("we", "us", "our") is based the European Union / European
-          Economic Area. We are the <strong>data controller</strong> for all
-          personal data processed through this website.
+          Economic Area. We are the data controller for all personal data
+          processed through this website.
         </Parag>
         <Parag>
           Contact: <em>no.rep.card.nest@gmail.com</em>
@@ -71,15 +70,19 @@ function PrivacyPolicy() {
         <List>
           <li>
             <strong>Email address</strong>: used to authenticate your account
-            and send transactional emails (e.g. password resets).
+            and send transactional emails (e.g. password reset request).
           </li>
           <li>
-            <strong>Username</strong>: displayed publicly in the lobby chat, in
-            multiplayer games, and on your profile.
+            <strong>Username</strong>: displayed in chat, in multiplayer games,
+            and on your profile.
           </li>
           <li>
-            <strong>Avatar image</strong>: displayed publicly alongside your
-            username. You provide this voluntarily.
+            <strong>Avatar image</strong>: displayed alongside your username.
+            You provide this voluntarily.
+          </li>
+          <li>
+            <strong>Description</strong>: displayed on your profile. You provide
+            this voluntarily.
           </li>
           <li>
             <strong>Password</strong>: stored as a one-way cryptographic hash.
@@ -87,11 +90,24 @@ function PrivacyPolicy() {
           </li>
           <li>
             <strong>Friend relationships</strong>: the list of users you have
-            added as friends, stored to enable private messaging.
+            added as friends, stored to enable private messaging. This list can
+            be seen on your profile.
+          </li>
+          <li>
+            <strong>Pending friend requests</strong>: the list of users you have
+            asked as friends, or who have asked you as a friend. This list is
+            hidden from other users.
+          </li>
+          <li>
+            <strong>Blocked users</strong>: the list of users you have blocked.
+            This list is hidden from other users. A blocked user cannot be your
+            friend, and you do not see their messages in the lobby chat. They do
+            not know you have blocked them.
           </li>
           <li>
             <strong>Direct messages (DMs)</strong>: messages exchanged privately
-            between you and friends you have added.
+            with individual friends. If the friendship ends, the thread is
+            deleted.
           </li>
         </List>
         <Parag>
@@ -109,10 +125,9 @@ function PrivacyPolicy() {
 
         <Subtitle>2.3 Lobby chat messages</Subtitle>
         <Parag>
-          Lobby messages are <strong>publicly visible</strong> to all users,
-          including guests. If you are logged in, your username is attached to
-          your messages. Please do not share personal information in the public
-          lobby.
+          Lobby messages are publicly visible to all users, including guests. If
+          you are logged in, your username and avatar are attached to your
+          messages. Please do not share personal information in any chat thread.
         </Parag>
         <Parag>
           <strong>Legal basis:</strong> Legitimate interests (Article 6(1)(f)
@@ -145,12 +160,11 @@ function PrivacyPolicy() {
         <List>
           <li>Create and maintain your account.</li>
           <li>
-            Display your username and avatar in the lobby and in multiplayer
-            games.
+            Display your username and avatar in chat and in multiplayer games.
           </li>
           <li>Enable friend connections and private messaging (DMs).</li>
           <li>
-            Send transactional emails (e.g. password reset requests) that you
+            Send transactional emails (e.g. password reset request) that you
             initiate.
           </li>
           <li>
@@ -158,8 +172,8 @@ function PrivacyPolicy() {
           </li>
         </List>
         <Parag>
-          We do <strong>not</strong> use your data for advertising, profiling,
-          or automated decision-making.
+          We do not use your data for advertising, profiling, or automated
+          decision-making.
         </Parag>
       </Section>
 
@@ -169,8 +183,8 @@ function PrivacyPolicy() {
 
         <Subtitle>4.1 Email delivery (Google / Gmail)</Subtitle>
         <Parag>
-          Transactional emails (such as password resets) are sent from a Gmail
-          account via Nodemailer. When an email is sent to you, your email
+          Transactional emails (e.g. password reset request) are sent from a
+          Gmail account via Nodemailer. When an email is sent to you, your email
           address is processed by <strong>Google LLC</strong> acting as a data
           processor on our behalf. Google's privacy policy is available at{' '}
           <a
@@ -195,16 +209,20 @@ function PrivacyPolicy() {
             and guests.
           </li>
           <li>
+            <strong>Your description and friend list</strong> are visible to all
+            users.
+          </li>
+          <li>
             <strong>Your lobby messages</strong> are visible to all users and
             guests, and are permanently associated with your username while your
             account exists.
           </li>
           <li>
             <strong>Other registered users may request a data export</strong>{' '}
-            that includes lobby and DM messages they themselves participated in
-            (see Section 7). This means messages you sent in a shared
-            conversation may appear in another user's data export. Please be
-            mindful of the information you choose to share publicly or in
+            that includes the lobby - if they have participated in it - and
+            their DM threads (see Section 7). This means messages you sent in a
+            shared conversation may appear in another user's data export. Please
+            be mindful of the information you choose to share publicly or in
             private messages.
           </li>
         </List>
@@ -213,7 +231,7 @@ function PrivacyPolicy() {
       <Section>
         <h2>5. Cookies</h2>
         <Parag>
-          We use one cookie, described below. No third-party cookies,
+          We use two cookies, described below. No third-party cookies,
           advertising cookies, or analytics cookies are set by Card Nest.
         </Parag>
 
@@ -238,16 +256,25 @@ function PrivacyPolicy() {
                 <td>Strictly necessary (HTTP-only, secure)</td>
                 <td>Until you log out or the token expires</td>
               </tr>
+              <tr>
+                <td>dummy_refresh</td>
+                <td>
+                  Allows us to know that the refresh token cookie exists. It
+                  doesn't contain any sensitive data.
+                </td>
+                <td>Strictly necessary (secure)</td>
+                <td>Until you log out or the token expires</td>
+              </tr>
             </tbody>
           </table>
         </Table>
 
         <div>
           <Parag>
-            Because this cookie is strictly necessary for authentication, it
-            does not require your consent under the ePrivacy Directive. It is
-            set only when you log in and is deleted when you log out or delete
-            your account.
+            Because these cookies are strictly necessary for authentication,
+            they do not require your consent under the ePrivacy Directive. They
+            are set only when you log in and are deleted when you log out or
+            delete your account.
           </Parag>
         </div>
       </Section>
@@ -260,7 +287,7 @@ function PrivacyPolicy() {
         </Parag>
         <List>
           <li>
-            <strong>Chat timeout</strong>: temporarily restricting your ability
+            <strong>Chat timeout</strong>: temporarily retracting your ability
             to write in the lobby.
           </li>
           <li>
@@ -268,14 +295,15 @@ function PrivacyPolicy() {
             violates our rules.
           </li>
           <li>
-            <strong>Username or description modification</strong>: changing a
-            username or profile description that is offensive, harmful, or in
-            violation of our Terms of Service. You may not reverse a moderator's
-            change to your username or description.
+            <strong>Username, avatar or description modification</strong>:
+            changing a username, avatar or profile description that is
+            offensive, harmful, or in violation of our{' '}
+            <Link to="/terms-of-service">Terms of Service</Link>.
           </li>
           <li>
-            <strong>Avatar removal</strong>: removing an avatar that violates
-            our rules.
+            <strong>Account termination</strong>: the admin can permanently
+            delete your account at their discretion for serious or repeated
+            violations, without prior notice.
           </li>
         </List>
         <Parag>
@@ -315,28 +343,12 @@ function PrivacyPolicy() {
               </tr>
               <tr>
                 <td>Rectification</td>
-                <td>
-                  You can update your username, avatar, and email address in
-                  your account settings.
-                </td>
+                <td>You can update your data in your account settings.</td>
               </tr>
               <tr>
                 <td>Erasure</td>
                 <td>
                   You can delete your account at any time (see Section 8).
-                </td>
-              </tr>
-              <tr>
-                <td>Restriction</td>
-                <td>
-                  You can ask us to restrict processing of your data in certain
-                  circumstances.
-                </td>
-              </tr>
-              <tr>
-                <td>Objection</td>
-                <td>
-                  You can object to processing based on legitimate interests.
                 </td>
               </tr>
             </tbody>
@@ -346,36 +358,17 @@ function PrivacyPolicy() {
         <Subtitle>7.1 Data export (portability)</Subtitle>
         <Parag>
           You may request an export of your personal data at any time from
-          within your account settings. You can select any combination of the
-          following:
+          within your account settings. Exports are provided in JSON, which is a
+          standard format, known for being both machine-readable and
+          human-readable. You can select any combination of the following:
         </Parag>
         <List>
-          <li>
-            Your <strong>user profile</strong> (username, email address, avatar)
-          </li>
-          <li>
-            Your <strong>lobby chat messages</strong>
-          </li>
-          <li>
-            Your <strong>direct messages (DMs)</strong>
-          </li>
+          <li>User profile</li>
+          <li>Lobby chat</li>
+          <li>Direct messages</li>
         </List>
-        <Parag>
-          Exports are provided in a standard, machine-readable format. We will
-          process your request promptly.
-        </Parag>
-        <div>
-          <Parag>
-            Because lobby messages are part of a shared, public conversation,
-            another user who participated in the same lobby may receive copies
-            of your public messages as part of their own data export. This is
-            inherent to any public chat service.
-          </Parag>
-        </div>
 
-        <Link to="/data-extraction">
-          <BtnDefault>Go to Personal Data Extraction Page</BtnDefault>
-        </Link>
+		<Parag>Note that avatars are omitted as they would make the export too heavy.</Parag>
 
         <Subtitle>7.2 Right to lodge a complaint</Subtitle>
         <Parag>
@@ -401,14 +394,13 @@ function PrivacyPolicy() {
         </Parag>
         <List>
           <li>
-            Your <strong>user profile</strong> (email, username, avatar, friend
-            list) is permanently deleted.
+            Your <strong>user profile</strong> is permanently deleted.
           </li>
           <li>
             Your <strong>direct messages (DMs)</strong> are permanently deleted.
           </li>
           <li>
-            Your <strong>lobby messages</strong> are anonymised. They remain
+            Your <strong>lobby messages</strong> are anonymized. They remain
             visible in the lobby but are reassigned to the "Guest" author. They
             are no longer linked to your identity.
           </li>
