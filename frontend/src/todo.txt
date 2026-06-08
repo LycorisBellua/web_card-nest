@@ -1,9 +1,5 @@
 README
-- Write the README. Check the Drive to see if you have missed anything.
-
-BROWSER COMPATIBILITY
-- Fix the CSS border animation on Firefox, or remove it entirely on all 
-browsers.
+- Write the README.
 
 GAME LOCAL MODE
 - Simplify the game without losing features. Maybe it should be divided into 
