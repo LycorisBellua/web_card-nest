@@ -28,8 +28,13 @@ const Border = styled.div`
   }
 
   @keyframes borderglow {
-    0%, 100% { opacity: 0; }
-    50%       { opacity: 1; }
+    0%,
+    100% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 
   @media (max-width: 680px) {

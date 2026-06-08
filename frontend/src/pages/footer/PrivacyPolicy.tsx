@@ -368,7 +368,9 @@ function PrivacyPolicy() {
           <li>Direct messages</li>
         </List>
 
-		<Parag>Note that avatars are omitted as they would make the export too heavy.</Parag>
+        <Parag>
+          Note that avatars are omitted as they would make the export too heavy.
+        </Parag>
 
         <Subtitle>7.2 Right to lodge a complaint</Subtitle>
         <Parag>
