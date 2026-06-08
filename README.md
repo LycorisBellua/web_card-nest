@@ -317,10 +317,109 @@ it's more fun this way. The more, the merrier.
 
 ## Features List
 
-TODO  
-*- Complete list of implemented features.*  
-*- Which team member(s) worked on each feature.*  
-*- Brief description of each feature's functionality.*  
+### 1. Infrastructure & Tooling
+
+| Feature | Member(s) |
+|---|---|
+| Install TypeScript-flavored React (frontend) and NestJS (backend) as the project's core frameworks. | Lycoris |
+| Set up the PostgreSQL database with the Prisma ORM - define the schema, run migrations, and configure the DB connection. | Cngogang |
+| Containerize the dev environment (Docker Compose for local development, hot-reload, and environment variable management). | Joshw34 |
+| Containerize the production environment (Docker Compose with Nginx reverse proxy, enforcing HTTPS and serving the built frontend). | Joshw34 |
+| Configure the email-sending service on the backend (SMTP provider, mailer module, reusable email templates). | Romtry |
+| Introduce WebSockets to the project via a dedicated gateway, with connection and disconnection lifecycle management. | Cngogang |
+
+### 2. Rendering & Frontend Foundation
+
+| Feature | Member(s) |
+|---|---|
+| Implement SSR with client-side hydration so the initial HTML is rendered on the server and subsequent navigation is handled by React. | Lycoris |
+| Establish the visual identity of the app, ensuring the UI is readable, accessible, and responsive across screen sizes. | Lycoris |
+| Define and enforce frontend input sanitization and validation rules. | Hong-CHP |
+| Align backend input validation and sanitization to match the rules enforced on the frontend. | Lycoris |
+| Wire all frontend pages to their corresponding backend API endpoints. | Lycoris |
+| Test and validate full compatibility on at least two browsers beyond Chrome (namely Firefox and Brave). | Lycoris |
+
+### 3. Authentication
+
+| Feature | Member(s) |
+|---|---|
+| Design and migrate the User database model. | Joshw34 |
+| Implement password hashing with bcrypt for secure storage of user credentials. | Romtry |
+| Implement JWT-based authentication with secure cookie storage, including token issuance, refresh, and expiry handling. | Joshw34 |
+| Backend: sign-up endpoint (validate input, check for duplicate email/username, hash password, create user, send verification email). | Joshw34 |
+| Backend: email verification flow (generate token, send verification link by email, validate token on click, mark account as verified). | Joshw34 |
+| Backend: log-in endpoint (validate credentials, issue JWT, set cookie). | Joshw34 |
+| Backend: log-out endpoint (invalidate session/cookie). | Joshw34 |
+| Backend: password reset flow for forgotten passwords (request reset by email, generate time-limited token, send reset link, validate token, update password). | Romtry |
+| Frontend: sign-up page (form with validation, feedback on errors and success). | Hong-CHP |
+| Frontend: log-in page (form with validation, redirect on success). | Hong-CHP |
+| Frontend: forgotten password page (email submission form) and password reset page (new password form, opened from the email link). | Hong-CHP |
+
+### 4. User Profiles
+
+| Feature | Member(s) |
+|---|---|
+| Serve a default avatar for registered users who have not uploaded one, and a distinct default avatar for unauthenticated guests. | Lycoris |
+| Backend: user update endpoints (change username, email, password, avatar and description). | Joshw34 |
+| Frontend: user private and public profile pages. | Hong-CHP |
+| Frontend: display friends list, requests and blocked users. | Lycoris |
+
+### 5. Roles & Permissions
+
+| Feature | Member(s) |
+|---|---|
+| Define the roles hierarchy: guest, user, moderator, admin. Seed the admin account on startup from an environment variable. | Joshw34 |
+| Backend: role-based access control guards - protect endpoints based on role, and expose different views of user data depending on the caller's role. | Joshw34 |
+| Backend: admin and moderator actions - view all users, edit user details, change user roles, and delete users. | Joshw34 |
+| Backend: user list endpoint - return a paginated list of users, filtered and shaped according to the caller's role permissions. | Joshw34 |
+| Frontend: admin/moderator - see a given user, view their details, perform moderation actions (edit, role change, ban) with appropriate confirmation steps. | Lycoris |
+
+### 6. Social Features
+
+| Feature | Member(s) |
+|---|---|
+| Backend: friendship system (send friend request, accept/decline, remove friend, list friends and pending requests). | Joshw34 |
+| Backend: block system (block a user from messaging you, unblock, and reflect blocked status in friend and chat features). | Joshw34 |
+| Real-time online status - broadcast and receive user presence events (online/offline) via WebSocket, visible on friend lists, chat and profiles. | Cngogang |
+| Frontend: friends panel (friends list with online status indicators, pending requests with accept/decline actions, ability to navigate to a friend's profile or start a DM). | Lycoris |
+
+### 7. Chat System
+
+| Feature | Member(s) |
+|---|---|
+| Backend: chat system over WebSocket - real-time message broadcasting to the lobby chat or relevant DM thread, with efficient pub/sub handling for multiple simultaneous conversations. | Cngogang |
+| Backend: chat history persistence - store messages in the database so users can retrieve conversation history on load. | Joshw34 |
+| Backend: lobby chat accessible to all authenticated users, alongside private DM threads between two users (only available when neither has blocked the other). | Cngogang |
+| Frontend: message input, real-time message rendering, and graceful handling of WebSocket disconnection and reconnection. | Cngogang |
+| Frontend: chat interface - lobby chat, DM threads list, message input. | Lycoris |
+| Frontend: access to user profiles from within the chat interface. | Lycoris |
+
+### 8. Game
+
+| Feature | Member(s) |
+|---|---|
+| Frontend: implement the complete game (UI, rendering, controls, game loop) for local play. | Hong-CHP |
+| Support for between 2 and 4 simultaneous players. | Hong-CHP |
+| Backend: game session management - create, join, and track game sessions with their state (waiting, in-progress, finished). | Joshw34 |
+| Remote multiplayer over WebSocket - synchronize game state in real time between two and four players on separate machines, handling network latency. | Joshw34 |
+| Handling of player disconnection and reconnection during a game. | Joshw34 |
+| Frontend: implement online mode interface. | Lycoris |
+
+### 9. GDPR & Data Management
+
+| Feature | Member(s) |
+|---|---|
+| Backend: data export endpoint for user profile and social data (profile fields, friends list, sent and received friend requests, blocked users list) - returned as a structured JSON file. | Cngogang |
+| Backend: data export endpoint for chat history (all DM threads and public chat messages sent by the user) - returned as a structured JSON file. | Joshw34 |
+| Backend: account deletion endpoint - hard-delete all user data and send a confirmation email upon completion. | Joshw34 |
+| Frontend: data management page - let users trigger each export independently (profile data, chat data) and initiate account deletion. Bundle all export files into a single ZIP archive for download. | Lycoris |
+
+### 10. Legal & Miscellaneous
+
+| Feature | Member(s) |
+|---|---|
+| Privacy Policy page - outlining what data is collected, how it is used, and users' rights (required for GDPR compliance). | Lycoris |
+| Terms of Service page - covering acceptable use, moderation rules, and account termination conditions. | Lycoris |
 
 ## Individual Contributions
 
