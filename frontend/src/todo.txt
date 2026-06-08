@@ -4,6 +4,7 @@ README
 GAME LOCAL MODE
 - Simplify the game without losing features. Maybe it should be divided into 
 more files.
+- Show the name of the game and the rules clearly.
 - Currently, the local version of the game gets lost if you switch to a 
 different page. You could store it in the local storage. It doesn't matter if 
 you're logged in or not, as only player indexes are stored.

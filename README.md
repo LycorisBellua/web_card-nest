@@ -69,7 +69,7 @@ situations with frameworks and tools we were not familiar with.
 
 | Name | Role(s) |
 |---|---|
-| Lycoris Bellua | Product Owner + Developer |
+| Lycoris | Product Owner + Developer |
 | Joshw34 | Project Manager + Developer |
 | Cngogang | Technical Lead + Developer |
 | Hong-CHP | Developer |
@@ -183,22 +183,144 @@ DMChat -> DMMessage
 All foreign keys cascade on user deletion, except `LobbyMessage.senderId` which 
 is set to `null`.  
 
+## Modules
+
+Because this is a school project, we get a mark at the end. After a small set 
+of requirements, there is a list of modules we can choose from. There are two 
+types of module: major and minor. A major module is worth 2 points, and a minor 
+module is worth 1. We need 14 points to reach a mark of 100% and validate the 
+project, with 19 points to reach 125%, which is the maximum possible mark. We 
+can also do more modules than needed so as to compensate for a failing one and 
+still get the mark we want.  
+
+The modules we've picked were chosen to fit into the concept we had decided on, 
+which is a simple friendly website where people can play games together. It 
+could have been anything else, such as a blog, a messaging board, or a 
+collaborative platform to name a few. All that was asked, concept-wise, was 
+that the website must support multiple users simultaneously.  
+
+Here is the list of our chosen modules, for 20 points total:  
+
+**[Minor] Frontend framework**
+- Description: Use a frontend framework (React, Vue, Angular, Svelte, etc).
+- Justification: Instead of writing the frontend in vanilla JavaScript or 
+TypeScript, we use a framework. The reasoning is explained in the "Technical 
+Stack" section.
+- Team member(s): Lycoris, Hong-CHP.
+
+**[Minor] Backend framework**
+- Description: Use a backend framework (Express, Fastify, NestJS, Django, etc).
+- Justification: Instead of writing the backend in a vanilla language, we use a 
+framework. The reasoning is explained in the "Technical Stack" section.
+- Team member(s): Lycoris, Joshw34, Cngogang, Romtry.
+
+**[Minor] ORM**
+- Description: Use an ORM for the database.
+- Justification: Instead of using SQL string queries directly, we went for an 
+ORM. The reasoning is explained in the "Technical Stack" section.
+- Team member(s): Joshw34, Cngogang.
+
+**[Minor] SSR**
+- Description: Server-Side Rendering (SSR) for improved performance and SEO.
+- Justification: SSR with hydration renders the initial page on the server, 
+then hands over rendering to the client for subsequent navigation. This 
+improves perceived performance, enables proper SEO and social media previews, 
+and avoids the overhead of fully server-rendered navigation. As a result, SSR 
+has become a standard practice for modern web applications, and an obvious pick 
+for us.
+- Team member(s): Lycoris.
+
+**[Major] Standard user management and authentication**
+- Description: Users can update their profile information, upload an avatar 
+(with a default avatar if none is provided), have a profile page displaying 
+their information, add other users as friends and see their online status.
+- Justification: Since users are required, we might as well create a user 
+profile and allow people to form friendships.
+- Team member(s): Lycoris, Joshw34, Cngogang, Hong-CHP, Romtry.
+
+**[Major] User interaction**
+- Description: Allow users to interact with other users. The minimum 
+requirements are a profile system (view user information), a friends system 
+(add/remove friends, see friends list), and a basic chat system (send/receive 
+messages between users).
+- Justification: Since the previous module is already about profiles and 
+friends, the new feature is really the chat system. And about this, it makes 
+sense to allow people not only to chat in a public room, but also to have DMs 
+with friends so as to justify the existence of the friendship feature.
+- Team member(s): Lycoris, Joshw34, Cngogang.
+
+**[Major] Advanced permissions system**
+- Description: Have roles management (admin, moderator, user, guest, etc), 
+different views and actions based on user role, and these actions being 
+viewing, editing and deleting users.
+- Justification: If we have users and a chat system, we need moderation. Also, 
+if the user was to request edition or deletion of their data, it's friendlier 
+to have a proper interface for this, both for them and for us.
+- Team member(s): Lycoris, Joshw34.
+
+**[Minor] GDPR compliance features**
+- Description: Allow users to request their data and export it in a readable 
+format, and also to delete their data. Send confirmation emails for data 
+operations.
+- Justification: Sending emails is a basic website feature. For example, it's 
+already relevant when someone forgot their password, so the mailing requirement 
+of this module is no reason to avoid it. And as for data export, it's only 
+polite to allow a user to request their own data. And then, it's a GDPR 
+requirement, and we are located in Europe.
+- Team member(s): Lycoris, Joshw34, Cngogang, Romtry.
+
+**[Major] Implement real-time features**
+- Description: Using WebSockets or similar technology, have real-time updates 
+across clients, efficient message broadcasting and handle 
+connection/disconnection gracefully.
+- Justification: The chat system is already a real-time feature, we will not 
+demand that users refresh the page to see if anything new got posted. It's also 
+needed to allow users to see others' online status, as per the "Standard user 
+management and authentication" module.
+- Team member(s): Joshw34, Cngogang.
+
+**[Minor] Support for additional browsers**
+- Description: On top of Google Chrome, have full compatibility with at least 2 
+additional browsers (Firefox, Safari, Edge, etc). Test and fix all features in 
+each browser, document any browser-specific limitations, and have consistent 
+UI/UX across all supported browsers.
+- Justification: For accessibility reasons, the app shouldn't only be working 
+within one browser. It makes sense to check that it's consistent within more 
+browsers.
+- Team member(s): Lycoris.
+
+**[Major] First game**
+- Description: Implement a complete web-based game where users can play against 
+each other in live matches (e.g., Pong, Chess, Tic-Tac-Toe, Card games, etc). 
+The game can be in 2D or 3D, turn-based or real-time, and it must have clear 
+rules and win/loss conditions.
+- Justification: A game is a good way to engage people and get them to 
+interact. A chat is well and all, but we wanted to go a bit further.
+- Team member(s): Lycoris, Hong-CHP.
+
+**[Major] Remote players**
+- Description: Enable two players on separate computers to play the same game 
+in real-time. Handle network latency and disconnections gracefully, provide a 
+smooth user experience for remote gameplay, and implement reconnection logic.
+- Justification: The "First game" module could be about a local mode, where 
+different people share the same machine. It makes sense to allow users of the 
+app to play together as well.
+- Team member(s): Lycoris, Joshw34.
+
+**[Major] More than two players**
+- Description: Support for three or more players simultaneously, with fair 
+gameplay mechanics for all participants, and proper synchronization across all 
+clients.
+- Justification: If the game concept can support more than two players, then 
+it's more fun this way. The more, the merrier.
+- Team member(s): Lycoris, Joshw34, Hong-CHP.
+
 ## Features List
 
 TODO  
 *- Complete list of implemented features.*  
 *- Which team member(s) worked on each feature.*  
 *- Brief description of each feature's functionality.*  
-
-## Modules
-
-TODO  
-*- List of all chosen modules (Major and Minor).*  
-*- Point calculation (Major = 2pts, Minor = 1pt).*  
-*- Justification for each module choice, especially for custom "Modules of 
-choice".*  
-*- How each module was implemented.*  
-*- Which team member(s) worked on each module.*  
 
 ## Individual Contributions
 
