@@ -423,14 +423,20 @@ it's more fun this way. The more, the merrier.
 
 ## Individual Contributions
 
-TODO  
-*- Detailed breakdown of what each team member contributed.*  
-*- Specific features, modules, or components implemented by each person.*  
-*- Any challenges faced and how they were overcome.*  
+The detailed breakdown of what each team member contributed can be seen in the 
+"Modules" and "Features List" sections.  
 
-TODO - TMP
-- Firefox requests favicon.ico. Even though the favicon could be displayed 
-anyway, there was an error in the browser, so I renamed the favicon from 
-"joker.svg" to "favicon.svg" and I've added an .ico alternative.
-- Firefox limitation: The border animation was displayed weirdly. Explain the 
-first so that it's consistent on both Firefox and Chrome.
+As for any particular challenge we've faced, the project wasn't particularly 
+difficult, it was mostly long. And AI helped with any minute details we were 
+struggling with in our learning of new technology. That, and asking other team 
+member for help.  
+
+And as for any limitations in supporting other browsers, Firefox had a few 
+quirks:
+- The favicon could be displayed properly, and yet there was an error in the 
+browser console because Firefox was requesting for `favicon.ico` specifically. 
+So the favicon was renamed from `joker.svg` to `favicon.svg`, and the `.ico` 
+alternative was added.
+- The website has a glowing and animated border which was glitchy on Firefox. 
+The border was then written differently, for a similar result, so that Firefox 
+could handle it no problem.
