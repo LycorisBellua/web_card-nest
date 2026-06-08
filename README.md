@@ -1,67 +1,76 @@
 # Card Nest
 
-This project has been created as part of a school curriculum by 
-[Lycoris Bellua](https://github.com/LycorisBellua), 
-[Joshw34](https://github.com/joshw34), 
-[Cngogang](https://github.com/cngogang), 
-[Hong-CHP](https://github.com/Hong-CHP) and 
-[Romtry](https://github.com/Romtry).  
+This project has been created as part of a school curriculum by
+[Lycoris Bellua](https://github.com/LycorisBellua),
+[Joshw34](https://github.com/joshw34),
+[Cngogang](https://github.com/cngogang),
+[Hong-CHP](https://github.com/Hong-CHP) and
+[Romtry](https://github.com/Romtry).
 
 ## Description
 
-*Card Nest* is a web app where multiple users can chat and play together. The 
-game is *Black Crown*, a version of Blackjack between 2 to 4 players, without 
-gambling mechanics and where only one person can win.  
+*Card Nest* is a web app where multiple users can chat and play together. The
+game is *Black Crown*, a version of Blackjack between 2 to 4 players, without
+gambling mechanics and where only one person can win.
 
 ## Instructions
 
-To run the project, we have put Docker containers at your disposal. It has only 
-been tested on Linux, so we do not guarantee it would work on another system.  
+To run the project, we have put Docker containers at your disposal. It has only
+been tested on Linux, so we do not guarantee it would work on another system.
 
 - Create a `containers/variable_imports.txt` file and complete the values:
-```
-GMAIL_EMAIL="example@gmail.com"
-GMAIL_PASSWORD="nodemailer gmail token"
-ADMIN_USER="admin username"
-```
-For mailing to work, create a Gmail account, and follow the 
-[instructions here](https://github.com/LycorisBellua/web_card-nest/pull/31) to 
-get the token. As for the admin user, it's optional and you can leave the value 
-empty.  
-- Run `make` or `make prod_up` from the root of the project to build a 
-production version of the project. It will be available from your browser at 
-`https://localhost:8080`. That's it!
-- If you run into any trouble, it might be because the app is not finished 
-building. Run `make logs` to see how it's going. Once you see lots of green 
-text, you're good to go. If you feel like trying again, run `make clean` first.
-- To run a development build instead, run `make backend_up` or 
-`make frontend_up` depending on whether you want to modify the backend or the 
-frontend. The backend version would be available at `http://localhost:3000` and 
-the frontend version at `http://localhost:5173`.
-- A development build also allows you to manually access the DB at 
-`http://localhost:5555`.
-- No matter the version, instead of `locahost` you can use your IP as the 
-domain name. It allows other machines on the same network to access the website 
-at `https://127.0.0.1:8080` for example. To find your IP, run 
-`ip route get 1 | awk '/src/ {print $7; exit}'`.
 
-If you want to run the project yourself, without our containers, look at the 
-`backend/.env.example` file which describes the environment variables you need. 
+  ```
+  GMAIL_EMAIL="example@gmail.com"
+  GMAIL_PASSWORD="nodemailer gmail token"
+  ADMIN_USER="admin username"
+  ```
+
+  For mailing to work, create a Gmail account, and follow the
+  [instructions here](https://github.com/LycorisBellua/web_card-nest/pull/31) to
+  get the token. As for the admin user, it's optional and you can leave the value
+  empty.
+
+- Run `make` or `make prod_up` from the root of the project to build a
+  production version of the project. It will be available from your browser at
+  `https://localhost:8080`. That's it!
+
+- If you run into any trouble, it might be because the app is not finished
+  building. Run `make logs` to see how it's going. Once you see lots of green
+  text, you're good to go. If you feel like trying again, run `make clean` first.
+
+- To run a development build instead, run `make backend_up` or
+  `make frontend_up` depending on whether you want to modify the backend or the
+  frontend. The backend version would be available at `http://localhost:3000` and
+  the frontend version at `http://localhost:5173`.
+
+- A development build also allows you to manually access the DB at
+  `http://localhost:5555`.
+
+- No matter the version, instead of `locahost` you can use your IP as the
+  domain name. It allows other machines on the same network to access the website
+  at `https://127.0.0.1:8080` for example. To find your IP, run
+  `ip route get 1 | awk '/src/ {print $7; exit}'`.
+
+If you want to run the project yourself, without our containers, look at the
+`backend/.env.example` file which describes the environment variables you need.
 Then, find more information about how to install and run the project here:
+
 - [Install the TypeScript version of React and NestJS](https://github.com/LycorisBellua/web_card-nest/issues/3)
 - [SSR for first paint then SPA](https://github.com/LycorisBellua/web_card-nest/issues/6)
 
 ## Resources
 
 Here are some classic references which can help you develop a similar project:
-- https://react.dev/
-- https://docs.nestjs.com/
-- https://docs.nestjs.com/recipes/prisma
-- https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
 
-And as for how we've used AI in this project, it has been useful in helping us 
-find ideas for the visual identity of the app, as well as unblocking tricky 
-situations with frameworks and tools we were not familiar with.  
+- [react.dev](https://react.dev/)
+- [docs.nestjs.com](https://docs.nestjs.com/)
+- [NestJS — Prisma recipe](https://docs.nestjs.com/recipes/prisma)
+- [MDN — HTTP Status reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status)
+
+And as for how we've used AI in this project, it has been useful in helping us
+find ideas for the visual identity of the app, as well as unblocking tricky
+situations with frameworks and tools we were not familiar with.
 
 ## Team Information
 
@@ -76,43 +85,44 @@ situations with frameworks and tools we were not familiar with.
 | Romtry | Developer |
 
 **Responsibilities**
-- Product Owner: defines the product vision, decides on features and 
-priorities, and validates completed work.
-- Project Manager: organizes team meetings, ensures team communication, and 
-manages risks and blockers.
-- Technical Lead: makes technology stack decisions, and ensures code quality 
-and best practices. 
+
+- Product Owner: defines the product vision, decides on features and
+  priorities, and validates completed work.
+- Project Manager: organizes team meetings, ensures team communication, and
+  manages risks and blockers.
+- Technical Lead: makes technology stack decisions, and ensures code quality
+  and best practices.
 - Developer: implements features, and participates in code reviews.
 
 ## Project Management
 
-To organize our work, we communicated through a Discord server created and 
-handled by Joshw34, as well as through Discord DMs and face-to-face.  
+To organize our work, we communicated through a Discord server created and
+handled by Joshw34, as well as through Discord DMs and face-to-face.
 
-As for how we distributed the tasks, it was simply up to personal interests. As 
-long as progress was being made and everyone could contribute, it didn't matter 
-much who worked on what.  
+As for how we distributed the tasks, it was simply up to personal interests. As
+long as progress was being made and everyone could contribute, it didn't matter
+much who worked on what.
 
-And, finally, to track this progress we've used GitHub Project. It allowed us 
-to discover GitHub Issues and PRs, and facilitated the tracking of ongoing 
-tasks. The project was also configured so as to have someone else in the team 
-review our work.  
+And, finally, to track this progress we've used GitHub Project. It allowed us
+to discover GitHub Issues and PRs, and facilitated the tracking of ongoing
+tasks. The project was also configured so as to have someone else in the team
+review our work.
 
 ## Technical Stack
 
-This web app was written in TypeScript, and made with NestJS (backend), React 
-(frontend), PostgreSQL (database), and Prisma (ORM).  
+This web app was written in TypeScript, and made with NestJS (backend), React
+(frontend), PostgreSQL (database), and Prisma (ORM).
 
-As for why TypeScript, it's because we're used to strongly typed languages and 
-deem it safer and more robust. Then, NestJS and React were picked because we 
-deem them complete enough, suggesting good practices, without doing all the 
-work for us. And PostgreSQL instead of a no-SQL database for example, was so 
-that we get the strength of a relational database. As for an ORM such as 
-Prisma, it's a layer between us and the DB, so that not only do we have the 
-comfort of using TypeScript to interact with the DB, we also avoid the SQL 
-injection attack.  
+As for why TypeScript, it's because we're used to strongly typed languages and
+deem it safer and more robust. Then, NestJS and React were picked because we
+deem them complete enough, suggesting good practices, without doing all the
+work for us. And PostgreSQL instead of a no-SQL database for example, was so
+that we get the strength of a relational database. As for an ORM such as
+Prisma, it's a layer between us and the DB, so that not only do we have the
+comfort of using TypeScript to interact with the DB, we also avoid the SQL
+injection attack.
 
-For a more detailed list of the stack, see below:  
+For a more detailed list of the stack, see below:
 
 | Category | Tool / Technology |
 |---|---|
@@ -138,15 +148,15 @@ For a more detailed list of the stack, see below:
 
 ## Database Schema
 
-The DB schema file can be found at `backend/prisma/schema.prisma`. As for the 
-overview...  
+The DB schema file can be found at `backend/prisma/schema.prisma`. As for the
+overview...
 
-**Enums**  
+**Enums**
 
 - `Ranks`: `PENDING`, `USER`, `MODERATOR`, `ADMIN`
 - `FriendStatus`: `PENDING`, `ACCEPTED`
 
-**Models**  
+**Models**
 
 | Model | Primary Key | Purpose |
 |---|---|---|
@@ -158,17 +168,17 @@ overview...
 | `LobbyMessage` | UUID v7 | Public lobby chat message, sender nullable on delete |
 | `LobbyBan` | `userId` | Marks a user as banned from the lobby |
 
-**Key Fields**  
+**Key Fields**
 
-- `User`: `username` (unique), `email` / `email_unverified`, `password`, 
-`avatar` (bytes), `rank`, token/timeout pairs for verify, refresh, and reset 
-flows.
+- `User`: `username` (unique), `email` / `email_unverified`, `password`,
+  `avatar` (bytes), `rank`, token/timeout pairs for verify, refresh, and reset
+  flows.
 - `Friend`: `requesterId`, `addresseeId`, `status` - pair is unique.
-- `DMChat`: `userAId`, `userBId`, `friendshipId` (unique) - one chat per 
-friendship.
+- `DMChat`: `userAId`, `userBId`, `friendshipId` (unique) - one chat per
+  friendship.
 - `DMMessage` / `LobbyMessage`: `message` (max 500 chars), `senderId`, `date`.
 
-**Relationships**  
+**Relationships**
 
 ```
 User -> Friend (requester / addressee)
@@ -180,140 +190,158 @@ Friend <->  DMChat (1-to-1)
 DMChat -> DMMessage
 ```
 
-All foreign keys cascade on user deletion, except `LobbyMessage.senderId` which 
-is set to `null`.  
+All foreign keys cascade on user deletion, except `LobbyMessage.senderId` which
+is set to `null`.
 
 ## Modules
 
-Because this is a school project, we get a mark at the end. After a small set 
-of requirements, there is a list of modules we can choose from. There are two 
-types of module: major and minor. A major module is worth 2 points, and a minor 
-module is worth 1. We need 14 points to reach a mark of 100% and validate the 
-project, with 19 points to reach 125%, which is the maximum possible mark. We 
-can also do more modules than needed so as to compensate for a failing one and 
-still get the mark we want.  
+Because this is a school project, we get a mark at the end. After a small set
+of requirements, there is a list of modules we can choose from. There are two
+types of module: major and minor. A major module is worth 2 points, and a minor
+module is worth 1. We need 14 points to reach a mark of 100% and validate the
+project, with 19 points to reach 125%, which is the maximum possible mark. We
+can also do more modules than needed so as to compensate for a failing one and
+still get the mark we want.
 
-The modules we've picked were chosen to fit into the concept we had decided on, 
-which is a simple friendly website where people can play games together. It 
-could have been anything else, such as a blog, a messaging board, or a 
-collaborative platform to name a few. All that was asked, concept-wise, was 
-that the website must support multiple users simultaneously.  
+The modules we've picked were chosen to fit into the concept we had decided on,
+which is a simple friendly website where people can play games together. It
+could have been anything else, such as a blog, a messaging board, or a
+collaborative platform to name a few. All that was asked, concept-wise, was
+that the website must support multiple users simultaneously.
 
-Here is the list of our chosen modules, for 20 points total:  
+Here is the list of our chosen modules, for 20 points total:
+
+| Module | Type | Team member(s) |
+|---|---|---|
+| Frontend framework | Minor | Lycoris, Hong-CHP |
+| Backend framework | Minor | Lycoris, Joshw34, Cngogang, Romtry |
+| ORM | Minor | Joshw34, Cngogang |
+| SSR | Minor | Lycoris |
+| Standard user management and authentication | Major | Lycoris, Joshw34, Cngogang, Hong-CHP, Romtry |
+| User interaction | Major | Lycoris, Joshw34, Cngogang |
+| Advanced permissions system | Major | Lycoris, Joshw34 |
+| GDPR compliance features | Minor | Lycoris, Joshw34, Cngogang, Romtry |
+| Implement real-time features | Major | Joshw34, Cngogang |
+| Support for additional browsers | Minor | Lycoris |
+| First game | Major | Lycoris, Hong-CHP |
+| Remote players | Major | Lycoris, Joshw34 |
+| More than two players | Major | Lycoris, Joshw34, Hong-CHP |
+
+### Module descriptions and justifications
 
 **[Minor] Frontend framework**
-- Description: Use a frontend framework (React, Vue, Angular, Svelte, etc).
-- Justification: Instead of writing the frontend in vanilla JavaScript or 
-TypeScript, we use a framework. The reasoning is explained in the "Technical 
-Stack" section.
-- Team member(s): Lycoris, Hong-CHP.
+
+- *Description:* Use a frontend framework (React, Vue, Angular, Svelte, etc).
+- *Justification:* Instead of writing the frontend in vanilla JavaScript or
+  TypeScript, we use a framework. The reasoning is explained in the "Technical
+  Stack" section.
 
 **[Minor] Backend framework**
-- Description: Use a backend framework (Express, Fastify, NestJS, Django, etc).
-- Justification: Instead of writing the backend in a vanilla language, we use a 
-framework. The reasoning is explained in the "Technical Stack" section.
-- Team member(s): Lycoris, Joshw34, Cngogang, Romtry.
+
+- *Description:* Use a backend framework (Express, Fastify, NestJS, Django, etc).
+- *Justification:* Instead of writing the backend in a vanilla language, we use a
+  framework. The reasoning is explained in the "Technical Stack" section.
 
 **[Minor] ORM**
-- Description: Use an ORM for the database.
-- Justification: Instead of using SQL string queries directly, we went for an 
-ORM. The reasoning is explained in the "Technical Stack" section.
-- Team member(s): Joshw34, Cngogang.
+
+- *Description:* Use an ORM for the database.
+- *Justification:* Instead of using SQL string queries directly, we went for an
+  ORM. The reasoning is explained in the "Technical Stack" section.
 
 **[Minor] SSR**
-- Description: Server-Side Rendering (SSR) for improved performance and SEO.
-- Justification: SSR with hydration renders the initial page on the server, 
-then hands over rendering to the client for subsequent navigation. This 
-improves perceived performance, enables proper SEO and social media previews, 
-and avoids the overhead of fully server-rendered navigation. As a result, SSR 
-has become a standard practice for modern web applications, and an obvious pick 
-for us.
-- Team member(s): Lycoris.
+
+- *Description:* Server-Side Rendering (SSR) for improved performance and SEO.
+- *Justification:* SSR with hydration renders the initial page on the server,
+  then hands over rendering to the client for subsequent navigation. This
+  improves perceived performance, enables proper SEO and social media previews,
+  and avoids the overhead of fully server-rendered navigation. As a result, SSR
+  has become a standard practice for modern web applications, and an obvious pick
+  for us.
 
 **[Major] Standard user management and authentication**
-- Description: Users can update their profile information, upload an avatar 
-(with a default avatar if none is provided), have a profile page displaying 
-their information, add other users as friends and see their online status.
-- Justification: Since users are required, we might as well create a user 
-profile and allow people to form friendships.
-- Team member(s): Lycoris, Joshw34, Cngogang, Hong-CHP, Romtry.
+
+- *Description:* Users can update their profile information, upload an avatar
+  (with a default avatar if none is provided), have a profile page displaying
+  their information, add other users as friends and see their online status.
+- *Justification:* Since users are required, we might as well create a user
+  profile and allow people to form friendships.
 
 **[Major] User interaction**
-- Description: Allow users to interact with other users. The minimum 
-requirements are a profile system (view user information), a friends system 
-(add/remove friends, see friends list), and a basic chat system (send/receive 
-messages between users).
-- Justification: Since the previous module is already about profiles and 
-friends, the new feature is really the chat system. And about this, it makes 
-sense to allow people not only to chat in a public room, but also to have DMs 
-with friends so as to justify the existence of the friendship feature.
-- Team member(s): Lycoris, Joshw34, Cngogang.
+
+- *Description:* Allow users to interact with other users. The minimum
+  requirements are a profile system (view user information), a friends system
+  (add/remove friends, see friends list), and a basic chat system (send/receive
+  messages between users).
+- *Justification:* Since the previous module is already about profiles and
+  friends, the new feature is really the chat system. And about this, it makes
+  sense to allow people not only to chat in a public room, but also to have DMs
+  with friends so as to justify the existence of the friendship feature.
 
 **[Major] Advanced permissions system**
-- Description: Have roles management (admin, moderator, user, guest, etc), 
-different views and actions based on user role, and these actions being 
-viewing, editing and deleting users.
-- Justification: If we have users and a chat system, we need moderation. Also, 
-if the user was to request edition or deletion of their data, it's friendlier 
-to have a proper interface for this, both for them and for us.
-- Team member(s): Lycoris, Joshw34.
+
+- *Description:* Have roles management (admin, moderator, user, guest, etc),
+  different views and actions based on user role, and these actions being
+  viewing, editing and deleting users.
+- *Justification:* If we have users and a chat system, we need moderation. Also,
+  if the user was to request edition or deletion of their data, it's friendlier
+  to have a proper interface for this, both for them and for us.
 
 **[Minor] GDPR compliance features**
-- Description: Allow users to request their data and export it in a readable 
-format, and also to delete their data. Send confirmation emails for data 
-operations.
-- Justification: Sending emails is a basic website feature. For example, it's 
-already relevant when someone forgot their password, so the mailing requirement 
-of this module is no reason to avoid it. And as for data export, it's only 
-polite to allow a user to request their own data. And then, it's a GDPR 
-requirement, and we are located in Europe.
-- Team member(s): Lycoris, Joshw34, Cngogang, Romtry.
+
+- *Description:* Allow users to request their data and export it in a readable
+  format, and also to delete their data. Send confirmation emails for data
+  operations.
+- *Justification:* Sending emails is a basic website feature. For example, it's
+  already relevant when someone forgot their password, so the mailing requirement
+  of this module is no reason to avoid it. And as for data export, it's only
+  polite to allow a user to request their own data. And then, it's a GDPR
+  requirement, and we are located in Europe.
 
 **[Major] Implement real-time features**
-- Description: Using WebSockets or similar technology, have real-time updates 
-across clients, efficient message broadcasting and handle 
-connection/disconnection gracefully.
-- Justification: The chat system is already a real-time feature, we will not 
-demand that users refresh the page to see if anything new got posted. It's also 
-needed to allow users to see others' online status, as per the "Standard user 
-management and authentication" module.
-- Team member(s): Joshw34, Cngogang.
+
+- *Description:* Using WebSockets or similar technology, have real-time updates
+  across clients, efficient message broadcasting and handle
+  connection/disconnection gracefully.
+- *Justification:* The chat system is already a real-time feature, we will not
+  demand that users refresh the page to see if anything new got posted. It's also
+  needed to allow users to see others' online status, as per the "Standard user
+  management and authentication" module.
 
 **[Minor] Support for additional browsers**
-- Description: On top of Google Chrome, have full compatibility with at least 2 
-additional browsers (Firefox, Safari, Edge, etc). Test and fix all features in 
-each browser, document any browser-specific limitations, and have consistent 
-UI/UX across all supported browsers.
-- Justification: For accessibility reasons, the app shouldn't only be working 
-within one browser. It makes sense to check that it's consistent within more 
-browsers.
-- Team member(s): Lycoris.
+
+- *Description:* On top of Google Chrome, have full compatibility with at least 2
+  additional browsers (Firefox, Safari, Edge, etc). Test and fix all features in
+  each browser, document any browser-specific limitations, and have consistent
+  UI/UX across all supported browsers.
+- *Justification:* For accessibility reasons, the app shouldn't only be working
+  within one browser. It makes sense to check that it's consistent within more
+  browsers.
 
 **[Major] First game**
-- Description: Implement a complete web-based game where users can play against 
-each other in live matches (e.g., Pong, Chess, Tic-Tac-Toe, Card games, etc). 
-The game can be in 2D or 3D, turn-based or real-time, and it must have clear 
-rules and win/loss conditions.
-- Justification: A game is a good way to engage people and get them to 
-interact. A chat is well and all, but we wanted to go a bit further.
-- Team member(s): Lycoris, Hong-CHP.
+
+- *Description:* Implement a complete web-based game where users can play against
+  each other in live matches (e.g., Pong, Chess, Tic-Tac-Toe, Card games, etc).
+  The game can be in 2D or 3D, turn-based or real-time, and it must have clear
+  rules and win/loss conditions.
+- *Justification:* A game is a good way to engage people and get them to
+  interact. A chat is well and all, but we wanted to go a bit further.
 
 **[Major] Remote players**
-- Description: Enable two players on separate computers to play the same game 
-in real-time. Handle network latency and disconnections gracefully, provide a 
-smooth user experience for remote gameplay, and implement reconnection logic.
-- Justification: The "First game" module could be about a local mode, where 
-different people share the same machine. It makes sense to allow users of the 
-app to play together as well.
-- Team member(s): Lycoris, Joshw34.
+
+- *Description:* Enable two players on separate computers to play the same game
+  in real-time. Handle network latency and disconnections gracefully, provide a
+  smooth user experience for remote gameplay, and implement reconnection logic.
+- *Justification:* The "First game" module could be about a local mode, where
+  different people share the same machine. It makes sense to allow users of the
+  app to play together as well.
 
 **[Major] More than two players**
-- Description: Support for three or more players simultaneously, with fair 
-gameplay mechanics for all participants, and proper synchronization across all 
-clients.
-- Justification: If the game concept can support more than two players, then 
-it's more fun this way. The more, the merrier.
-- Team member(s): Lycoris, Joshw34, Hong-CHP.
+
+- *Description:* Support for three or more players simultaneously, with fair
+  gameplay mechanics for all participants, and proper synchronization across all
+  clients.
+- *Justification:* If the game concept can support more than two players, then
+  it's more fun this way. The more, the merrier.
 
 ## Features List
 
@@ -423,20 +451,21 @@ it's more fun this way. The more, the merrier.
 
 ## Individual Contributions
 
-The detailed breakdown of what each team member contributed can be seen in the 
-"Modules" and "Features List" sections.  
+The detailed breakdown of what each team member contributed can be seen in the
+"Modules" and "Features List" sections.
 
-As for any particular challenge we've faced, the project wasn't particularly 
-difficult, it was mostly long. And AI helped with any minute details we were 
-struggling with in our learning of new technology. That, and asking other team 
-member for help.  
+As for any particular challenge we've faced, the project wasn't particularly
+difficult, it was mostly long. And AI helped with any minute details we were
+struggling with in our learning of new technology. That, and asking other team
+member for help.
 
-And as for any limitations in supporting other browsers, Firefox had a few 
+And as for any limitations in supporting other browsers, Firefox had a few
 quirks:
-- The favicon could be displayed properly, and yet there was an error in the 
-browser console because Firefox was requesting for `favicon.ico` specifically. 
-So the favicon was renamed from `joker.svg` to `favicon.svg`, and the `.ico` 
-alternative was added.
-- The website has a glowing and animated border which was glitchy on Firefox. 
-The border was then written differently, for a similar result, so that Firefox 
-could handle it no problem.
+
+- The favicon could be displayed properly, and yet there was an error in the
+  browser console because Firefox was requesting for `favicon.ico` specifically.
+  So the favicon was renamed from `joker.svg` to `favicon.svg`, and the `.ico`
+  alternative was added.
+- The website has a glowing and animated border which was glitchy on Firefox.
+  The border was then written differently, for a similar result, so that Firefox
+  could handle it no problem.

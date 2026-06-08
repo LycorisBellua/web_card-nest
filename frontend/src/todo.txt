@@ -1,6 +1,3 @@
-README
-- Write the README.
-
 GAME LOCAL MODE
 - Simplify the game without losing features. Maybe it should be divided into 
 more files.
