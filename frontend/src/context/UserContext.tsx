@@ -2,6 +2,7 @@ import { createContext } from 'react';
 import type { User, LimitedUser } from 'context/Types';
 
 export type UserContextType = {
+  isAuthLoading: boolean;
   user: User;
   setUser: React.Dispatch<React.SetStateAction<User>>;
   blocked: LimitedUser[];

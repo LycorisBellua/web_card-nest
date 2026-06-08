@@ -1,4 +1,4 @@
-import { GetDate } from 'functions/Time';
+import { getDate } from 'functions/Time';
 import styled from 'styled-components';
 
 const DateDisplay = styled.div`
@@ -22,7 +22,7 @@ const DateDisplay = styled.div`
 `;
 
 function ChatDate({ date }: { date: Date }) {
-  return <DateDisplay>{GetDate(date)}</DateDisplay>;
+  return <DateDisplay>{getDate(date)}</DateDisplay>;
 }
 
 export default ChatDate;

@@ -1,21 +1,21 @@
 import type { User, LimitedUser } from 'context/Types';
 import { addAvatarPrefix } from 'functions/UserValidation';
 
-export async function RefreshTokenRequest(
+export async function refreshTokenRequest(
   accessToken: string,
 ): Promise<string> {
   const res = await fetch('/api/auth/refresh', {
     method: 'POST',
   });
   if (!res.ok) {
-    if (res.status != 401) await LogoutRequest(accessToken);
+    if (res.status != 401) await logoutRequest(accessToken);
     return '';
   }
   const data = (await res.json()) as { accessToken: string };
   return data.accessToken;
 }
 
-export async function LogoutRequest(accessToken: string): Promise<void> {
+export async function logoutRequest(accessToken: string): Promise<void> {
   await fetch('/api/auth/logout', {
     method: 'POST',
     headers: {
@@ -24,7 +24,7 @@ export async function LogoutRequest(accessToken: string): Promise<void> {
   });
 }
 
-export async function FetchSelfRequest(accessToken: string): Promise<{
+export async function fetchSelfRequest(accessToken: string): Promise<{
   user: User | null;
   blocked: LimitedUser[];
   friends: LimitedUser[];
@@ -46,7 +46,7 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
         sentFriends: [],
         receivedFriends: [],
       };
-    const newaccessToken = await RefreshTokenRequest(accessToken);
+    const newaccessToken = await refreshTokenRequest(accessToken);
     if (!newaccessToken.length)
       return {
         user: null,
@@ -86,7 +86,7 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
       sentFriends: [],
       receivedFriends: [],
     };
-  const bl = await FetchSelfBlockedListRequest(accessToken);
+  const bl = await fetchSelfBlockedListRequest(accessToken);
   if (!bl.accessToken.length)
     return {
       user: null,
@@ -96,7 +96,7 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
       receivedFriends: [],
     };
   accessToken = bl.accessToken;
-  const fl = await FetchSelfFriendListRequest(accessToken);
+  const fl = await fetchSelfFriendListRequest(accessToken);
   if (!fl.accessToken.length)
     return {
       user: null,
@@ -106,7 +106,7 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
       receivedFriends: [],
     };
   accessToken = fl.accessToken;
-  const sl = await FetchSelfSentListRequest(accessToken);
+  const sl = await fetchSelfSentListRequest(accessToken);
   if (!sl.accessToken.length)
     return {
       user: null,
@@ -116,7 +116,7 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
       receivedFriends: [],
     };
   accessToken = sl.accessToken;
-  const rl = await FetchSelfReceivedListRequest(accessToken);
+  const rl = await fetchSelfReceivedListRequest(accessToken);
   if (!rl.accessToken.length)
     return {
       user: null,
@@ -136,7 +136,7 @@ export async function FetchSelfRequest(accessToken: string): Promise<{
   };
 }
 
-export async function ResendVerificationEmailRequest(
+export async function resendVerificationEmailRequest(
   accessToken: string,
 ): Promise<string> {
   let res = await fetch('/api/auth/verify/resend', {
@@ -147,7 +147,7 @@ export async function ResendVerificationEmailRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/auth/verify/resend', {
       method: 'GET',
@@ -160,7 +160,7 @@ export async function ResendVerificationEmailRequest(
   return accessToken;
 }
 
-export async function CancelEmailVerificationRequest(
+export async function cancelEmailVerificationRequest(
   accessToken: string,
 ): Promise<string> {
   let res = await fetch('/api/auth/verify/cancel', {
@@ -171,7 +171,7 @@ export async function CancelEmailVerificationRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/auth/verify/cancel', {
       method: 'DELETE',
@@ -186,7 +186,7 @@ export async function CancelEmailVerificationRequest(
   return accessToken;
 }
 
-export async function ChangeRankRequest(
+export async function changeRankRequest(
   accessToken: string,
   userId: string,
   newRank: string,
@@ -204,7 +204,7 @@ export async function ChangeRankRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/admin/rank', {
       method: 'PATCH',
@@ -222,7 +222,7 @@ export async function ChangeRankRequest(
   return accessToken;
 }
 
-export async function DeleteSelfRequest(accessToken: string): Promise<string> {
+export async function deleteSelfRequest(accessToken: string): Promise<string> {
   let res = await fetch('/api/user', {
     method: 'DELETE',
     headers: {
@@ -231,7 +231,7 @@ export async function DeleteSelfRequest(accessToken: string): Promise<string> {
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/user', {
       method: 'DELETE',
@@ -244,7 +244,7 @@ export async function DeleteSelfRequest(accessToken: string): Promise<string> {
   return accessToken;
 }
 
-export async function DeleteUserRequest(
+export async function deleteUserRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
@@ -256,7 +256,7 @@ export async function DeleteUserRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch(`/api/admin/${userId}`, {
       method: 'DELETE',
@@ -269,7 +269,7 @@ export async function DeleteUserRequest(
   return accessToken;
 }
 
-export async function FetchSelfBlockedListRequest(
+export async function fetchSelfBlockedListRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; users: LimitedUser[] }> {
   let res = await fetch('/api/rel/block', {
@@ -280,7 +280,7 @@ export async function FetchSelfBlockedListRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', users: [] };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', users: [] };
     res = await fetch('/api/rel/block', {
       method: 'GET',
@@ -298,7 +298,7 @@ export async function FetchSelfBlockedListRequest(
   return { accessToken: accessToken, users: prefixed };
 }
 
-export async function FetchSelfFriendListRequest(
+export async function fetchSelfFriendListRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; users: LimitedUser[] }> {
   let res = await fetch('/api/rel/friend', {
@@ -309,7 +309,7 @@ export async function FetchSelfFriendListRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', users: [] };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', users: [] };
     res = await fetch('/api/rel/friend', {
       method: 'GET',
@@ -327,7 +327,7 @@ export async function FetchSelfFriendListRequest(
   return { accessToken: accessToken, users: prefixed };
 }
 
-export async function FetchSelfSentListRequest(
+export async function fetchSelfSentListRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; users: LimitedUser[] }> {
   let res = await fetch('/api/rel/friend/sent', {
@@ -338,7 +338,7 @@ export async function FetchSelfSentListRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', users: [] };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', users: [] };
     res = await fetch('/api/rel/friend/sent', {
       method: 'GET',
@@ -356,7 +356,7 @@ export async function FetchSelfSentListRequest(
   return { accessToken: accessToken, users: prefixed };
 }
 
-export async function FetchSelfReceivedListRequest(
+export async function fetchSelfReceivedListRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; users: LimitedUser[] }> {
   let res = await fetch('/api/rel/friend/received', {
@@ -367,7 +367,7 @@ export async function FetchSelfReceivedListRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', users: [] };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', users: [] };
     res = await fetch('/api/rel/friend/received', {
       method: 'GET',
@@ -385,7 +385,7 @@ export async function FetchSelfReceivedListRequest(
   return { accessToken: accessToken, users: prefixed };
 }
 
-export async function RemoveFriendshipRequest(
+export async function removeFriendshipRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
@@ -397,7 +397,7 @@ export async function RemoveFriendshipRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch(`/api/rel/friend/${userId}`, {
       method: 'DELETE',
@@ -410,7 +410,7 @@ export async function RemoveFriendshipRequest(
   return accessToken;
 }
 
-export async function AskFriendshipRequest(
+export async function askFriendshipRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
@@ -426,7 +426,7 @@ export async function AskFriendshipRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/rel/friend', {
       method: 'POST',
@@ -443,7 +443,7 @@ export async function AskFriendshipRequest(
   return accessToken;
 }
 
-export async function CancelFriendshipRequest(
+export async function cancelFriendshipRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
@@ -455,7 +455,7 @@ export async function CancelFriendshipRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch(`/api/rel/friend/cancel/${userId}`, {
       method: 'DELETE',
@@ -468,7 +468,7 @@ export async function CancelFriendshipRequest(
   return accessToken;
 }
 
-export async function AcceptFriendshipRequest(
+export async function acceptFriendshipRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
@@ -484,7 +484,7 @@ export async function AcceptFriendshipRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/rel/friend/accept', {
       method: 'PATCH',
@@ -501,7 +501,7 @@ export async function AcceptFriendshipRequest(
   return accessToken;
 }
 
-export async function RejectFriendshipRequest(
+export async function rejectFriendshipRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
@@ -513,7 +513,7 @@ export async function RejectFriendshipRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch(`/api/rel/friend/reject/${userId}`, {
       method: 'DELETE',
@@ -526,7 +526,7 @@ export async function RejectFriendshipRequest(
   return accessToken;
 }
 
-export async function UnblockingRequest(
+export async function unblockingRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
@@ -538,7 +538,7 @@ export async function UnblockingRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch(`/api/rel/block/${userId}`, {
       method: 'DELETE',
@@ -551,7 +551,7 @@ export async function UnblockingRequest(
   return accessToken;
 }
 
-export async function BlockingRequest(
+export async function blockingRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
@@ -567,7 +567,7 @@ export async function BlockingRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/rel/block', {
       method: 'POST',
@@ -584,7 +584,7 @@ export async function BlockingRequest(
   return accessToken;
 }
 
-export async function FetchOtherFriendListRequest(
+export async function fetchOtherFriendListRequest(
   accessToken: string,
   userId: string,
 ): Promise<{ accessToken: string; users: LimitedUser[] }> {
@@ -596,7 +596,7 @@ export async function FetchOtherFriendListRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', users: [] };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', users: [] };
     res = await fetch(`/api/rel/friend/${userId}`, {
       method: 'GET',
@@ -614,7 +614,7 @@ export async function FetchOtherFriendListRequest(
   return { accessToken: accessToken, users: prefixed };
 }
 
-export async function ExtractProfileDataRequest(
+export async function extractProfileDataRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; data: object }> {
   let res = await fetch('/api/gdpr/export/profile', {
@@ -625,7 +625,7 @@ export async function ExtractProfileDataRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', data: {} };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', data: {} };
     res = await fetch('/api/gdpr/export/profile', {
       method: 'GET',
@@ -639,7 +639,7 @@ export async function ExtractProfileDataRequest(
   return { accessToken: accessToken, data: data };
 }
 
-export async function ExtractLobbyDataRequest(
+export async function extractLobbyDataRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; data: object }> {
   let res = await fetch('/api/gdpr/export/lobby', {
@@ -650,7 +650,7 @@ export async function ExtractLobbyDataRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', data: {} };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', data: {} };
     res = await fetch('/api/gdpr/export/lobby', {
       method: 'GET',
@@ -664,7 +664,7 @@ export async function ExtractLobbyDataRequest(
   return { accessToken: accessToken, data: data };
 }
 
-export async function ExtractDMDataRequest(
+export async function extractDMDataRequest(
   accessToken: string,
   friendId: string,
 ): Promise<{ accessToken: string; data: object }> {
@@ -676,7 +676,7 @@ export async function ExtractDMDataRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', data: {} };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', data: {} };
     res = await fetch(`/api/gdpr/export/dm/${friendId}`, {
       method: 'GET',
@@ -690,7 +690,7 @@ export async function ExtractDMDataRequest(
   return { accessToken: accessToken, data: data };
 }
 
-export async function ExtractAllDataRequest(
+export async function extractAllDataRequest(
   accessToken: string,
   dto: { profile?: boolean; lobby?: boolean; friendIds?: string[] },
 ): Promise<{ accessToken: string; blob: Blob | null }> {
@@ -707,7 +707,7 @@ export async function ExtractAllDataRequest(
   });
   if (!res.ok) {
     if (res.status !== 401) return { accessToken, blob: null };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', blob: null };
     res = await fetch('/api/gdpr/export/all', {
       method: 'POST',
@@ -720,7 +720,7 @@ export async function ExtractAllDataRequest(
   return { accessToken, blob };
 }
 
-export async function EnableLobbyTimeoutRequest(
+export async function enableLobbyTimeoutRequest(
   accessToken: string,
   userId: string,
 ): Promise<string> {
@@ -736,7 +736,7 @@ export async function EnableLobbyTimeoutRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/admin/ban/user', {
       method: 'POST',
@@ -753,7 +753,7 @@ export async function EnableLobbyTimeoutRequest(
   return accessToken;
 }
 
-export async function EnableGuestLobbyTimeoutRequest(
+export async function enableGuestLobbyTimeoutRequest(
   accessToken: string,
 ): Promise<string> {
   let res = await fetch('/api/admin/ban/guest', {
@@ -764,7 +764,7 @@ export async function EnableGuestLobbyTimeoutRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/admin/ban/guest', {
       method: 'POST',
@@ -789,7 +789,7 @@ export async function DisableLobbyTimeoutRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch(`/api/admin/ban/user/${userId}`, {
       method: 'DELETE',
@@ -802,7 +802,7 @@ export async function DisableLobbyTimeoutRequest(
   return accessToken;
 }
 
-export async function DisableGuestLobbyTimeoutRequest(
+export async function disableGuestLobbyTimeoutRequest(
   accessToken: string,
 ): Promise<string> {
   let res = await fetch('/api/admin/ban/guest', {
@@ -813,7 +813,7 @@ export async function DisableGuestLobbyTimeoutRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return '';
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return '';
     res = await fetch('/api/admin/ban/guest', {
       method: 'DELETE',
@@ -826,7 +826,7 @@ export async function DisableGuestLobbyTimeoutRequest(
   return accessToken;
 }
 
-export async function GetLobbyTimeoutStateRequest(
+export async function getLobbyTimeoutStateRequest(
   accessToken: string,
   userId: string,
 ): Promise<{ accessToken: string; enabled: boolean }> {
@@ -838,7 +838,7 @@ export async function GetLobbyTimeoutStateRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', enabled: false };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', enabled: false };
     res = await fetch(`/api/admin/ban/user/${userId}`, {
       method: 'GET',
@@ -854,7 +854,7 @@ export async function GetLobbyTimeoutStateRequest(
   return { accessToken: accessToken, enabled: enabled };
 }
 
-export async function GetGuestLobbyTimeoutStateRequest(
+export async function getGuestLobbyTimeoutStateRequest(
   accessToken: string,
 ): Promise<{ accessToken: string; enabled: boolean }> {
   let res = await fetch('/api/admin/ban/guest', {
@@ -865,7 +865,7 @@ export async function GetGuestLobbyTimeoutStateRequest(
   });
   if (!res.ok) {
     if (res.status != 401) return { accessToken: '', enabled: false };
-    accessToken = await RefreshTokenRequest(accessToken);
+    accessToken = await refreshTokenRequest(accessToken);
     if (!accessToken.length) return { accessToken: '', enabled: false };
     res = await fetch('/api/admin/ban/guest', {
       method: 'GET',

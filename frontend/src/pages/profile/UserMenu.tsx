@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from 'context/useUser';
-import { LogoutRequest } from 'functions/Requests';
+import { logoutRequest } from 'functions/Requests';
 import { BtnAccent } from 'components/btn/Btn';
 import UserBtnBase from 'components/btn/UserBtnBase';
 import { Wrapper, Menu, Option } from 'components/btn/UserMenuStyle';
 
 function UserMenu() {
-  const { user, setUser } = useUser();
+  const { user } = useUser();
   const [open, setOpen] = useState<boolean>(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -37,9 +37,7 @@ function UserMenu() {
 
   const handleLogout = async () => {
     try {
-      await LogoutRequest(user.accessToken);
-      setOpen(false);
-      setUser(null);
+      await logoutRequest(user.accessToken);
       window.location.href = '/';
     } catch {
       setOpen(false);

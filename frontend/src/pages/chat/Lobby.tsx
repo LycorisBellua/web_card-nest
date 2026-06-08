@@ -11,7 +11,7 @@ import { PublicChatMsg } from 'components/chat/ChatMsg';
 import { ChatInput, DisabledChatInput } from 'components/chat/ChatInput';
 
 function Lobby() {
-  const { user } = useUser();
+  const { isAuthLoading, user, blocked } = useUser();
   const { socket, onlineUsers } = useSocket();
   const [isTimedOut, setIsTimedOut] = useState<boolean>(false);
   const [messages, setMessages] = useState<PublicMsg[]>([]);
@@ -56,8 +56,13 @@ function Lobby() {
   }, [user?.id, lastMsg]);
 
   useEffect(() => {
+    if (isAuthLoading) return;
     socket.emit('FetchLobbyHistory', (data: PublicMsg[]) => {
-      setMessages(data.map(normalizeMsg));
+      const filtered = data.filter(
+        (m) => !blocked.some((b) => b.id === m.senderId),
+      );
+      const msg = filtered.map(normalizeMsg);
+      setMessages(msg);
     });
     socket.emit('GetSelfLobbyTimeoutStatus', (data: boolean) => {
       setIsTimedOut(data);
@@ -83,7 +88,7 @@ function Lobby() {
       socket.off('messageModerated');
       socket.off('LobbyTimeoutStatus');
     };
-  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [socket, isAuthLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <ChatPage>

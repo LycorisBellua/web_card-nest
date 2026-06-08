@@ -13,13 +13,13 @@ import {
   addAvatarPrefix,
 } from 'functions/UserValidation';
 import {
-  RefreshTokenRequest,
-  FetchSelfBlockedListRequest,
-  FetchSelfFriendListRequest,
-  FetchSelfSentListRequest,
-  FetchSelfReceivedListRequest,
+  refreshTokenRequest,
+  fetchSelfBlockedListRequest,
+  fetchSelfFriendListRequest,
+  fetchSelfSentListRequest,
+  fetchSelfReceivedListRequest,
 } from 'functions/Requests';
-import { CanDisciplineThisUser } from 'functions/Ranks';
+import { canDisciplineThisUser } from 'functions/Ranks';
 import { BtnDefault, BtnDisabled } from 'components/btn/Btn';
 import { AvatarBig } from 'components/btn/Avatar';
 import InputField from 'components/misc/InputField';
@@ -73,7 +73,7 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
   if (
     !user ||
     !otherUser ||
-    !CanDisciplineThisUser(user?.rank ?? '', otherUser?.rank ?? '')
+    !canDisciplineThisUser(user?.rank ?? '', otherUser?.rank ?? '')
   )
     return <></>;
 
@@ -88,22 +88,22 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
       (u) => u.id === otherUser.id,
     );
     if (inBlocked) {
-      const data = await FetchSelfBlockedListRequest(accessToken);
+      const data = await fetchSelfBlockedListRequest(accessToken);
       if (!data.accessToken.length) return '';
       accessToken = data.accessToken;
       setBlocked(data.users);
     } else if (inFriends) {
-      const data = await FetchSelfFriendListRequest(accessToken);
+      const data = await fetchSelfFriendListRequest(accessToken);
       if (!data.accessToken.length) return '';
       accessToken = data.accessToken;
       setFriends(data.users);
     } else if (inSentFriends) {
-      const data = await FetchSelfSentListRequest(accessToken);
+      const data = await fetchSelfSentListRequest(accessToken);
       if (!data.accessToken.length) return '';
       accessToken = data.accessToken;
       setSentFriends(data.users);
     } else if (inReceivedFriends) {
-      const data = await FetchSelfReceivedListRequest(accessToken);
+      const data = await fetchSelfReceivedListRequest(accessToken);
       if (!data.accessToken.length) return '';
       accessToken = data.accessToken;
       setReceivedFriends(data.users);
@@ -177,7 +177,7 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
         });
 
         if (res.status === 401) {
-          token = await RefreshTokenRequest(token);
+          token = await refreshTokenRequest(token);
           if (token.length) {
             res = await fetch('/api/admin/modify', {
               method: 'PATCH',
@@ -201,9 +201,7 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
               data?.message ?? `Error ${res.status}: ${res.statusText}`,
             ],
           }));
-          setIsSaving(false);
-          setDisplaySpinner(false);
-          return;
+          throw new Error();
         }
 
         const updated = (await res.json()) as Partial<NonNullable<OtherUser>>;
@@ -223,9 +221,10 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
         }
       }
     } catch {
+      return;
+    } finally {
       setIsSaving(false);
       setDisplaySpinner(false);
-      return;
     }
 
     setAvatar(undefined);
@@ -233,8 +232,6 @@ function EditProfileMod({ otherUser, setOtherUser }: Props) {
     setDesc('');
     setResetKey((k) => k + 1);
     setSuccessMessage('Changes saved successfully.');
-    setIsSaving(false);
-    setDisplaySpinner(false);
   }
 
   const SaveButton = hasPendingChanges && !isSaving ? BtnDefault : BtnDisabled;

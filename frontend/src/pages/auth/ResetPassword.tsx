@@ -138,7 +138,7 @@ function ResetPasswordEdit({ email, token }: { email: string; token: string }) {
       setErrors([]);
       await navigate('/auth');
     } catch {
-      setErrors(['An error occurred']);
+      setErrors(['Error occurred']);
     }
   }
 

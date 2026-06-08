@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from 'context/useUser';
 import type { User, OtherUser } from 'context/Types';
-import { RefreshTokenRequest } from 'functions/Requests';
+import { refreshTokenRequest } from 'functions/Requests';
 import { addAvatarPrefix } from 'functions/UserValidation';
 import NotFound from 'pages/NotFound';
 import { ScrollablePage } from 'components/general/Scrollable';
@@ -23,7 +23,7 @@ function Users() {
         });
         if (!res.ok) {
           if (res.status != 401) return;
-          const accessToken = await RefreshTokenRequest(user.accessToken);
+          const accessToken = await refreshTokenRequest(user.accessToken);
           if (!accessToken.length) return;
           setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
           res = await fetch('/api/user/all/username', {

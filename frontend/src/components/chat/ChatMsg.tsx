@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import type { PublicMsg, PrivateMsg } from 'context/Types';
-import { GetTime } from 'functions/Time';
 import { useUser } from 'context/useUser';
 import { useSocket } from 'context/useSocket';
-import { CanDisciplineThisUser } from 'functions/Ranks';
+import { getTime } from 'functions/Time';
+import { canDisciplineThisUser } from 'functions/Ranks';
 import styled, { css } from 'styled-components';
 import { Avatar } from 'components/btn/Avatar';
 import { Username } from 'components/btn/Username';
@@ -116,7 +116,7 @@ export function PublicChatMsg({ msg }: { msg: PublicMsg }) {
   const { user } = useUser();
   const { socket, onlineUsers } = useSocket();
   const is_logged_in = !!user && user.rank.toLowerCase() != 'pending';
-  const can_discipline = CanDisciplineThisUser(
+  const can_discipline = canDisciplineThisUser(
     user?.rank ?? '',
     msg.sender?.rank ?? '',
   );
@@ -151,7 +151,7 @@ export function PublicChatMsg({ msg }: { msg: PublicMsg }) {
             )}
             <RankBadge rank={rank} />
           </NameWrap>
-          <Time>{GetTime(msg.date)}</Time>
+          <Time>{getTime(msg.date)}</Time>
           {can_discipline && !msg.moderated && (
             <BtnIcon title="Moderate" onClick={() => handleModerate()}>
               x
@@ -188,7 +188,7 @@ export function PrivateChatMsg({ msg }: { msg: PrivateMsg }) {
             </Link>
             <RankBadge rank={rank} />
           </NameWrap>
-          <Time>{GetTime(msg.date)}</Time>
+          <Time>{getTime(msg.date)}</Time>
         </Meta>
         <Text>{msg.message}</Text>
       </Body>

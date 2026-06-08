@@ -4,35 +4,50 @@ const Border = styled.div`
   width: 100%;
   background: #18120f;
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  animation: borderglow 2.5s ease-in-out infinite;
+  position: relative;
+  outline: 1px solid rgba(217, 168, 90, 0.25);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.8),
+    0 0 12px rgba(217, 168, 90, 0.15);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    outline: 1px solid rgba(240, 192, 106, 0.45);
+    box-shadow: 0 0 22px rgba(240, 192, 106, 0.2);
+    opacity: 0;
+    animation: borderglow 2.5s ease-in-out infinite;
+    pointer-events: none;
+  }
 
   @keyframes borderglow {
     0%,
     100% {
-      box-shadow:
-        0 40px 100px rgba(0, 0, 0, 0.8),
-        0 0 0 1px rgba(217, 168, 90, 0.25),
-        0 0 12px rgba(217, 168, 90, 0.15);
+      opacity: 0;
     }
     50% {
-      box-shadow:
-        0 40px 100px rgba(0, 0, 0, 0.8),
-        0 0 0 1px rgba(240, 192, 106, 0.7),
-        0 0 22px rgba(240, 192, 106, 0.35);
+      opacity: 1;
     }
   }
 
   @media (max-width: 680px) {
     border-radius: 0;
+    outline: none;
     box-shadow: none;
-    animation: none;
+    overflow: hidden;
     max-width: 100%;
     height: 100svh;
+
+    &::after {
+      display: none;
+    }
   }
 `;
 

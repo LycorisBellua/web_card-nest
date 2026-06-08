@@ -1,4 +1,4 @@
-export function CanDisciplineThisUser(
+export function canDisciplineThisUser(
   ourRank: string,
   theirRank: string,
 ): boolean {

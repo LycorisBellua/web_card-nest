@@ -26,5 +26,3 @@ export function sanitizeMessage(msg: string, maxLen: number): string {
   if (!msg || maxLen <= 0) return '';
   return msg.normalize('NFC').trim().substring(0, maxLen);
 }
-
-// No sanitation for the avatar

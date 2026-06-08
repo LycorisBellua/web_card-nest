@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import type { User, PublicMsg } from 'context/Types';
 import { useUser } from 'context/useUser';
 import { useSocket } from 'context/useSocket';
-import { ExtractAllDataRequest } from 'functions/Requests';
+import { downloadBlob } from 'functions/Files';
+import { extractAllDataRequest } from 'functions/Requests';
 import { ScrollablePage } from 'components/general/Scrollable';
 import Checkbox from 'components/misc/Checkbox';
 import Spinner from 'components/misc/Spinner';
@@ -27,31 +28,6 @@ function DataExtraction() {
 
   const allDmsSelected = dmSelected.length > 0 && dmSelected.every(Boolean);
 
-  /*
-  // For individual JSON file:
-  const handleDownload = (data: object, filename = 'card_nest_data.json') => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-  */
-
-  // For the ZIP file:
-  const handleDownload = (blob: Blob, filename = 'card_nest_data.zip') => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   async function handleExtract() {
     try {
       const anyDataSelected =
@@ -60,26 +36,21 @@ function DataExtraction() {
         setMessage('No data has been selected.');
         return;
       }
-      setMessage('');
       setDisplaySpinner(true);
       let accessToken = user!.accessToken;
-      const result = await ExtractAllDataRequest(accessToken, {
+      const result = await extractAllDataRequest(accessToken, {
         profile: profileSelected,
         lobby: lobbySelected,
         friendIds: friends.filter((_, i) => dmSelected[i]).map((f) => f.id),
       });
       accessToken = result.accessToken;
-      if (!accessToken.length || !result.blob) {
-        setMessage('Error with data extraction');
-        setDisplaySpinner(false);
-        return;
-      }
-      handleDownload(result.blob, 'card_nest_data.zip');
+      if (!accessToken.length || !result.blob) throw new Error();
+      downloadBlob(result.blob, 'card_nest_data.zip');
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
       setMessage('');
-      setDisplaySpinner(false);
     } catch {
-      setMessage('');
+      setMessage('Error with data extraction');
+    } finally {
       setDisplaySpinner(false);
     }
   }
@@ -94,10 +65,10 @@ function DataExtraction() {
   }, [socket, user?.id]);
 
   useEffect(() => {
-    function InitDmSelector() {
+    function initDmSelector() {
       setDmSelected(Array.from({ length: friends.length }, () => false));
     }
-    InitDmSelector();
+    initDmSelector();
   }, [friends.length]);
 
   if (!user) {

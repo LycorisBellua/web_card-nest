@@ -1,14 +1,15 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { User, OtherUserOrGuest } from 'context/Types';
 import { useUser } from 'context/useUser';
-import { CanDisciplineThisUser } from 'functions/Ranks';
+import { canDisciplineThisUser } from 'functions/Ranks';
 import {
-  ChangeRankRequest,
-  DeleteUserRequest,
-  FetchSelfBlockedListRequest,
-  FetchSelfFriendListRequest,
-  FetchSelfSentListRequest,
-  FetchSelfReceivedListRequest,
+  changeRankRequest,
+  deleteUserRequest,
+  fetchSelfBlockedListRequest,
+  fetchSelfFriendListRequest,
+  fetchSelfSentListRequest,
+  fetchSelfReceivedListRequest,
 } from 'functions/Requests';
 import { BtnDanger, BtnAccent } from 'components/btn/Btn';
 import Modal from 'components/misc/Modal';
@@ -37,12 +38,13 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
   const [isDeletionModalOpen, setIsDeletionModalOpen] =
     useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const navigate = useNavigate();
 
   if (
     !user ||
     !otherUser ||
     user.rank.toLowerCase() != 'admin' ||
-    !CanDisciplineThisUser(user?.rank ?? '', otherUser?.rank ?? '')
+    !canDisciplineThisUser(user?.rank ?? '', otherUser?.rank ?? '')
   )
     return <></>;
 
@@ -61,22 +63,22 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
       (u) => u.id === otherUser!.id,
     );
     if (inBlocked) {
-      const data = await FetchSelfBlockedListRequest(accessToken);
+      const data = await fetchSelfBlockedListRequest(accessToken);
       if (!data.accessToken.length) return '';
       accessToken = data.accessToken;
       setBlocked(data.users);
     } else if (inFriends) {
-      const data = await FetchSelfFriendListRequest(accessToken);
+      const data = await fetchSelfFriendListRequest(accessToken);
       if (!data.accessToken.length) return '';
       accessToken = data.accessToken;
       setFriends(data.users);
     } else if (inSentFriends) {
-      const data = await FetchSelfSentListRequest(accessToken);
+      const data = await fetchSelfSentListRequest(accessToken);
       if (!data.accessToken.length) return '';
       accessToken = data.accessToken;
       setSentFriends(data.users);
     } else if (inReceivedFriends) {
-      const data = await FetchSelfReceivedListRequest(accessToken);
+      const data = await fetchSelfReceivedListRequest(accessToken);
       if (!data.accessToken.length) return '';
       accessToken = data.accessToken;
       setReceivedFriends(data.users);
@@ -88,22 +90,16 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
     closeModals();
     try {
       const newRank = 'user';
-      let accessToken = await ChangeRankRequest(
+      let accessToken = await changeRankRequest(
         user!.accessToken,
         otherUser!.id,
         newRank,
       );
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
       otherUser!.rank = newRank;
       setOtherUser(otherUser);
       accessToken = await updateRelationships(accessToken);
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
     } catch {
       setError('Error occurred');
@@ -114,22 +110,16 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
     closeModals();
     try {
       const newRank = 'moderator';
-      let accessToken = await ChangeRankRequest(
+      let accessToken = await changeRankRequest(
         user!.accessToken,
         otherUser!.id,
         newRank,
       );
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
       otherUser!.rank = newRank;
       setOtherUser(otherUser);
       accessToken = await updateRelationships(accessToken);
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
     } catch {
       setError('Error occurred');
@@ -139,22 +129,16 @@ function DangerZoneAdmin({ otherUser, setOtherUser }: Props) {
   async function handleDelete() {
     closeModals();
     try {
-      let accessToken = await DeleteUserRequest(
+      let accessToken = await deleteUserRequest(
         user!.accessToken,
         otherUser!.id,
       );
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
       setOtherUser(null);
       accessToken = await updateRelationships(accessToken);
-      if (!accessToken.length) {
-        setError('Error occurred');
-        return;
-      }
+      if (!accessToken.length) throw new Error();
       setUser((prev) => ({ ...prev, accessToken: accessToken }) as User);
-      window.location.href = '/users';
+      await navigate('/users');
     } catch {
       setError('Error occurred');
     }
