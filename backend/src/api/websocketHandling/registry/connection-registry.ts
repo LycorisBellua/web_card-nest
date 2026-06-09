@@ -5,13 +5,19 @@ export class ConnectionRegistry {
   private readonly socketIdByUserId = new Map<string, string>();
   private readonly userIdBySocketId = new Map<string, string>();
 
-  add(userId: string, socketId: string): void {
+  /**
+   * Registers the socket for a user. If the user already had a different
+   * socket, that stale socket id is unmapped and returned so the caller can
+   * forcibly disconnect it (single live socket per user).
+   */
+  add(userId: string, socketId: string): string | undefined {
     const oldSocketId = this.socketIdByUserId.get(userId);
     if (oldSocketId && oldSocketId !== socketId) {
       this.userIdBySocketId.delete(oldSocketId);
     }
     this.userIdBySocketId.set(socketId, userId);
     this.socketIdByUserId.set(userId, socketId);
+    return oldSocketId !== socketId ? oldSocketId : undefined;
   }
 
   removeBySocketId(socketId: string): string | undefined {
@@ -34,5 +40,9 @@ export class ConnectionRegistry {
 
   getAllUserIds(): string[] {
     return Array.from(this.socketIdByUserId.keys());
+  }
+
+  isOnline(userId: string): boolean {
+    return this.socketIdByUserId.has(userId);
   }
 }
