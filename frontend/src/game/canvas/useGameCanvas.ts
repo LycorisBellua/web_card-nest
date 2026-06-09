@@ -254,11 +254,6 @@ export function useGameCanvas(
           label = `${playerName} : ${getVisiblePoints(playerIdx)}`;
         }
 
-        ctx.save();
-        ctx.font = 'bold 16px Arial';
-        ctx.fillStyle = isCurrent ? '#FFD700' : 'rgba(255,255,255,0.8)';
-        ctx.textAlign = 'center';
-
         const relativeIndex = getRelativeIndex(
           playerIdx,
           gameRef.current!.currentPlayerIdx,
@@ -269,6 +264,29 @@ export function useGameCanvas(
           gameRef.current!.players.length,
         );
 
+        // The side hands are rotated 90deg, so their on-screen horizontal
+        // footprint is CARD_H wide centred on the card's mid-line. Derive the
+        // exact card edges so the label can be anchored just outside them.
+        const TEXT_GAP = 16;
+        // Left hand: cards sit at x = 40, centre at 40 + CARD_W/2, extending
+        // CARD_H/2 each way -> right edge at 140.
+        const leftHandRightEdge = 40 + CARD_W / 2 + CARD_H / 2;
+        // Right hand: cards sit at x = W - CARD_H, centre at that + CARD_W/2,
+        // so the left edge is centre - CARD_H/2 -> 760.
+        const rightHandLeftEdge = W - CARD_H + CARD_W / 2 - CARD_H / 2;
+
+        ctx.save();
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = isCurrent ? '#FFD700' : 'rgba(255,255,255,0.8)';
+        // Left hand starts to the right of its cards (left-aligned), right hand
+        // ends to the left of its cards (right-aligned), top/bottom centred.
+        ctx.textAlign =
+          position === 'left'
+            ? 'left'
+            : position === 'right'
+              ? 'right'
+              : 'center';
+
         let labelX = 0;
         let labelY = 0;
         if (position === 'bottom') {
@@ -278,43 +296,34 @@ export function useGameCanvas(
           labelX = W / 2;
           labelY = CARD_H + 55;
         } else if (position === 'left') {
-          labelX = CARD_W + 120;
+          labelX = leftHandRightEdge + TEXT_GAP;
           labelY = H / 2;
         } else if (position === 'right') {
-          labelX = W - CARD_W - 120;
+          labelX = rightHandLeftEdge - TEXT_GAP;
           labelY = H / 2;
         }
 
-        const displayLabel =
-          position === 'left' ? label : position === 'right' ? label : label;
-        ctx.fillText(displayLabel, labelX, labelY);
+        ctx.fillText(label, labelX, labelY);
 
-        const displayStatus = (s: string) =>
-          position === 'left' ? s : position === 'right' ? s : s;
-
+        // Status lines reuse labelX + the active textAlign so they stack neatly
+        // under the main label on whichever side the hand is on.
         if (gameRef.current!.players[playerIdx].isBusted) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = '#c0110f';
-          ctx.fillText(displayStatus('BUST'), labelX, labelY + 20);
+          ctx.fillText('BUST', labelX, labelY + 20);
         } else if (
           gameRef.current!.gameStatus !== 'finished' &&
           gameRef.current!.players[playerIdx].hasStood
         ) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = 'rgba(255,255,255,0.8)';
-          ctx.fillText(displayStatus('STAND'), labelX, labelY + 20);
+          ctx.fillText('STAND', labelX, labelY + 20);
         }
 
         if (gameRef.current!.players[playerIdx].hasBlackCrown) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = '#b253ff';
-          let bcLabelX = labelX;
-          if (position === 'left') {
-            bcLabelX = CARD_W + 92 + 40;
-          } else if (position === 'right') {
-            bcLabelX = W - CARD_W - 92 - 40;
-          }
-          ctx.fillText(displayStatus('BLACKCROWN'), bcLabelX, labelY + 20);
+          ctx.fillText('BLACKCROWN', labelX, labelY + 20);
         }
 
         ctx.restore();

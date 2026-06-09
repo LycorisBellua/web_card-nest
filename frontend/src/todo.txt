@@ -1,7 +1,5 @@
-GAME
-- Anchor the username text in such a way that it doesn't clip through the hands.
-
 TEST (BOTH IN DEV AND PROD)
+- Test to close the window and come back.
 - Test to change your name mid-game and then come back (should show your new 
 username).
 - Test to log in or log out mid-game, both in local and online mode.
