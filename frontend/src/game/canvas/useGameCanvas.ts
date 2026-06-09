@@ -285,19 +285,24 @@ export function useGameCanvas(
           labelY = H / 2;
         }
 
-        ctx.fillText(label, labelX, labelY);
+        const displayLabel =
+          position === 'left' ? label : position === 'right' ? label : label;
+        ctx.fillText(displayLabel, labelX, labelY);
+
+        const displayStatus = (s: string) =>
+          position === 'left' ? s : position === 'right' ? s : s;
 
         if (gameRef.current!.players[playerIdx].isBusted) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = '#c0110f';
-          ctx.fillText('BUST', labelX, labelY + 20);
+          ctx.fillText(displayStatus('BUST'), labelX, labelY + 20);
         } else if (
           gameRef.current!.gameStatus !== 'finished' &&
           gameRef.current!.players[playerIdx].hasStood
         ) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = 'rgba(255,255,255,0.8)';
-          ctx.fillText('STAND', labelX, labelY + 20);
+          ctx.fillText(displayStatus('STAND'), labelX, labelY + 20);
         }
 
         if (gameRef.current!.players[playerIdx].hasBlackCrown) {
@@ -309,7 +314,7 @@ export function useGameCanvas(
           } else if (position === 'right') {
             bcLabelX = W - CARD_W - 92 - 40;
           }
-          ctx.fillText('BLACKCROWN', bcLabelX, labelY + 20);
+          ctx.fillText(displayStatus('BLACKCROWN'), bcLabelX, labelY + 20);
         }
 
         ctx.restore();

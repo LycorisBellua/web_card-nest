@@ -1,6 +1,5 @@
 GAME
-- In the screen with the mode selector, the name of the game and the rules need 
-to be shown clearly.
+- Anchor the username text in such a way that it doesn't clip through the hands.
 
 TEST (BOTH IN DEV AND PROD)
 - Test to change your name mid-game and then come back (should show your new 

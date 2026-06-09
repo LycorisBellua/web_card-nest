@@ -8,6 +8,7 @@ import {
   ShowFinishedStyle,
 } from 'game/GameTableStyle';
 import { ScrollablePage } from 'components/general/Scrollable';
+import CenterButtons from 'components/btn/CenterButtons';
 import { BtnDefault } from 'components/btn/Btn';
 import { initialGame } from 'game/state/initialState';
 import { dealInitialCards } from 'game/logic/deck';
@@ -107,56 +108,62 @@ export default function PlayLocal() {
   return (
     <ScrollablePage>
       {game && (
-        <TableWrapper>
+        <>
           <h1>Black Crown - Local Mode</h1>
-          <BtnDefault onClick={handleStopPlaying}>End Game</BtnDefault>
-          {showTransition && game.gameStatus === 'transition' && (
-            <Overlay>
-              {game.players[game.currentPlayerIdx].isBusted && (
-                <p>You're busted!</p>
-              )}
-              {game.players[game.currentPlayerIdx].hasStood && (
-                <p>You stood!</p>
-              )}
-              {getNextActivePlayer() !== -1 && (
-                <>
-                  <p>Change to Player {getNextActivePlayer() + 1}</p>
-                  <BtnDefault onClick={handleNextPlayer}>Confirm</BtnDefault>
-                </>
-              )}
-            </Overlay>
-          )}
-          <PlayTableStyle>
-            {game.gameStatus === 'finished' && (
-              <ShowFinishedStyle>
-                <p>
-                  Round {game.turn}: Winner is player {game.winnerId! + 1}
-                </p>
-                <div className="btn">
-                  <BtnDefault onClick={handleNewRound}>Another Game</BtnDefault>
-                  <BtnDefault onClick={handleStopPlaying}>
-                    Stop Playing
-                  </BtnDefault>
-                </div>
-              </ShowFinishedStyle>
+          <CenterButtons>
+            <BtnDefault onClick={handleStopPlaying}>End Game</BtnDefault>
+          </CenterButtons>
+          <TableWrapper>
+            {showTransition && game.gameStatus === 'transition' && (
+              <Overlay>
+                {game.players[game.currentPlayerIdx].isBusted && (
+                  <p>You're busted!</p>
+                )}
+                {game.players[game.currentPlayerIdx].hasStood && (
+                  <p>You stood!</p>
+                )}
+                {getNextActivePlayer() !== -1 && (
+                  <>
+                    <p>Change to Player {getNextActivePlayer() + 1}</p>
+                    <BtnDefault onClick={handleNextPlayer}>Confirm</BtnDefault>
+                  </>
+                )}
+              </Overlay>
             )}
-            <canvas ref={canvasRef} width={900} height={600} />
-          </PlayTableStyle>
-          <div className="btn">
-            <BtnDefault
-              onClick={handleHit}
-              disabled={game.gameStatus !== 'playing'}
-            >
-              Hit
-            </BtnDefault>
-            <BtnDefault
-              onClick={handleStand}
-              disabled={game.gameStatus !== 'playing'}
-            >
-              Stand
-            </BtnDefault>
-          </div>
-        </TableWrapper>
+            <PlayTableStyle>
+              {game.gameStatus === 'finished' && (
+                <ShowFinishedStyle>
+                  <p>
+                    Round {game.turn}: Winner is player {game.winnerId! + 1}
+                  </p>
+                  <div className="btn">
+                    <BtnDefault onClick={handleNewRound}>
+                      Another Game
+                    </BtnDefault>
+                    <BtnDefault onClick={handleStopPlaying}>
+                      Stop Playing
+                    </BtnDefault>
+                  </div>
+                </ShowFinishedStyle>
+              )}
+              <canvas ref={canvasRef} width={900} height={600} />
+            </PlayTableStyle>
+            <div className="btn">
+              <BtnDefault
+                onClick={handleHit}
+                disabled={game.gameStatus !== 'playing'}
+              >
+                Hit
+              </BtnDefault>
+              <BtnDefault
+                onClick={handleStand}
+                disabled={game.gameStatus !== 'playing'}
+              >
+                Stand
+              </BtnDefault>
+            </div>
+          </TableWrapper>
+        </>
       )}
     </ScrollablePage>
   );

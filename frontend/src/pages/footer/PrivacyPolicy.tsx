@@ -1,20 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ScrollablePage } from 'components/general/Scrollable';
+import Section from 'components/general/Section';
 import styled from 'styled-components';
-
-const Section = styled.section`
-  margin-top: 20px;
-  margin-bottom: 20px;
-  text-align: justify;
-`;
 
 const Subtitle = styled.h3`
   margin-top: 15px;
-`;
-
-const Parag = styled.p`
-  margin-top: 10px;
-  margin-bottom: 10px;
 `;
 
 const List = styled.ul`
@@ -52,21 +42,21 @@ function PrivacyPolicy() {
 
       <Section>
         <h2>1. Who We Are</h2>
-        <Parag>
+        <p>
           Card Nest ("we", "us", "our") is based the European Union / European
           Economic Area. We are the data controller for all personal data
           processed through this website.
-        </Parag>
-        <Parag>
+        </p>
+        <p>
           Contact: <em>no.rep.card.nest@gmail.com</em>
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>2. What Data We Collect and Why</h2>
 
         <Subtitle>2.1 Registered users (account holders)</Subtitle>
-        <Parag>When you create an account, we collect:</Parag>
+        <p>When you create an account, we collect:</p>
         <List>
           <li>
             <strong>Email address</strong>: used to authenticate your account
@@ -110,36 +100,36 @@ function PrivacyPolicy() {
             deleted.
           </li>
         </List>
-        <Parag>
+        <p>
           <strong>Legal basis:</strong> Performance of a contract (Article
           6(1)(b) GDPR): this data is necessary to provide you with the services
           you signed up for.
-        </Parag>
+        </p>
 
         <Subtitle>2.2 Guests (non-registered visitors)</Subtitle>
-        <Parag>
+        <p>
           Guests may participate in the lobby chat and play Black Crown in local
           mode. No account is required and no personal data is collected from
           guests beyond what is inherent in any internet connection.
-        </Parag>
+        </p>
 
         <Subtitle>2.3 Lobby chat messages</Subtitle>
-        <Parag>
+        <p>
           Lobby messages are publicly visible to all users, including guests. If
           you are logged in, your username and avatar are attached to your
           messages. Please do not share personal information in any chat thread.
-        </Parag>
-        <Parag>
+        </p>
+        <p>
           <strong>Legal basis:</strong> Legitimate interests (Article 6(1)(f)
           GDPR): operating a functional public chat space.
-        </Parag>
+        </p>
 
         <Subtitle>2.4 Technical data</Subtitle>
-        <Parag>
+        <p>
           We do not maintain server-side logs of IP addresses or other technical
           metadata. No browser fingerprints, analytics cookies, or tracking
           technologies are used.
-        </Parag>
+        </p>
 
         <Subtitle>
           2.5 Data we do <em>not</em> collect
@@ -156,7 +146,7 @@ function PrivacyPolicy() {
 
       <Section>
         <h2>3. How We Use Your Data</h2>
-        <Parag>We use the data described above solely to:</Parag>
+        <p>We use the data described above solely to:</p>
         <List>
           <li>Create and maintain your account.</li>
           <li>
@@ -171,18 +161,18 @@ function PrivacyPolicy() {
             Allow moderators to maintain a safe environment (see Section 6).
           </li>
         </List>
-        <Parag>
+        <p>
           We do not use your data for advertising, profiling, or automated
           decision-making.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>4. Data Sharing and Third Parties</h2>
-        <Parag>We share your data with as few parties as possible.</Parag>
+        <p>We share your data with as few parties as possible.</p>
 
         <Subtitle>4.1 Email delivery (Google / Gmail)</Subtitle>
-        <Parag>
+        <p>
           Transactional emails (e.g. password reset request) are sent from a
           Gmail account via Nodemailer. When an email is sent to you, your email
           address is processed by <strong>Google LLC</strong> acting as a data
@@ -195,14 +185,14 @@ function PrivacyPolicy() {
             policies.google.com/privacy
           </a>
           .
-        </Parag>
-        <Parag>
+        </p>
+        <p>
           We do not share your data with any other third parties. We do not sell
           your data. We do not use advertising networks or analytics services.
-        </Parag>
+        </p>
 
         <Subtitle>4.2 Visibility to other users</Subtitle>
-        <Parag>By using Card Nest, you acknowledge that:</Parag>
+        <p>By using Card Nest, you acknowledge that:</p>
         <List>
           <li>
             <strong>Your username and avatar</strong> are visible to all users
@@ -230,10 +220,10 @@ function PrivacyPolicy() {
 
       <Section>
         <h2>5. Cookies</h2>
-        <Parag>
+        <p>
           We use two cookies, described below. No third-party cookies,
           advertising cookies, or analytics cookies are set by Card Nest.
-        </Parag>
+        </p>
 
         <Table>
           <table>
@@ -270,21 +260,21 @@ function PrivacyPolicy() {
         </Table>
 
         <div>
-          <Parag>
+          <p>
             Because these cookies are strictly necessary for authentication,
             they do not require your consent under the ePrivacy Directive. They
             are set only when you log in and are deleted when you log out or
             delete your account.
-          </Parag>
+          </p>
         </div>
       </Section>
 
       <Section>
         <h2>6. Moderation and Account Actions</h2>
-        <Parag>
+        <p>
           Card Nest moderators may take the following actions to maintain a safe
           and respectful environment:
-        </Parag>
+        </p>
         <List>
           <li>
             <strong>Chat timeout</strong>: temporarily retracting your ability
@@ -306,19 +296,17 @@ function PrivacyPolicy() {
             violations, without prior notice.
           </li>
         </List>
-        <Parag>
+        <p>
           These actions are taken under our legitimate interest in operating a
           safe platform (Article 6(1)(f) GDPR) and are a condition of using the
           service. They do not constitute unlawful processing of your personal
           data.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>7. Your Rights Under the GDPR</h2>
-        <Parag>
-          As a data subject under the GDPR, you have the following rights:
-        </Parag>
+        <p>As a data subject under the GDPR, you have the following rights:</p>
 
         <Table>
           <table>
@@ -356,24 +344,24 @@ function PrivacyPolicy() {
         </Table>
 
         <Subtitle>7.1 Data export (portability)</Subtitle>
-        <Parag>
+        <p>
           You may request an export of your personal data at any time from
           within your account settings. Exports are provided in JSON, which is a
           standard format, known for being both machine-readable and
           human-readable. You can select any combination of the following:
-        </Parag>
+        </p>
         <List>
           <li>User profile</li>
           <li>Lobby chat</li>
           <li>Direct messages</li>
         </List>
 
-        <Parag>
+        <p>
           Note that avatars are omitted as they would make the export too heavy.
-        </Parag>
+        </p>
 
         <Subtitle>7.2 Right to lodge a complaint</Subtitle>
-        <Parag>
+        <p>
           If you believe we have not handled your personal data lawfully, you
           have the right to lodge a complaint with your national data protection
           authority. A list of EU/EEA supervisory authorities is available at{' '}
@@ -385,15 +373,15 @@ function PrivacyPolicy() {
             edpb.europa.eu
           </a>
           .
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>8. Account Deletion and Data Retention</h2>
-        <Parag>
+        <p>
           You may delete your account at any time from your account settings.
           Upon deletion:
-        </Parag>
+        </p>
         <List>
           <li>
             Your <strong>user profile</strong> is permanently deleted.
@@ -407,56 +395,56 @@ function PrivacyPolicy() {
             are no longer linked to your identity.
           </li>
         </List>
-        <Parag>
+        <p>
           We retain data only for as long as necessary to provide the service.
           We do not maintain backups or archives that would preserve deleted
           data beyond this process.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>9. Security</h2>
-        <Parag>
+        <p>
           We take reasonable technical measures to protect your data, including
           hashing passwords with a one-way algorithm and using HTTP-only, secure
           cookies for authentication tokens. However, no internet service can
           guarantee absolute security. Please use a strong, unique password for
           your Card Nest account.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>10. Children</h2>
-        <Parag>
+        <p>
           Card Nest does not have an age restriction. However, we do not
           knowingly collect data from children under the age of 13 without
           verifiable parental consent, as required by applicable law. If you
           believe a child under 13 has created an account without consent,
           please contact us at the address below and we will delete the account
           promptly.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>11. Changes to This Policy</h2>
-        <Parag>
+        <p>
           We may update this Privacy Policy from time to time. If we make
           material changes, we will post the updated policy on this page with a
           revised "last updated" date. Continued use of Card Nest after such
           changes constitutes acceptance of the updated policy.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>12. Contact</h2>
-        <Parag>
+        <p>
           For any questions, requests, or concerns regarding your personal data,
           contact us at:
           <br />
           <strong>
             <em>no.rep.card.nest@gmail.com</em>
           </strong>
-        </Parag>
+        </p>
       </Section>
     </ScrollablePage>
   );
