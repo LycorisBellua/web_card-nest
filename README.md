@@ -49,12 +49,12 @@ been tested on Linux, so we do not guarantee it would work on another system.
 
 - For the prod build, the project includes an Adminer container to inspect the
   database. This is only accessible from the host machine and can be found at:
-  http://localhost:54245. The login data can be found the containers/.env:
-  - System: PostgreSQL
-  - Server: db
-  - Username: $POSTGRES_USER
-  - Password: $POSTGRES_PASSWORD
-  - Database: $POSTGRES_DB
+  `http://localhost:54245`. The login data can be found the `containers/.env`:
+  - System: `PostgreSQL`
+  - Server: `db`
+  - Username: `$POSTGRES_USER`
+  - Password: `$POSTGRES_PASSWORD`
+  - Database: `$POSTGRES_DB`
 
 - No matter the version, instead of `locahost` you can use your IP as the
   domain name. It allows other machines on the same network to access the website
