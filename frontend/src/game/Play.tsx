@@ -1,233 +1,69 @@
-import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useUser } from 'context/useUser';
-import {
-  PlayTableStyle,
-  TableWrapper,
-  PlayerCountStyle,
-  Overlay,
-  ShowFinishedStyle,
-} from 'game/GameTableStyle';
 import { ScrollablePage } from 'components/general/Scrollable';
+import Section from 'components/general/Section';
+import CenterButtons from 'components/btn/CenterButtons';
 import { BtnDefault } from 'components/btn/Btn';
-import { initialGame } from 'game/state/initialState';
-import { dealInitialCards } from 'game/logic/deck';
-import { hit, stand } from 'game/logic/game';
-import { useGameCanvas } from 'game/canvas/useGameCanvas';
-import type { GameState } from 'game/logic/types';
-import { newRoundGame, nextPlayer } from 'game/engine/gameEngine';
 
-function PlayGame() {
+/**
+ * Landing page for /play.
+ * The Online Mode button is only shown when the user is logged in and not
+ * pending — matching the access guard in PlayOnline.
+ */
+export default function Play() {
   const { user } = useUser();
-  const [username, setUsername] = useState<string>('');
-  const [started, setStarted] = useState<boolean>(false);
-  const [local, setLocal] = useState<boolean>(false);
-  const [online, setOnline] = useState<boolean>(false);
-  const [game, setGame] = useState<GameState | null>(null);
-  const [showTransition, setShowTransition] = useState<boolean>(false);
-  const { canvasRef, reset } = useGameCanvas(game, started);
-
-  function handleLocalGame() {
-    setLocal(true);
-  }
-
-  function handleOnlineGame() {
-    setOnline(true);
-  }
-
-  function handleStartLocalGame(playerCount: number) {
-    setStarted(true);
-    setGame(() => {
-      const g = initialGame(playerCount, username);
-      return dealInitialCards(g);
-    });
-  }
-
-  function handleStartOnlineGame(playerCount: number) {
-    setStarted(true);
-    setGame(() => {
-      const g = initialGame(playerCount, username);
-      return dealInitialCards(g);
-    });
-  }
-
-  function handleHit() {
-    setGame((g) => {
-      if (!g) return g;
-      return hit(g.currentPlayerIdx, g);
-    });
-  }
-
-  function handleStand() {
-    setGame((g) => {
-      if (!g) return g;
-      const next = stand(g);
-      return next;
-    });
-  }
-
-  function getNextActivePlayer(): number {
-    if (!game) return -1;
-    const total = game.players.length;
-    for (let i = 1; i <= total; i++) {
-      const nextPlayer = (game.currentPlayerIdx + i) % total;
-      const player = game.players[nextPlayer];
-      if (!player.hasStood && !player.isBusted) {
-        return nextPlayer;
-      }
-    }
-    return -1;
-  }
-
-  function handleNextPlayer() {
-    setGame((g) => {
-      if (!g) return g;
-      const next = nextPlayer(g);
-      if (next.gameStatus === 'transition') next.gameStatus = 'playing';
-      return next;
-    });
-  }
-
-  function handleNewRound() {
-    if (!game) return;
-    reset();
-    const newGame = newRoundGame(game, username);
-    setGame(dealInitialCards(newGame));
-  }
-
-  useEffect(() => {
-    function updateUsername() {
-      if (local || !user) setUsername('');
-      else setUsername(user.username);
-    }
-    updateUsername();
-  }, [local, user]);
-
-  useEffect(() => {
-    if (!game) return;
-    if (game.gameStatus === 'transition') {
-      const timer = setTimeout(() => {
-        setShowTransition(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-    const timer = setTimeout(() => {
-      setShowTransition(false);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [game]);
+  const canPlayOnline = !!user && user.rank.toLowerCase() !== 'pending';
 
   return (
     <ScrollablePage>
-      {started && game && (
-        <>
-          <TableWrapper>
-            {showTransition && game?.gameStatus === 'transition' && (
-              <Overlay>
-                {game.players[game.currentPlayerIdx].isBusted && (
-                  <p>You're busted!</p>
-                )}
-                {game.players[game.currentPlayerIdx].hasStood && (
-                  <p>You stood!</p>
-                )}
-                {getNextActivePlayer() !== -1 && (
-                  <>
-                    <p>Change to Player {getNextActivePlayer() + 1}</p>
-                    <BtnDefault onClick={handleNextPlayer}>Confirm</BtnDefault>
-                  </>
-                )}
-              </Overlay>
-            )}
-            <PlayTableStyle>
-              {game?.gameStatus === 'finished' && (
-                <ShowFinishedStyle>
-                  <p>
-                    Round {game.turn}: Winner is player {game.winnerId! + 1}
-                  </p>
-                  <div className="btn">
-                    <BtnDefault onClick={handleNewRound}>
-                      Another Game
-                    </BtnDefault>
-                    <BtnDefault onClick={() => window.location.reload()}>
-                      Stop Playing
-                    </BtnDefault>
-                  </div>
-                </ShowFinishedStyle>
-              )}
-              <canvas ref={canvasRef} width={900} height={600}></canvas>
-            </PlayTableStyle>
-            <div className="btn">
-              <BtnDefault
-                onClick={handleHit}
-                disabled={game.gameStatus !== 'playing'}
-              >
-                Hit
-              </BtnDefault>
-              <BtnDefault
-                onClick={handleStand}
-                disabled={game.gameStatus !== 'playing'}
-              >
-                Stand
-              </BtnDefault>
-            </div>
-          </TableWrapper>
-        </>
-      )}
-      {!local && !online && (
-        <div>
-          <BtnDefault onClick={handleLocalGame}>Local game</BtnDefault>
-          <BtnDefault onClick={handleOnlineGame}>Online game</BtnDefault>
-        </div>
-      )}
-      {(local || online) && !started && (
-        <PlayerCount
-          local={local}
-          onStartLocalGame={handleStartLocalGame}
-          onStartOnlineGame={handleStartOnlineGame}
-        />
-      )}
+      <h1>Black Crown</h1>
+
+      <CenterButtons>
+        <Link to="local">
+          <BtnDefault>Local Mode</BtnDefault>
+        </Link>
+        {canPlayOnline && (
+          <Link to="online">
+            <BtnDefault>Online Mode</BtnDefault>
+          </Link>
+        )}
+      </CenterButtons>
+
+      <Section>
+        <p>
+          Black Crown is a 2 to 4 player card game based on Blackjack. The goal
+          is to build a hand as close to 21 points as possible without going
+          over. There is no house: only the players competing against each
+          other, and only one winner per game.
+        </p>
+
+        <h2>Card values</h2>
+        <p>
+          Number cards (2-10) are worth their face value. Face cards (Jack,
+          Queen, King) are worth 10. An Ace is worth 11 unless that would push
+          your total above 21, in which case it counts as 1: this is decided
+          automatically.
+        </p>
+
+        <h2>How a round works</h2>
+        <p>
+          Each player is dealt one card face-up, then a second card that only
+          they can see. On your turn you may <strong>hit</strong> (take another
+          card, visible to all) as many times as you like, or{' '}
+          <strong>stand</strong> to lock in your total. If your hand exceeds 21
+          you <strong>bust</strong> and are out of the round. If you are the
+          last player who could still hit but everyone else has busted, you are
+          automatically forced to stand: congratulations, you're the winner!
+        </p>
+
+        <h2>Winning</h2>
+        <p>
+          Once no one can act, the highest total among non-busted players wins.
+          On a tie, the player who reached that total first wins. One hand beats
+          all others: the <strong>Black Crown</strong>. It's an Ace paired with
+          any 10-value card, totalling 21 in exactly two cards.
+        </p>
+      </Section>
     </ScrollablePage>
   );
 }
-
-type PlayerCountProps = {
-  local: boolean;
-  onStartLocalGame: (playerCount: number) => void;
-  onStartOnlineGame: (playerCount: number) => void;
-};
-
-function PlayerCount({
-  local,
-  onStartLocalGame,
-  onStartOnlineGame,
-}: PlayerCountProps) {
-  return (
-    <PlayerCountStyle>
-      <BtnDefault
-        onClick={() => {
-          if (local) onStartLocalGame(2);
-          else onStartOnlineGame(2);
-        }}
-      >
-        2 players
-      </BtnDefault>
-      <BtnDefault
-        onClick={() => {
-          if (local) onStartLocalGame(3);
-          else onStartOnlineGame(3);
-        }}
-      >
-        3 players
-      </BtnDefault>
-      <BtnDefault
-        onClick={() => {
-          if (local) onStartLocalGame(4);
-          else onStartOnlineGame(4);
-        }}
-      >
-        4 players
-      </BtnDefault>
-    </PlayerCountStyle>
-  );
-}
-
-export default PlayGame;

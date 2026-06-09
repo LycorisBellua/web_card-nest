@@ -10,6 +10,8 @@ import PrivateProfile from 'pages/profile/PrivateProfile';
 import Lobby from 'pages/chat/Lobby';
 import DM from 'pages/chat/DM';
 import Play from 'game/Play';
+import PlayLocal from 'game/modes/PlayLocal';
+import PlayOnline from 'game/modes/PlayOnline';
 import PrivacyPolicy from 'pages/footer/PrivacyPolicy';
 import TermsOfService from 'pages/footer/TermsOfService';
 import Credits from 'pages/footer/Credits';
@@ -32,6 +34,8 @@ const routes = [
       { path: 'profile', element: <PrivateProfile /> },
       { path: 'chat/:username', element: <DM /> },
       { path: 'play', element: <Play /> },
+      { path: 'play/local', element: <PlayLocal /> },
+      { path: 'play/online', element: <PlayOnline /> },
       { path: 'privacy-policy', element: <PrivacyPolicy /> },
       { path: 'terms-of-service', element: <TermsOfService /> },
       { path: 'credits', element: <Credits /> },

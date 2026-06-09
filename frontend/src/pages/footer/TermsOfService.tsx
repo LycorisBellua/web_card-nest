@@ -1,20 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ScrollablePage } from 'components/general/Scrollable';
+import Section from 'components/general/Section';
 import styled from 'styled-components';
-
-const Section = styled.section`
-  margin-top: 20px;
-  margin-bottom: 20px;
-  text-align: justify;
-`;
 
 const Subtitle = styled.h3`
   margin-top: 15px;
-`;
-
-const Parag = styled.p`
-  margin-top: 10px;
-  margin-bottom: 10px;
 `;
 
 const List = styled.ul`
@@ -30,23 +20,23 @@ function TermsOfService() {
 
       <Section>
         <h2>1. Acceptance of Terms</h2>
-        <Parag>
+        <p>
           By accessing or using Card Nest (the "Service"), you agree to be bound
           by these Terms of Service ("Terms"). If you do not agree, do not use
           the Service.
-        </Parag>
-        <Parag>
+        </p>
+        <p>
           Card Nest ("we", "us", "our") is based in the European Union /
           European Economic Area.
-        </Parag>
-        <Parag>
+        </p>
+        <p>
           Contact: <em>no.rep.card.nest@gmail.com</em>
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>2. The Service</h2>
-        <Parag>Card Nest provides:</Parag>
+        <p>Card Nest provides:</p>
         <List>
           <li>
             A <strong>public lobby chat</strong> accessible to all visitors,
@@ -72,29 +62,29 @@ function TermsOfService() {
         <h2>3. Accounts</h2>
 
         <Subtitle>3.1 Registration</Subtitle>
-        <Parag>
+        <p>
           To access multiplayer features and messaging, you must register an
           account with a valid email address, a username, and a password. You
           must provide accurate information and keep it up to date.
-        </Parag>
+        </p>
 
         <Subtitle>3.2 Account security</Subtitle>
-        <Parag>
+        <p>
           You are responsible for maintaining the confidentiality of your
           password and for all activity that occurs under your account. Notify
           us immediately if you suspect unauthorised access.
-        </Parag>
+        </p>
 
         <Subtitle>3.3 One account per person</Subtitle>
-        <Parag>
+        <p>
           You may not create multiple accounts to evade moderation actions or
           for any other purpose.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>4. User Conduct</h2>
-        <Parag>By using Card Nest, you agree not to:</Parag>
+        <p>By using Card Nest, you agree not to:</p>
         <List>
           <li>
             Post content that is illegal, hateful, discriminatory, threatening,
@@ -116,19 +106,19 @@ function TermsOfService() {
             consent.
           </li>
         </List>
-        <Parag>
+        <p>
           These rules apply to all areas of the Service, including the lobby
           chat, usernames, avatars, profile descriptions, and private messages.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>5. Moderation and Enforcement</h2>
-        <Parag>
+        <p>
           We reserve the right to take any of the following actions if you
           violate these Terms or behave in a way that is harmful to other users
           or the Service:
-        </Parag>
+        </p>
 
         <List>
           <li>
@@ -153,123 +143,123 @@ function TermsOfService() {
         </List>
 
         <div>
-          <Parag>
+          <p>
             Profile changes are final. Moderator modifications to your username,
             description, or avatar are not subject to reversal at your request.
             You may contact us to raise a concern, but we are under no
             obligation to restore the original content.
-          </Parag>
+          </p>
         </div>
 
-        <Parag>
+        <p>
           Moderation decisions are made in good faith. We are not liable for any
           loss or inconvenience resulting from a moderation action taken under
           these Terms.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>6. Content You Post</h2>
 
         <Subtitle>6.1 Your responsibility</Subtitle>
-        <Parag>
+        <p>
           You are solely responsible for the content you post, including lobby
           messages, DMs, usernames, profile descriptions, and avatars. Do not
           post content you do not have the right to share.
-        </Parag>
+        </p>
 
         <Subtitle>6.2 Lobby messages are public</Subtitle>
-        <Parag>
+        <p>
           The public lobby is visible to all users, including guests who are not
           logged in. Do not share personal or sensitive information in the
           public lobby.
-        </Parag>
+        </p>
 
         <Subtitle>6.3 Data exports by other users</Subtitle>
-        <Parag>
+        <p>
           Other registered users may export data from conversations they
           participated in, including lobby messages and DM threads. This means
           messages you sent may appear in another user's data export. Please see
           our <Link to="/privacy-policy">Privacy Policy</Link> for more
           information.
-        </Parag>
+        </p>
 
         <Subtitle>6.4 Anonymization on account deletion</Subtitle>
-        <Parag>
+        <p>
           If your account is deleted, your lobby messages will remain visible
           but attributed to "Guest" rather than your username.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>7. Intellectual Property</h2>
-        <Parag>
+        <p>
           Card Nest and its content - including game logic, design, and branding
           - are the property of Card Nest. You may not copy, reproduce, or
           distribute any part of the Service without our prior written consent.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>8. Disclaimer of Warranties</h2>
-        <Parag>
+        <p>
           The Service is provided "as is" and "as available" without warranties
           of any kind, express or implied. We do not guarantee that the Service
           will be uninterrupted, error-free, or free of harmful components.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>9. Limitation of Liability</h2>
-        <Parag>
+        <p>
           To the fullest extent permitted by applicable law, we shall not be
           liable for any indirect, incidental, or consequential damages arising
           out of your use of - or inability to use - the Service. Nothing in
           these Terms limits liability for death, personal injury, or fraud
           caused by our negligence.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>10. Account Deletion</h2>
-        <Parag>
+        <p>
           You may delete your account at any time from your account settings.
           The effects of deletion are described in the{' '}
           <Link to="/privacy-policy">Privacy Policy</Link>. We may also delete
           inactive accounts after an extended period of inactivity, with
           reasonable prior notice where possible.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>11. Changes to the Service and These Terms</h2>
-        <Parag>
+        <p>
           We may modify or discontinue the Service, or update these Terms, at
           any time. Material changes will be communicated by posting the updated
           version on this page with a revised "last updated" date. Continued use
           of the Service after changes are posted constitutes your acceptance of
           the revised Terms.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>12. Governing Law</h2>
-        <Parag>
+        <p>
           These Terms are governed by the laws of France, without regard to its
           conflict-of-law provisions. Any disputes shall be subject to the
           exclusive jurisdiction of the courts of Nice.
-        </Parag>
+        </p>
       </Section>
 
       <Section>
         <h2>13. Contact</h2>
-        <Parag>
+        <p>
           For any questions about these Terms, contact us at:
           <br />
           <strong>
             <em>no.rep.card.nest@gmail.com</em>
           </strong>
-        </Parag>
+        </p>
       </Section>
     </ScrollablePage>
   );
