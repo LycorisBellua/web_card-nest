@@ -73,10 +73,6 @@ export class WebsocketServer
     const userId = client.data.user.id;
     if (userId === 'Guest') return;
 
-    // Kill any stale socket the user still had open (single live socket per
-    // user). add() returns the displaced socket id, already unmapped, so the
-    // resulting handleDisconnect on that socket no-ops and won't broadcast a
-    // spurious offline event.
     const oldSocket = this.connections.add(userId, client.id);
     if (oldSocket) {
       this.server.sockets.sockets.get(oldSocket)?.disconnect(true);
@@ -239,7 +235,7 @@ export class WebsocketServer
         userId: sender.data.user.id,
         seats: payload.seats,
       });
-      sender.emit('GameInfo', game);
+      sender.emit('GameInfo', this.toWire(game));
     } catch (err) {
       sender.emit('GameError', this.errorHandler(err));
     }
@@ -324,7 +320,13 @@ export class WebsocketServer
         gameId: payload.gameId,
       });
       this.broadcastGameInfo(game);
-      sender.emit('GameRejected');
+      const leaderSocket = this.connections.getSocketId(game.leader);
+      if (leaderSocket) {
+        this.server.to(leaderSocket).emit('GameRejected', {
+          gameId: game.gameId,
+          invitedId: sender.data.user.id,
+        });
+      }
     } catch (err) {
       sender.emit('GameError', this.errorHandler(err));
     }
@@ -358,10 +360,14 @@ export class WebsocketServer
       if (player.type === 'human') {
         const socket = this.connections.getSocketId(player.id);
         if (socket) {
-          this.server.to(socket).emit('GameInfo', game);
+          this.server.to(socket).emit('GameInfo', this.toWire(game));
         }
       }
     }
+  }
+
+  private toWire(game: Game) {
+    return { ...game, invited: [...game.invited] };
   }
 
   private errorHandler(err: unknown): string {

@@ -5,11 +5,6 @@ export class ConnectionRegistry {
   private readonly socketIdByUserId = new Map<string, string>();
   private readonly userIdBySocketId = new Map<string, string>();
 
-  /**
-   * Registers the socket for a user. If the user already had a different
-   * socket, that stale socket id is unmapped and returned so the caller can
-   * forcibly disconnect it (single live socket per user).
-   */
   add(userId: string, socketId: string): string | undefined {
     const oldSocketId = this.socketIdByUserId.get(userId);
     if (oldSocketId && oldSocketId !== socketId) {

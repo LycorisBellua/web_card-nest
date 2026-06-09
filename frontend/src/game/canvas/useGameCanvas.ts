@@ -88,7 +88,7 @@ export function useGameCanvas(
       );
 
       const cards = player.cards.map((c, i) => {
-        const id = `p${playerIdx}-${i}`;
+        const id = `p${playerIdx}-${i}-${c.rank}${c.suit}`;
         const label = `${c.rank}${suitToSymbol(c.suit)}`;
         const card =
           existing.get(id) ?? new CanvasCard(id, label, DECK_X, DECK_Y);
