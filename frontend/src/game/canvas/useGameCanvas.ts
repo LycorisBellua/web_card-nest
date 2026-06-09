@@ -24,12 +24,47 @@ function getPlayerPosition(relativeIndex: number, total: number) {
   if (total === 4) return ['bottom', 'right', 'top', 'left'][relativeIndex];
 }
 
-export function useGameCanvas(game: GameState | null, started: boolean) {
+/**
+ * @param game             Current game state.
+ * @param started          Whether the game has started.
+ * @param localPlayer      Index of the local player.  Pass `null` in local
+ *                         (hotseat) mode: the current player's cards are always
+ *                         fully visible, and all cards are revealed at round end.
+ *                         Pass a player index (e.g. `0`) in online mode: other
+ *                         players' second card (index 1) stays hidden during play,
+ *                         but every card is revealed once the round finishes.
+ * @param hideOtherScores  When `true`, other players' real score is never shown
+ *                         during play — only the visible-card estimate is displayed.
+ *                         At game end all scores are revealed regardless.  Use in
+ *                         online mode so the local player cannot infer the hidden card.
+ */
+export function useGameCanvas(
+  game: GameState | null,
+  started: boolean,
+  localPlayer: number | null = null,
+  hideOtherScores = false,
+) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number>(0);
   const allRef = useRef<CanvasCard[][]>([]);
   const gameRef = useRef(game);
   const revealedRef = useRef(false);
+
+  // Store these in refs so effects that read them don't need them as deps.
+  // They are stable for the lifetime of a game session.
+  const isOnlineMode = localPlayer !== null;
+  const localPlayerRef = useRef(localPlayer);
+  const isOnlineModeRef = useRef(isOnlineMode);
+  const hideOtherScoresRef = useRef(hideOtherScores);
+  useEffect(() => {
+    localPlayerRef.current = localPlayer;
+  }, [localPlayer]);
+  useEffect(() => {
+    isOnlineModeRef.current = isOnlineMode;
+  }, [isOnlineMode]);
+  useEffect(() => {
+    hideOtherScoresRef.current = hideOtherScores;
+  }, [hideOtherScores]);
 
   useEffect(() => {
     if (!game) return;
@@ -49,9 +84,16 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
         const card =
           existing.get(id) ?? new CanvasCard(id, label, DECK_X, DECK_Y);
 
-        if (i == 1 && !existing.has(id)) card.flipped = true;
+        // In online mode, non-local players start with their second card hidden
+        // and it never gets revealed (even at game end).
+        if (i === 1 && !existing.has(id)) {
+          card.flipped = isOnlineModeRef.current
+            ? playerIdx !== localPlayerRef.current
+            : true;
+        }
         return card;
       });
+
       const relativeIndex = getRelativeIndex(
         playerIdx,
         game.currentPlayerIdx,
@@ -62,6 +104,7 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
       const total = (cards.length - 1) * spacing;
       let startX = 0;
       let startY = 0;
+
       if (position === 'top' || position === 'bottom') {
         startX = W / 2 - total / 2 - CARD_W / 2;
         if (position === 'bottom') startY = H - CARD_H - 20;
@@ -96,25 +139,26 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 
   function getVisiblePoints(playerIdx: number): string {
     const player = gameRef.current!.players[playerIdx];
-    // if (playerIdx == currentPlayerIdx) return `${player.score}`;
-
-    const visibleCards = player.cards.filter((_, i) => i != 1);
+    const visibleCards = player.cards.filter((_, i) => i !== 1);
     let points = 0;
     let hasAces = false;
 
     visibleCards.forEach((card) => {
-      if (card.rank == 'A') {
+      if (card.rank === 'A') {
         points += 1;
         hasAces = true;
       } else if (
-        card.rank == '10' ||
-        card.rank == 'J' ||
-        card.rank == 'Q' ||
-        card.rank == 'K'
-      )
+        card.rank === '10' ||
+        card.rank === 'J' ||
+        card.rank === 'Q' ||
+        card.rank === 'K'
+      ) {
         points += 10;
-      else points += Number(card.rank);
+      } else {
+        points += Number(card.rank);
+      }
     });
+
     if (hasAces && points + 10 <= 21) return `${points}+ or ${points + 10}+`;
     return `${points}+`;
   }
@@ -127,6 +171,7 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
     if (!ctx) return;
 
     let last = performance.now();
+
     function loop(now: number) {
       const dt = Math.min((now - last) / 1000, 0.033);
       last = now;
@@ -137,16 +182,34 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
 
       allRef.current.forEach((playerCards, playerIdx) => {
         let isCurrent = playerIdx === gameRef.current!.currentPlayerIdx;
+
         playerCards.forEach((card, i) => {
           if (gameRef.current!.gameStatus !== 'finished') {
-            if (isCurrent) card.flipped = false;
-            else {
-              if (i === 1) card.flipped = true;
+            if (isCurrent) {
+              // Always show the current player's own cards
+              if (
+                !isOnlineModeRef.current ||
+                playerIdx === localPlayerRef.current
+              ) {
+                card.flipped = false;
+              } else {
+                // In online mode, other "current" players: only show card 0
+                if (i === 1) card.flipped = true;
+              }
+            } else {
+              if (i === 1) {
+                // In online mode, hide other players' second card during play.
+                card.flipped = isOnlineModeRef.current
+                  ? playerIdx !== localPlayerRef.current
+                  : true;
+              }
             }
           } else {
+            // Game finished: reveal every card regardless of mode.
             card.flipped = false;
             isCurrent = false;
           }
+
           card.update(dt);
           card.draw(ctx, isCurrent);
         });
@@ -155,20 +218,31 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
         const playerName = player.username
           ? `#${playerIdx + 1} ${player.username}`
           : `#${playerIdx + 1} Player`;
-        // according to gamestatus to get only visible points or total score
+
         let label = '';
         const crown = player.hasBlackCrown ? '👑​' : '';
-        const isfinished = gameRef.current!.gameStatus === 'finished';
-        if (isfinished) {
+        const isFinished = gameRef.current!.gameStatus === 'finished';
+        // In online mode, only the local player sees their own real score
+        // during play. Other players only show the visible-card estimate.
+        // At game end everyone's real score is shown regardless.
+        const isLocalPlayer =
+          !isOnlineModeRef.current || playerIdx === localPlayerRef.current;
+        const showRealScore =
+          isFinished || isLocalPlayer || !hideOtherScoresRef.current;
+
+        if (isFinished) {
           label = `${playerName} : ${player.score} ${crown}`;
-        } else if (isCurrent) {
+        } else if (showRealScore) {
           label = `${playerName} : ${getVisiblePoints(playerIdx)} ( ${player.score} ${crown})`;
-        } else label = `${playerName} : ${getVisiblePoints(playerIdx)}`;
+        } else {
+          label = `${playerName} : ${getVisiblePoints(playerIdx)}`;
+        }
 
         ctx.save();
         ctx.font = 'bold 16px Arial';
         ctx.fillStyle = isCurrent ? '#FFD700' : 'rgba(255,255,255,0.8)';
         ctx.textAlign = 'center';
+
         const relativeIndex = getRelativeIndex(
           playerIdx,
           gameRef.current!.currentPlayerIdx,
@@ -178,6 +252,7 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
           relativeIndex,
           gameRef.current!.players.length,
         );
+
         let labelX = 0;
         let labelY = 0;
         if (position === 'bottom') {
@@ -193,7 +268,9 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
           labelX = W - CARD_W - 120;
           labelY = H / 2;
         }
+
         ctx.fillText(label, labelX, labelY);
+
         if (gameRef.current!.players[playerIdx].isBusted) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = '#c0110f';
@@ -206,21 +283,25 @@ export function useGameCanvas(game: GameState | null, started: boolean) {
           ctx.fillStyle = 'rgba(255,255,255,0.8)';
           ctx.fillText('STAND', labelX, labelY + 20);
         }
+
         if (gameRef.current!.players[playerIdx].hasBlackCrown) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = '#b253ff';
+          let bcLabelX = labelX;
           if (position === 'left') {
-            labelX = CARD_W + 92 + 40;
+            bcLabelX = CARD_W + 92 + 40;
           } else if (position === 'right') {
-            labelX = W - CARD_W - 92 - 40;
-            labelY = H / 2;
+            bcLabelX = W - CARD_W - 92 - 40;
           }
-          ctx.fillText('BLACKCROWN', labelX, labelY + 20);
+          ctx.fillText('BLACKCROWN', bcLabelX, labelY + 20);
         }
+
         ctx.restore();
       });
+
       rafRef.current = requestAnimationFrame(loop);
     }
+
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
   }, [game, started]);
