@@ -47,6 +47,15 @@ been tested on Linux, so we do not guarantee it would work on another system.
 - A development build also allows you to manually access the DB at
   `http://localhost:5555`.
 
+- For the prod build, the project includes an Adminer container to inspect the
+  database. This is only accessible from the host machine and can be found at:
+  `http://localhost:54245`. The login data can be found the `containers/.env`:
+  - System: `PostgreSQL`
+  - Server: `db`
+  - Username: `$POSTGRES_USER`
+  - Password: `$POSTGRES_PASSWORD`
+  - Database: `$POSTGRES_DB`
+
 - No matter the version, instead of `locahost` you can use your IP as the
   domain name. It allows other machines on the same network to access the website
   at `https://127.0.0.1:8080` for example. To find your IP, run

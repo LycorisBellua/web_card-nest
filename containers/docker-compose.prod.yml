@@ -14,13 +14,9 @@ services:
       context: ..
       dockerfile: containers/nginx/Dockerfile
     container_name: nginx
-    environment:
-      DB_USER: ${DB_ACCESS_USER}
-      DB_PASS: ${DB_ACCESS_PASSWORD}
     restart: unless-stopped
     ports:
       - '8080:8080'
-      - '5555:5555'
     depends_on:
       - app
     networks:
@@ -29,6 +25,21 @@ services:
       - ./nginx/certs:/etc/nginx/certs:ro
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf.template:ro
 
+  adminer:
+    image: adminer:standalone
+    container_name: adminer
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:54245:8080"
+    networks:
+      - adminer
+
+  db:
+    networks:
+      - adminer
+
 networks:
   app-net:
+    driver: bridge
+  adminer:
     driver: bridge
