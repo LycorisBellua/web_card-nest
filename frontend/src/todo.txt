@@ -1,8 +1,4 @@
 GAME
-- In online mode, refreshing the page empties the canvas, as if it didn't have 
-access to the game state. Clicking on Hit for example does bring it back. It's 
-also alright if we arrive to the game through normal means, without just 
-showing up from a refreshed page.
 - In the screen with the mode selector, the name of the game and the rules need 
 to be shown clearly.
 

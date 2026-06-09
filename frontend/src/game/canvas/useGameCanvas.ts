@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GameState } from 'game/logic/types';
 import { CanvasCard } from 'game/canvas/CanvasCard';
 import { suitToSymbol } from 'game/canvas/cardTextures';
@@ -56,6 +56,15 @@ export function useGameCanvas(
   const localPlayerRef = useRef(localPlayer);
   const isOnlineModeRef = useRef(isOnlineMode);
   const hideOtherScoresRef = useRef(hideOtherScores);
+
+  // canvasReady flips to true when the canvas element mounts. This ensures
+  // the render loop effect re-runs after an isAuthLoading-gated return null
+  // caused the canvas to be absent on the first render.
+  const [canvasReady, setCanvasReady] = useState(false);
+  const setCanvasRef = useCallback((el: HTMLCanvasElement | null) => {
+    canvasRef.current = el;
+    setCanvasReady(el !== null);
+  }, []);
   useEffect(() => {
     localPlayerRef.current = localPlayer;
   }, [localPlayer]);
@@ -173,6 +182,13 @@ export function useGameCanvas(
     let last = performance.now();
 
     function loop(now: number) {
+      // On a refresh, the layout effect and the render loop effect fire on the
+      // same tick. If allRef isn't populated yet, skip this frame and retry.
+      if (allRef.current.length === 0) {
+        rafRef.current = requestAnimationFrame(loop);
+        return;
+      }
+
       const dt = Math.min((now - last) / 1000, 0.033);
       last = now;
 
@@ -304,7 +320,7 @@ export function useGameCanvas(
 
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [game, started]);
+  }, [game, started, canvasReady]);
 
   useEffect(() => {
     if (!game) return;
@@ -325,5 +341,5 @@ export function useGameCanvas(
     revealedRef.current = false;
   };
 
-  return { canvasRef, reset };
+  return { canvasRef: setCanvasRef, reset };
 }
