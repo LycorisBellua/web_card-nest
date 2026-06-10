@@ -1,7 +1,6 @@
 GAME
-- Remove `style` attributes.
-- We also need to do better when it comes to the user list for invitations. We 
-could take inspirations from the Users page.
+- We need to do better when it comes to the user list for invitations. We could 
+take inspirations from the Users page.
 
 TEST (BOTH IN DEV AND PROD)
 - Test to close the window and come back.

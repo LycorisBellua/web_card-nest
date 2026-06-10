@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from 'context/useUser';
 import { useSocket } from 'context/useSocket';
@@ -42,6 +43,7 @@ export default function PlayOnline() {
     error,
     createGame,
     inviteUser,
+    cancelInvite,
     startGame,
     leaveGame,
     hit,
@@ -135,7 +137,10 @@ export default function PlayOnline() {
               <ul>
                 {pendingInvites.map((id) => (
                   <li key={id}>
-                    {id} — {onlineUsers.has(id) ? 'pending' : 'offline'}
+                    {id} — {onlineUsers.has(id) ? 'pending' : 'offline'}{' '}
+                    <BtnDefault onClick={() => cancelInvite(id)}>
+                      Cancel
+                    </BtnDefault>
                   </li>
                 ))}
               </ul>
@@ -238,14 +243,14 @@ function ReconnectBanner({
   if (active.length === 0) return null;
 
   return (
-    <div style={{ color: '#FFD700', textAlign: 'center' }}>
+    <ReconnectList>
       {active.map((t) => (
         <p key={t.seat}>
           {label(t.seat)} disconnected — {Math.ceil((t.timer - now) / 1000)}s to
           return (playing as a bot)
         </p>
       ))}
-    </div>
+    </ReconnectList>
   );
 }
 
@@ -257,11 +262,17 @@ function ErrorLine({
   onDismiss: () => void;
 }) {
   return (
-    <p style={{ color: '#c0110f' }}>
-      {message}{' '}
-      <button onClick={onDismiss} style={{ marginLeft: 8 }}>
-        dismiss
-      </button>
-    </p>
+    <ErrorMessage>
+      {message} <BtnDefault onClick={onDismiss}>dismiss</BtnDefault>
+    </ErrorMessage>
   );
 }
+
+const ReconnectList = styled.div`
+  color: #ffd700;
+  text-align: center;
+`;
+
+const ErrorMessage = styled.p`
+  color: #c0110f;
+`;

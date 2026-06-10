@@ -17,7 +17,7 @@ import { GameContext } from 'game/online/GameContext';
 import type { GameContextType } from 'game/online/GameContext';
 
 const STORAGE_KEY = 'blackjack:online';
-const BOT_DELAY_MS = 700;
+const BOT_DELAY_MS = 2000;
 
 /**
  * After a hit/stand the engine parks the game in 'transition' (the hotseat
@@ -45,6 +45,24 @@ function playableSeat(
   const seat = inf.players.findIndex((p) => p.type === 'human' && p.id === uid);
   if (cur.gameStatus !== 'playing' || cur.currentPlayerIdx !== seat) return -1;
   return seat;
+}
+
+/**
+ * Reset every seat's display name at the start of a round: the leader stamps
+ * its own current username; every other seat is cleared to null. Cleared human
+ * seats re-announce via `identify` (so renames are picked up), and a seat now
+ * held by a bot (a player who left) drops the departed name and falls back to
+ * the canvas's generic "#N Player" label.
+ */
+function refreshedNames(
+  players: GameState['players'],
+  leaderSeat: number,
+  leaderName: string,
+): GameState['players'] {
+  return players.map((p, i) => ({
+    ...p,
+    username: i === leaderSeat ? leaderName : null,
+  }));
 }
 
 /**
@@ -216,6 +234,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     };
 
     const onInvite = (gameId: string) => setInvite({ gameId });
+    const onCancelled = (gameId: string) =>
+      setInvite((prev) => (prev && prev.gameId === gameId ? null : prev));
     const onRejected = (data: { gameId: string; invitedId: string }) =>
       setLastRejectedId(data.invitedId);
     const onError = (message: string) => setError(message);
@@ -224,6 +244,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     socket.on('GameInfo', onInfo);
     socket.on('GameState', onRelay);
     socket.on('GameInvite', onInvite);
+    socket.on('GameInviteCancelled', onCancelled);
     socket.on('GameRejected', onRejected);
     socket.on('GameError', onError);
     return () => {
@@ -231,6 +252,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.off('GameInfo', onInfo);
       socket.off('GameState', onRelay);
       socket.off('GameInvite', onInvite);
+      socket.off('GameInviteCancelled', onCancelled);
       socket.off('GameRejected', onRejected);
       socket.off('GameError', onError);
     };
@@ -302,6 +324,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [socket],
   );
 
+  const cancelInvite = useCallback(
+    (invitedId: string) => {
+      const inf = ref.current.info;
+      if (!inf) return;
+      socket.emit('CancelInvite', { gameId: inf.gameId, invitedId });
+    },
+    [socket],
+  );
+
   const acceptInvite = useCallback(() => {
     if (!invite || !user) return;
     socket.emit('JoinGame', { gameId: invite.gameId });
@@ -318,19 +349,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const inf = ref.current.info;
     const u = ref.current.user;
     if (!inf || !u || inf.leader !== u.id) return;
-    let g = initialGame(inf.seats, '');
     const seat = inf.players.findIndex(
       (p) => p.type === 'human' && p.id === u.id,
     );
-    if (seat >= 0) {
-      g = {
+    const g = initialGame(inf.seats, '');
+    pushState(
+      dealInitialCards({
         ...g,
-        players: g.players.map((p, i) =>
-          i === seat ? { ...p, username: u.username } : p,
-        ),
-      };
-    }
-    pushState(dealInitialCards(g));
+        players: refreshedNames(g.players, seat, u.username),
+      }),
+    );
   }, [pushState]);
 
   const leaveGame = useCallback(() => {
@@ -356,16 +384,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const newRound = useCallback(() => {
     const { state: cur, user: u, isLeader: leader } = ref.current;
     if (!cur || !u || !leader) return;
+    const inf = ref.current.info;
+    const seat = inf
+      ? inf.players.findIndex((p) => p.type === 'human' && p.id === u.id)
+      : -1;
     const rebuilt = newRoundGame(cur, '');
-    // Carry usernames across the round so names do not reset to null.
-    const next: GameState = {
-      ...rebuilt,
-      players: rebuilt.players.map((p, i) => ({
-        ...p,
-        username: cur.players[i]?.username ?? null,
-      })),
-    };
-    pushState(dealInitialCards(next));
+    pushState(
+      dealInitialCards({
+        ...rebuilt,
+        players: refreshedNames(rebuilt.players, seat, u.username),
+      }),
+    );
   }, [pushState]);
 
   const clearError = useCallback(() => setError(null), []);
@@ -383,6 +412,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     isMyTurn,
     createGame,
     inviteUser,
+    cancelInvite,
     acceptInvite,
     rejectInvite,
     startGame,

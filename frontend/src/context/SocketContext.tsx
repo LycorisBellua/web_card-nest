@@ -17,6 +17,8 @@ export type ServerToClientEvents = {
   GameError: (message: string) => void;
   /** An invite addressed to this client; payload is the gameId to join. */
   GameInvite: (gameId: string) => void;
+  /** A previously received invite was withdrawn by the leader. */
+  GameInviteCancelled: (gameId: string) => void;
   /** The leader is told an invitee declined, so it can update its list. */
   GameRejected: (data: { gameId: string; invitedId: string }) => void;
   /** Relayed gameplay from a peer (see RelayMessage). */
@@ -41,6 +43,7 @@ export type ClientToServerEvents = {
   JoinGame: (payload: { gameId: string }) => void;
   LeaveGame: () => void;
   InviteGame: (payload: { gameId: string; invitedId: string }) => void;
+  CancelInvite: (payload: { gameId: string; invitedId: string }) => void;
   RejectGame: (payload: { gameId: string }) => void;
   /** Relay a gameplay message to the other humans in our game. */
   SyncGame: (payload: RelayMessage) => void;

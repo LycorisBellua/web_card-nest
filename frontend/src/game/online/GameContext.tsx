@@ -24,6 +24,7 @@ export type GameContextType = {
   // ----- lobby -----
   createGame: (seats: number) => void;
   inviteUser: (invitedId: string) => void;
+  cancelInvite: (invitedId: string) => void;
   acceptInvite: () => void;
   rejectInvite: () => void;
   startGame: () => void; // leader: deal + broadcast the first state

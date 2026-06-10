@@ -181,6 +181,27 @@ export class GameRegistry implements OnModuleDestroy {
     return game;
   }
 
+  cancelInvite(dto: InviteGameDto): Game {
+    const game = this.getGame(dto.gameId);
+    if (!game || dto.leaderId !== game.leader) {
+      throw new ForbiddenException(GameErr.ONLY_LEADER_INVITE);
+    }
+    game.invited.delete(dto.invitedId);
+    return game;
+  }
+
+  // Games this user has a pending (un-acted) invite to. Used to re-deliver the
+  // invite on (re)connect, since the prompt lives only in client memory.
+  findInvites(userId: string): string[] {
+    const gameIds: string[] = [];
+    for (const [gameId, game] of this.gameId_game) {
+      if (game.invited.has(userId)) {
+        gameIds.push(gameId);
+      }
+    }
+    return gameIds;
+  }
+
   syncGameState(userId: string): Occupant[] {
     const gameId = this.getGameId(userId);
     if (!gameId) {
