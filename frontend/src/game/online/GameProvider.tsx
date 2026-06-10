@@ -108,12 +108,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // Latest values for the stable socket handlers / timers to read without
   // re-subscribing on every render (mirrors the ref pattern in useGameCanvas).
-  const ref = useRef({ info, state, user, isLeader });
+  const ref = useRef({ info, state, user, isLeader, isAuthLoading });
   const setStateRef = useRef(setState);
   // Updated after commit (never during render) so we don't write refs while
   // rendering. Handlers fire asynchronously, well after this has run.
   useEffect(() => {
-    ref.current = { info, state, user, isLeader };
+    ref.current = { info, state, user, isLeader, isAuthLoading };
     setStateRef.current = setState;
   });
 
@@ -152,7 +152,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setLastRejectedId(null);
     seqRef.current = -1;
     liveRef.current = false;
-    saveOnlineUserId(null);
   }, []);
 
   // ----- socket subscriptions (mounted once) -----
@@ -162,6 +161,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // as stale until a fresh one arrives (or onInfo finds we're the sole
       // human, in which case our cache is authoritative).
       liveRef.current = false;
+
+      // Reconcile session ownership. We wait for auth to settle so the brief
+      // guest connect during loading isn't mistaken for a logout. Same user
+      // reconnecting (a transient drop) keeps the game; a different user (or a
+      // logout) clears the leftover session. Running here — a subscription
+      // callback rather than an effect body — also avoids a synchronous
+      // setState cascade during render/effects.
+      if (ref.current.isAuthLoading) return;
+      const u = ref.current.user;
+      const owner = loadOnlineUserId();
+      if (!u) {
+        if (owner !== null) resetLocal();
+        return;
+      }
+      if (owner !== null && owner !== u.id) resetLocal();
+      saveOnlineUserId(u.id);
     };
 
     const onInfo = (data: GameInfo) => {
@@ -219,7 +234,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.off('GameRejected', onRejected);
       socket.off('GameError', onError);
     };
-  }, [socket, pushState]);
+  }, [socket, pushState, resetLocal]);
 
   // Whenever occupancy changes, any client holding live state re-broadcasts it
   // at a fresh seq so reconnecting/late-joining clients (whose state is stale or
@@ -269,25 +284,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   }, [isLeader, user, localSeat, state, socket]);
 
-  // Clear the session on logout or when a different user takes over the
-  // browser. We wait for auth to settle so a refresh's brief null user is not
-  // mistaken for a logout (ported from the old PlayOnline behaviour).
-  useEffect(() => {
-    if (isAuthLoading) return;
-    if (!state && !info) return;
-    if (!user) {
-      resetLocal();
-      return;
-    }
-    const storedId = loadOnlineUserId();
-    if (storedId !== null && storedId !== user.id) resetLocal();
-  }, [user, isAuthLoading, state, info, resetLocal]);
-
   // ----- lobby actions -----
   const createGame = useCallback(
     (seats: number) => {
       if (!user) return;
-      saveOnlineUserId(user.id);
       socket.emit('CreateGame', { seats });
     },
     [socket, user],
@@ -304,7 +304,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const acceptInvite = useCallback(() => {
     if (!invite || !user) return;
-    saveOnlineUserId(user.id);
     socket.emit('JoinGame', { gameId: invite.gameId });
     setInvite(null);
   }, [socket, invite, user]);

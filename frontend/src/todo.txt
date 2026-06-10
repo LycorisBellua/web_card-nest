@@ -1,6 +1,5 @@
 GAME
 - Remove `style` attributes.
-- I already have a modal component, that doesn't need to be called from App.tsx.
 - We also need to do better when it comes to the user list for invitations. We 
 could take inspirations from the Users page.
 

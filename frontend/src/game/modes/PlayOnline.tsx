@@ -224,12 +224,16 @@ function ReconnectBanner({
 }) {
   const [now, setNow] = useState(0);
   useEffect(() => {
-    setNow(Date.now());
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
+    const tick = () => setNow(Date.now());
+    const raf = requestAnimationFrame(tick); // first paint, ~immediate
+    const id = setInterval(tick, 1000);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(id);
+    };
   }, []);
 
-  if (now === 0) return null; // first frame before the effect sets the clock
+  if (now === 0) return null; // first frame before the clock is set
   const active = timeouts.filter((t) => t.timer > now);
   if (active.length === 0) return null;
 
