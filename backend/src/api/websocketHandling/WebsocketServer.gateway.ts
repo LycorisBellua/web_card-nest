@@ -229,13 +229,18 @@ export class WebsocketServer
   // ********** GAME HANDLING **********
 
   @SubscribeMessage('CreateGame')
-  createGame(
+  async createGame(
     @ConnectedSocket() sender: AppSocket,
     @MessageBody() payload: { seats: number },
-  ): void {
+  ): Promise<void> {
     try {
+      const self = await this.userService.getUserById(
+        sender.data.user.rank as Ranks,
+        sender.data.user.id,
+      );
       const game = this.games.createGame({
         userId: sender.data.user.id,
+        username: self.username,
         seats: payload.seats,
       });
       sender.emit('GameInfo', this.toWire(game));
@@ -397,11 +402,16 @@ export class WebsocketServer
 
   // `Game.invited` is a Map, which doesn't survive JSON over Socket.IO. Convert
   // it to an array of { id, username } so the client can show pending invitees
-  // by name.
+  // by name. `names` gets the same treatment so the client can resolve a
+  // display name for every seated human (leader included), not just an id.
   private toWire(game: Game) {
     return {
       ...game,
       invited: [...game.invited.entries()].map(([id, username]) => ({
+        id,
+        username,
+      })),
+      names: [...game.names.entries()].map(([id, username]) => ({
         id,
         username,
       })),

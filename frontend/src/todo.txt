@@ -1,1 +1,0 @@
-- Show username in the invite list (also for the leader on non-leader machines).

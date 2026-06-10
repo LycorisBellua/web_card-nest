@@ -19,6 +19,7 @@ export type GameInfo = {
   timeouts: Timeout[];
   leader: string;
   invited?: { id: string; username: string }[];
+  names?: { id: string; username: string }[];
 };
 
 export type RelayMessage =

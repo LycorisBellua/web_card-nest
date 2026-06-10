@@ -6,6 +6,10 @@ export type Game = {
   timeouts: Timeout[];
   // userId -> username of players invited but not yet seated
   invited: Map<string, string>;
+  // userId -> username for everyone known to this game (leader + seated +
+  // invited). Unlike `invited`, entries here are NOT removed when a player
+  // takes a seat, so the client can always resolve a display name.
+  names: Map<string, string>;
   leader: string;
 };
 

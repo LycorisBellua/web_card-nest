@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from 'context/useUser';
 import { useSocket } from 'context/useSocket';
@@ -57,6 +57,13 @@ export default function PlayOnline() {
   const started = state !== null;
   const { canvasRef } = useGameCanvas(state, started, localSeat, true);
 
+  const names = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const entry of info?.names ?? []) map.set(entry.id, entry.username);
+    return map;
+  }, [info]);
+  const nameOf = (id: string) => names.get(id);
+
   const accessAllowed = !!user && user.rank.toLowerCase() !== 'pending';
 
   const handleLeave = () => {
@@ -109,7 +116,11 @@ export default function PlayOnline() {
             const isSeatLeader =
               occ.type === 'human' && occ.id === info!.leader;
             const who =
-              occ.type === 'bot' ? 'open (bot)' : isSelf ? 'You' : occ.id;
+              occ.type === 'bot'
+                ? 'open (bot)'
+                : isSelf
+                  ? 'You'
+                  : (nameOf(occ.id) ?? occ.id);
             return (
               <li key={seat}>
                 Seat {seat + 1}: {who}

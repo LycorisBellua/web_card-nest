@@ -49,6 +49,7 @@ export class GameRegistry implements OnModuleDestroy {
     }
     const game = this.newGame(seats);
     game.players.push(this.newPlayer(userId));
+    game.names.set(userId, dto.username);
     game.leader = userId;
     game.humans++;
     for (let i = 1; i < seats; i++) {
@@ -159,6 +160,7 @@ export class GameRegistry implements OnModuleDestroy {
       throw new BadRequestException(GameErr.NO_SEAT_AVAILABLE);
     }
     game.invited.set(arg.invitedId, arg.invitedUsername);
+    game.names.set(arg.invitedId, arg.invitedUsername);
     return game;
   }
 
@@ -318,6 +320,7 @@ export class GameRegistry implements OnModuleDestroy {
       players: [],
       timeouts: [],
       invited: new Map<string, string>(),
+      names: new Map<string, string>(),
       leader: '',
     };
   }
