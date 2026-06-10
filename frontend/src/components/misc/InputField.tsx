@@ -12,6 +12,7 @@ import styled from 'styled-components';
       setValue(e.target.value);
       onChange(e.target.value);
     }}
+    onKeyDown={(e) => e.key === 'Enter' && handleAction()}
     helpers={['Please enter a valid email address']}
     isError={true}
     autoComplete="off"
@@ -77,6 +78,7 @@ function InputField({
   id,
   value,
   onChange,
+  onKeyDown,
   type,
   name,
   placeholder,
@@ -88,6 +90,7 @@ function InputField({
   id: string;
   value: string;
   onChange: (val: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   type: string;
   name: string;
   placeholder?: string;
@@ -107,6 +110,7 @@ function InputField({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e)}
+        onKeyDown={onKeyDown}
         autoComplete={autoComplete ?? 'off'}
       />
       {helpers?.map((e) => (

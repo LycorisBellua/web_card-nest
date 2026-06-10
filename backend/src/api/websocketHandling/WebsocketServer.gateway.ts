@@ -73,17 +73,11 @@ export class WebsocketServer
     const userId = client.data.user.id;
     if (userId === 'Guest') return;
 
-    // Kill any stale socket the user still had open (single live socket per
-    // user). add() returns the displaced socket id, already unmapped, so the
-    // resulting handleDisconnect on that socket no-ops and won't broadcast a
-    // spurious offline event.
     const oldSocket = this.connections.add(userId, client.id);
     if (oldSocket) {
       this.server.sockets.sockets.get(oldSocket)?.disconnect(true);
     }
     this.reconnectGame(userId, client);
-    // Re-deliver any pending invites: the prompt lives only in client memory,
-    // so a refresh would otherwise lose it while the leader still waits.
     for (const gameId of this.games.findInvites(userId)) {
       client.emit('GameInvite', gameId);
     }
@@ -302,9 +296,6 @@ export class WebsocketServer
     @MessageBody() payload: { gameId: string; username: string },
   ): Promise<void> {
     try {
-      // Resolve the typed username to a user. getUserByUsername throws
-      // USER_NOT_FOUND if there's no match (or a PENDING user a regular user
-      // can't see), which the catch below surfaces to the leader as a GameError.
       const invited = await this.userService.getUserByUsername(
         sender.data.user.rank as Ranks,
         payload.username,
@@ -338,7 +329,6 @@ export class WebsocketServer
         invitedId: payload.invitedId,
       });
       this.broadcastGameInfo(game);
-      // Dismiss the invitee's prompt if they're online.
       const invitedSocket = this.connections.getSocketId(payload.invitedId);
       if (invitedSocket) {
         this.server.to(invitedSocket).emit('GameInviteCancelled', game.gameId);
@@ -359,8 +349,6 @@ export class WebsocketServer
         gameId: payload.gameId,
       });
       this.broadcastGameInfo(game);
-      // Tell the leader who declined so its pending-invite list updates and it
-      // knows to pick someone else.
       const leaderSocket = this.connections.getSocketId(game.leader);
       if (leaderSocket) {
         this.server.to(leaderSocket).emit('GameRejected', {

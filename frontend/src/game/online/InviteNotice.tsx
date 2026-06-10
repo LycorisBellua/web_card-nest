@@ -1,17 +1,24 @@
-import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from 'game/online/useGame';
 import { BtnDefault } from 'components/btn/Btn';
+import styled from 'styled-components';
 
-/**
- * App-wide invite notification. Renders a small fixed banner whenever an invite
- * arrives, from anywhere in the app - it is driven by the GameProvider's
- * `invite` state, which is why the provider is mounted high in the tree.
- *
- * Barebone by design: the styling is a placeholder (the "modal doesn't matter
- * yet"); what matters is that the notification is global and acts on the real
- * accept/reject actions.
- */
+const Banner = styled.div`
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+`;
+
 export default function InviteNotice() {
   const navigate = useNavigate();
   const { invite, acceptInvite, rejectInvite } = useGame();
@@ -31,19 +38,3 @@ export default function InviteNotice() {
     </Banner>
   );
 }
-
-const Banner = styled.div`
-  position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-`;

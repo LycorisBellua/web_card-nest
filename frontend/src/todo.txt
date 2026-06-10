@@ -1,10 +1,1 @@
-TEST (BOTH IN DEV AND PROD)
-- Test to close the window and come back.
-- Test to change your name mid-game and then come back (should show your new 
-username).
-- Test to log in or log out mid-game, both in local and online mode.
-- In online mode, test what happens when you were logged in as someone, don't 
-log out, and then directly log in as someone else.
-
-COMMENTS
-- Certain comments might be unnecessary.
+- Show username in the invite list (also for the leader on non-leader machines).

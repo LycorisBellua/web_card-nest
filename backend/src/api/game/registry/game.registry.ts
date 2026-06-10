@@ -20,12 +20,7 @@ export class GameRegistry implements OnModuleDestroy {
   private readonly sweepInterval: ReturnType<typeof setInterval>;
 
   constructor() {
-    // The registry is otherwise lazy - it only cleans up when poked by an
-    // action (create/join/leave/reconnect). Without this sweep, a game where
-    // everyone disconnected at once would linger in memory forever, since no
-    // action ever runs to notice the reconnect windows have all lapsed.
     this.sweepInterval = setInterval(() => this.sweep(), 10_000);
-    // Don't keep the Node event loop alive just for the sweep.
     this.sweepInterval.unref?.();
   }
 
@@ -33,9 +28,6 @@ export class GameRegistry implements OnModuleDestroy {
     clearInterval(this.sweepInterval);
   }
 
-  // Reap abandoned games: expire stale reconnect windows, then delete any game
-  // with no humans present and no live windows remaining. Deleting the current
-  // key while iterating a Map is safe.
   private sweep(): void {
     for (const [gameId, game] of this.gameId_game) {
       this.gameTimeoutsCleanup(game);
@@ -193,8 +185,6 @@ export class GameRegistry implements OnModuleDestroy {
     return game;
   }
 
-  // Games this user has a pending (un-acted) invite to. Used to re-deliver the
-  // invite on (re)connect, since the prompt lives only in client memory.
   findInvites(userId: string): string[] {
     const gameIds: string[] = [];
     for (const [gameId, game] of this.gameId_game) {

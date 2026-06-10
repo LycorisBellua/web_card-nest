@@ -21,5 +21,3 @@ export function sanitizeDescription(udesc: string): string {
   if (!udesc) return '';
   return udesc.normalize('NFC');
 }
-
-// No sanitation for the avatar

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from 'context/useUser';
 import { useSocket } from 'context/useSocket';
@@ -18,17 +17,17 @@ import { useGameCanvas } from 'game/canvas/useGameCanvas';
 import type { GameState } from 'game/logic/types';
 import type { Timeout } from 'game/online/types';
 import NotFound from 'pages/NotFound';
+import styled from 'styled-components';
 
-/**
- * Online mode, wired to the GameProvider.
- *  - Lobby/occupancy and leadership come from the server (`info`).
- *  - Gameplay (`state`) is relayed peer-to-peer; this component only renders it
- *    and calls hit/stand, which the provider ignores unless it is our turn -
- *    the disabled buttons here are just the matching UI layer.
- *  - The local user's seat comes from `localSeat`, no longer hardcoded to 0.
- *  - There is no "pass the device" transition: the provider auto-advances turns,
- *    so the only states reaching the canvas are 'playing' and 'finished'.
- */
+const ReconnectList = styled.div`
+  color: #ffd700;
+  text-align: center;
+`;
+
+const ErrorMessage = styled.p`
+  color: #c0110f;
+`;
+
 export default function PlayOnline() {
   const navigate = useNavigate();
   const { user, isAuthLoading } = useUser();
@@ -55,8 +54,6 @@ export default function PlayOnline() {
 
   const [inviteName, setInviteName] = useState('');
 
-  // Hooks must run unconditionally, so the canvas hook is called before any
-  // early return. localSeat decides whose cards/score are revealed.
   const started = state !== null;
   const { canvasRef } = useGameCanvas(state, started, localSeat, true);
 
@@ -77,7 +74,6 @@ export default function PlayOnline() {
   if (isAuthLoading) return null;
   if (!accessAllowed) return <NotFound />;
 
-  // ---- 1. Not in a game: choose a size and create one ----
   if (!isInGame) {
     return (
       <ScrollablePage>
@@ -94,7 +90,6 @@ export default function PlayOnline() {
     );
   }
 
-  // ---- 2. In a game but not yet dealt: lobby ----
   if (!started) {
     return (
       <ScrollablePage>
@@ -135,6 +130,7 @@ export default function PlayOnline() {
               placeholder="Username to invite"
               value={inviteName}
               onChange={(e) => setInviteName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
             />
             <BtnDefault onClick={handleInvite}>Invite</BtnDefault>
             {pendingInvites.length > 0 && (
@@ -157,7 +153,7 @@ export default function PlayOnline() {
           {isLeader ? (
             <BtnDefault onClick={startGame}>Start game</BtnDefault>
           ) : (
-            <p>Waiting for the leader to start…</p>
+            <p>Waiting for the leader to start...</p>
           )}
           <BtnDefault onClick={handleLeave}>End Game</BtnDefault>
         </CenterButtons>
@@ -165,7 +161,6 @@ export default function PlayOnline() {
     );
   }
 
-  // ---- 3. Playing ----
   return (
     <ScrollablePage>
       <h1>Black Crown - Online Mode</h1>
@@ -190,7 +185,7 @@ export default function PlayOnline() {
                 {isLeader ? (
                   <BtnDefault onClick={newRound}>Another Game</BtnDefault>
                 ) : (
-                  <p>Waiting for the leader to start a new round…</p>
+                  <p>Waiting for the leader to start a new round...</p>
                 )}
                 <BtnDefault onClick={handleLeave}>Stop Playing</BtnDefault>
               </div>
@@ -213,18 +208,12 @@ export default function PlayOnline() {
 
 function winnerText(g: GameState): string {
   if (g.winnerId == null || g.winnerId < 0) {
-    return `Round ${g.turn}: no winner`;
+    return `Round ${g.turn}: No winner`;
   }
   const name = g.players[g.winnerId]?.username ?? `Player ${g.winnerId + 1}`;
-  return `Round ${g.turn}: winner is ${name}`;
+  return `Round ${g.turn}: Winner is ${name}`;
 }
 
-/**
- * Shows a live countdown for each seat whose player has disconnected, using the
- * absolute `timer` deadline from the server. Ticks once a second and self-clears
- * each entry the moment it expires, so it stays correct even though the server
- * does not push an update when a 30s window lapses.
- */
 function ReconnectBanner({
   timeouts,
   label,
@@ -235,7 +224,7 @@ function ReconnectBanner({
   const [now, setNow] = useState(0);
   useEffect(() => {
     const tick = () => setNow(Date.now());
-    const raf = requestAnimationFrame(tick); // first paint, ~immediate
+    const raf = requestAnimationFrame(tick);
     const id = setInterval(tick, 1000);
     return () => {
       cancelAnimationFrame(raf);
@@ -243,7 +232,7 @@ function ReconnectBanner({
     };
   }, []);
 
-  if (now === 0) return null; // first frame before the clock is set
+  if (now === 0) return null;
   const active = timeouts.filter((t) => t.timer > now);
   if (active.length === 0) return null;
 
@@ -272,12 +261,3 @@ function ErrorLine({
     </ErrorMessage>
   );
 }
-
-const ReconnectList = styled.div`
-  color: #ffd700;
-  text-align: center;
-`;
-
-const ErrorMessage = styled.p`
-  color: #c0110f;
-`;

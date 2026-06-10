@@ -19,11 +19,6 @@ import type { GameContextType } from 'game/online/GameContext';
 const STORAGE_KEY = 'blackjack:online';
 const BOT_DELAY_MS = 2000;
 
-/**
- * After a hit/stand the engine parks the game in 'transition' (the hotseat
- * "pass the device" pause). Online has no device to pass, so we advance to the
- * next active player immediately and resume play.
- */
 function settle(next: GameState): GameState {
   if (next.gameStatus === 'transition') {
     next = nextPlayer(next);
@@ -32,10 +27,6 @@ function settle(next: GameState): GameState {
   return next;
 }
 
-/**
- * Returns the user's seat if it is currently their turn to act, else -1.
- * Pure (all inputs passed in) so it can live at module scope.
- */
 function playableSeat(
   cur: GameState | null,
   inf: GameInfo | null,
@@ -47,13 +38,6 @@ function playableSeat(
   return seat;
 }
 
-/**
- * Reset every seat's display name at the start of a round: the leader stamps
- * its own current username; every other seat is cleared to null. Cleared human
- * seats re-announce via `identify` (so renames are picked up), and a seat now
- * held by a bot (a player who left) drops the departed name and falls back to
- * the canvas's generic "#N Player" label.
- */
 function refreshedNames(
   players: GameState['players'],
   leaderSeat: number,
@@ -65,21 +49,6 @@ function refreshedNames(
   }));
 }
 
-/**
- * Owns everything about the online game: the server's lobby/occupancy snapshot
- * (`GameInfo`), the relayed gameplay (`GameState`, persisted to localStorage),
- * and incoming/outgoing invites. Mount it inside SocketProvider and
- * UserProvider so it shares the authenticated socket.
- *
- * Authority model (turn-holder):
- *  - The human whose seat is current runs their own hit/stand and broadcasts
- *    the resulting snapshot. A client literally cannot mutate state off-turn,
- *    so "no acting off-turn" is enforced at the data layer, not just the UI.
- *  - The leader is the authority for everything with no human turn-holder:
- *    the initial deal, new rounds, and any seat the server marks as a bot
- *    (disconnected players included). Leadership = authority, and the server
- *    moves leadership on disconnect, so authority follows it automatically.
- */
 export function GameProvider({ children }: { children: ReactNode }) {
   const { socket } = useSocket();
   const { user, isAuthLoading } = useUser();
@@ -90,18 +59,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [lastRejectedId, setLastRejectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Monotonic ordering of relayed snapshots, timestamp-based (see bumpSeq), so
-  // it stays ahead of prior values across a refresh without being persisted.
   const seqRef = useRef<number>(-1);
 
-  // Whether our current snapshot is "live" - adopted from a relay or pushed by
-  // us this session - rather than merely rehydrated from localStorage on a
-  // (re)connect and possibly stale. We refuse to act on or re-broadcast non-live
-  // state, so a reconnecting client (the leader included) can never clobber the
-  // table with an outdated snapshot.
   const liveRef = useRef(false);
 
-  // ----- derived -----
   const localSeat = useMemo(() => {
     if (!info || !user) return -1;
     return info.players.findIndex(
@@ -124,18 +85,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     );
   }, [info]);
 
-  // Latest values for the stable socket handlers / timers to read without
-  // re-subscribing on every render (mirrors the ref pattern in useGameCanvas).
   const ref = useRef({ info, state, user, isLeader, isAuthLoading });
   const setStateRef = useRef(setState);
-  // Updated after commit (never during render) so we don't write refs while
-  // rendering. Handlers fire asynchronously, well after this has run.
   useEffect(() => {
     ref.current = { info, state, user, isLeader, isAuthLoading };
     setStateRef.current = setState;
   });
 
-  // ----- relay helpers -----
   const emitState = useCallback(
     (game: GameState, seq: number) => {
       socket.emit('SyncGame', { kind: 'state', seq, game });
@@ -143,16 +99,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [socket],
   );
 
-  // Strictly-increasing, timestamp-based sequence. Date.now() keeps it ahead of
-  // any pre-refresh value (so a reloaded client's broadcasts are accepted
-  // again); the +1 term guarantees strict increase even within one millisecond
-  // and regardless of clock skew between players.
   const bumpSeq = useCallback(() => {
     seqRef.current = Math.max(Date.now(), seqRef.current + 1);
     return seqRef.current;
   }, []);
 
-  // Apply locally (persist) and broadcast as the new authoritative snapshot.
   const pushState = useCallback(
     (game: GameState) => {
       const seq = bumpSeq();
@@ -172,20 +123,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     liveRef.current = false;
   }, []);
 
-  // ----- socket subscriptions (mounted once) -----
   useEffect(() => {
     const onConnect = () => {
-      // After any (re)connect we may have missed relays, so treat our snapshot
-      // as stale until a fresh one arrives (or onInfo finds we're the sole
-      // human, in which case our cache is authoritative).
       liveRef.current = false;
-
-      // Reconcile session ownership. We wait for auth to settle so the brief
-      // guest connect during loading isn't mistaken for a logout. Same user
-      // reconnecting (a transient drop) keeps the game; a different user (or a
-      // logout) clears the leftover session. Running here - a subscription
-      // callback rather than an effect body - also avoids a synchronous
-      // setState cascade during render/effects.
       if (ref.current.isAuthLoading) return;
       const u = ref.current.user;
       const owner = loadOnlineUserId();
@@ -204,8 +144,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const mine = data.players.some(
         (p) => p.type === 'human' && p.id === u?.id,
       );
-      // Sole human: nobody else could have advanced the game while we were
-      // away, so our rehydrated snapshot is authoritative - trust it as live.
       if (data.humans <= 1 && mine && ref.current.state) {
         liveRef.current = true;
       }
@@ -220,7 +158,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
         }
         return;
       }
-      // 'identify': only the leader bakes names into the canonical snapshot.
       const { isLeader: leader, state: cur } = ref.current;
       if (!leader || !cur) return;
       if (msg.seat < 0 || msg.seat >= cur.players.length) return;
@@ -258,18 +195,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
     };
   }, [socket, pushState, resetLocal]);
 
-  // Whenever occupancy changes, any client holding live state re-broadcasts it
-  // at a fresh seq so reconnecting/late-joining clients (whose state is stale or
-  // missing) re-sync. Live clients hold identical state, so redundant echoes are
-  // harmless; a non-live client stays silent and cannot clobber the table.
   useEffect(() => {
     if (!liveRef.current || !ref.current.state) return;
     emitState(ref.current.state, bumpSeq());
   }, [info, emitState, bumpSeq]);
 
-  // Leader drives any seat the server marks as a bot (incl. disconnected
-  // players): hit while under 17, otherwise stand. Re-runs after each move, so
-  // consecutive bot turns chain until a human's turn or the round ends.
   useEffect(() => {
     if (!isLeader || !state || !info || !liveRef.current) return;
     if (state.gameStatus !== 'playing') return;
@@ -294,8 +224,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(id);
   }, [isLeader, state, info, pushState]);
 
-  // Non-leaders announce their name once it is missing from the snapshot. The
-  // leader bakes its own name in at startGame/newRound, so it skips this.
   useEffect(() => {
     if (isLeader || !user || localSeat < 0 || !state) return;
     if (state.players[localSeat]?.username === user.username) return;
@@ -306,7 +234,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   }, [isLeader, user, localSeat, state, socket]);
 
-  // ----- lobby actions -----
   const createGame = useCallback(
     (seats: number) => {
       if (!user) return;
@@ -366,7 +293,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     resetLocal();
   }, [socket, resetLocal]);
 
-  // ----- gameplay actions -----
   const hit = useCallback(() => {
     if (!liveRef.current) return;
     const { state: cur, info: inf, user: u } = ref.current;

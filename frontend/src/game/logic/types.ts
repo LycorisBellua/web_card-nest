@@ -18,7 +18,6 @@ export type Rank =
 export interface Card {
   suit: Suit;
   rank: Rank;
-  // isPublic: boolean;
 }
 
 export interface Player {
