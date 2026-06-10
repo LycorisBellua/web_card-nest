@@ -3,7 +3,6 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  OnModuleDestroy,
 } from '@nestjs/common';
 import { v7 } from 'uuid';
 import { Timeout, type Game, type Occupant } from '../types/game.types';
@@ -14,28 +13,9 @@ import { LeaveGameDto } from '../dto/leavegame.dto';
 import { InviteGameDto } from '../dto/invitegame.dto';
 
 @Injectable()
-export class GameRegistry implements OnModuleDestroy {
+export class GameRegistry {
   private gameId_game = new Map<string, Game>();
   private userId_gameId = new Map<string, string>();
-  private readonly sweepInterval: ReturnType<typeof setInterval>;
-
-  constructor() {
-    this.sweepInterval = setInterval(() => this.sweep(), 10_000);
-    this.sweepInterval.unref?.();
-  }
-
-  onModuleDestroy(): void {
-    clearInterval(this.sweepInterval);
-  }
-
-  private sweep(): void {
-    for (const [gameId, game] of this.gameId_game) {
-      this.gameTimeoutsCleanup(game);
-      if (game.humans === 0 && game.timeouts.length === 0) {
-        this.gameId_game.delete(gameId);
-      }
-    }
-  }
 
   createGame(dto: CreateGameDto): Game {
     const seats = dto.seats;
@@ -156,6 +136,11 @@ export class GameRegistry implements OnModuleDestroy {
     if (!game || arg.leaderId !== game.leader) {
       throw new ForbiddenException(GameErr.ONLY_LEADER_INVITE);
     }
+    this.gameTimeoutsCleanup(game);
+    if (this.getGameId(arg.invitedId)) {
+      throw new BadRequestException(GameErr.ALREADY_IN_GAME);
+    }
+
     if (game.humans === game.seats) {
       throw new BadRequestException(GameErr.NO_SEAT_AVAILABLE);
     }

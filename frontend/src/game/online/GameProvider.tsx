@@ -6,6 +6,8 @@ import {
   useGameStorage,
   loadOnlineUserId,
   saveOnlineUserId,
+  loadStateGameId,
+  saveStateGameId,
 } from 'game/hooks/useGameStorage';
 import { initialGame } from 'game/state/initialState';
 import { dealInitialCards } from 'game/logic/deck';
@@ -16,7 +18,7 @@ import type { GameState } from 'game/logic/types';
 import { GameContext } from 'game/online/GameContext';
 import type { GameContextType } from 'game/online/GameContext';
 
-const STORAGE_KEY = 'blackjack:online';
+const STORAGE_KEY = 'blackcrown:online';
 const BOT_DELAY_MS = 2000;
 
 function settle(next: GameState): GameState {
@@ -63,6 +65,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const liveRef = useRef(false);
 
+  // Tracks which game the persisted GameState belongs to, so we can recognise
+  // and drop state left over from a previous game (e.g. after a timeout).
+  const stateGameIdRef = useRef<string | null>(loadStateGameId());
+
   const localSeat = useMemo(() => {
     if (!info || !user) return -1;
     return info.players.findIndex(
@@ -104,24 +110,45 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return seqRef.current;
   }, []);
 
+  // Single funnel for persisting game state. Stamps the owning game id
+  // alongside the state (or clears both), keeping localStorage and the in-memory
+  // tracking ref in sync so stale state can later be detected and dropped.
+  const writeState = useCallback((game: GameState | null) => {
+    setStateRef.current(game);
+    if (game === null) {
+      stateGameIdRef.current = null;
+      saveStateGameId(null);
+      return;
+    }
+    const gid = ref.current.info?.gameId ?? stateGameIdRef.current;
+    stateGameIdRef.current = gid ?? null;
+    saveStateGameId(gid ?? null);
+  }, []);
+
+  const clearLocalState = useCallback(() => {
+    writeState(null);
+    seqRef.current = -1;
+    liveRef.current = false;
+  }, [writeState]);
+
   const pushState = useCallback(
     (game: GameState) => {
       const seq = bumpSeq();
       liveRef.current = true;
-      setStateRef.current(game);
+      writeState(game);
       emitState(game, seq);
     },
-    [emitState, bumpSeq],
+    [emitState, bumpSeq, writeState],
   );
 
   const resetLocal = useCallback(() => {
-    setStateRef.current(null);
+    writeState(null);
     setInfo(null);
     setInvite(null);
     setLastRejectedId(null);
     seqRef.current = -1;
     liveRef.current = false;
-  }, []);
+  }, [writeState]);
 
   useEffect(() => {
     const onConnect = () => {
@@ -139,12 +166,27 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     const onInfo = (data: GameInfo) => {
       setError(null);
+      // If our persisted state belongs to a different game than the one the
+      // server now reports us in, it is stale (e.g. we timed out of the old
+      // game and just created/joined a new one). Drop it from both memory and
+      // localStorage before adopting the new game's info.
+      if (
+        stateGameIdRef.current !== null &&
+        stateGameIdRef.current !== data.gameId
+      ) {
+        clearLocalState();
+      }
       setInfo(data);
       const u = ref.current.user;
       const mine = data.players.some(
         (p) => p.type === 'human' && p.id === u?.id,
       );
-      if (data.humans <= 1 && mine && ref.current.state) {
+      if (
+        data.humans <= 1 &&
+        mine &&
+        ref.current.state &&
+        stateGameIdRef.current === data.gameId
+      ) {
         liveRef.current = true;
       }
     };
@@ -154,7 +196,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         if (msg.seq > seqRef.current) {
           seqRef.current = msg.seq;
           liveRef.current = true;
-          setStateRef.current(msg.game);
+          writeState(msg.game);
         }
         return;
       }
@@ -170,7 +212,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       });
     };
 
-    const onInvite = (gameId: string) => setInvite({ gameId });
+    const onInvite = (gameId: string) => {
+      // Never surface an invite to a game we are already in (the backend now
+      // blocks this, but guard the UI too so a self-invite can never appear).
+      if (ref.current.info?.gameId === gameId) return;
+      setInvite({ gameId });
+    };
     const onCancelled = (gameId: string) =>
       setInvite((prev) => (prev && prev.gameId === gameId ? null : prev));
     const onRejected = (data: { gameId: string; invitedId: string }) =>
@@ -193,7 +240,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.off('GameRejected', onRejected);
       socket.off('GameError', onError);
     };
-  }, [socket, pushState, resetLocal]);
+  }, [socket, pushState, resetLocal, writeState, clearLocalState]);
 
   useEffect(() => {
     if (!liveRef.current || !ref.current.state) return;

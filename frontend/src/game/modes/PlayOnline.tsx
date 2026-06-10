@@ -160,14 +160,14 @@ export default function PlayOnline() {
           </>
         )}
 
-        <CenterButtons>
+        <div className="btn">
           {isLeader ? (
             <BtnDefault onClick={startGame}>Start game</BtnDefault>
           ) : (
             <p>Waiting for the leader to start...</p>
           )}
           <BtnDefault onClick={handleLeave}>End Game</BtnDefault>
-        </CenterButtons>
+        </div>
       </ScrollablePage>
     );
   }

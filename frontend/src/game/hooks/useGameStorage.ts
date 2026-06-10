@@ -40,7 +40,7 @@ export function useGameStorage(storageKey: string) {
   return { game, setGame, clearGame };
 }
 
-const USER_ID_KEY = 'blackjack:online:userId';
+const USER_ID_KEY = 'blackcrown:online:userId';
 
 export function loadOnlineUserId(): string | null {
   try {
@@ -53,4 +53,22 @@ export function loadOnlineUserId(): string | null {
 export function saveOnlineUserId(id: string | null) {
   if (id === null) localStorage.removeItem(USER_ID_KEY);
   else localStorage.setItem(USER_ID_KEY, id);
+}
+
+// The id of the game that the persisted GameState belongs to. GameState itself
+// carries no game identifier, so we store this separately to detect when the
+// stored state is left over from a previous game and must be discarded.
+const STATE_GAME_ID_KEY = 'blackcrown:online:gameId';
+
+export function loadStateGameId(): string | null {
+  try {
+    return localStorage.getItem(STATE_GAME_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveStateGameId(id: string | null) {
+  if (id === null) localStorage.removeItem(STATE_GAME_ID_KEY);
+  else localStorage.setItem(STATE_GAME_ID_KEY, id);
 }

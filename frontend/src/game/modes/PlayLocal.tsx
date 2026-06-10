@@ -17,7 +17,7 @@ import { useGameCanvas } from 'game/canvas/useGameCanvas';
 import { newRoundGame, nextPlayer } from 'game/engine/gameEngine';
 import { useGameStorage } from 'game/hooks/useGameStorage';
 
-const STORAGE_KEY = 'blackjack:local';
+const STORAGE_KEY = 'blackcrown:local';
 
 export default function PlayLocal() {
   const navigate = useNavigate();
