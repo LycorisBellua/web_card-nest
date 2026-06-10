@@ -1,7 +1,3 @@
-GAME
-- We need to do better when it comes to the user list for invitations. We could 
-take inspirations from the Users page.
-
 TEST (BOTH IN DEV AND PROD)
 - Test to close the window and come back.
 - Test to change your name mid-game and then come back (should show your new 

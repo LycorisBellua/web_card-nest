@@ -10,7 +10,7 @@ export type GameContextType = {
   // ----- an incoming invite awaiting this user's decision (drives the modal) -----
   invite: { gameId: string } | null;
   // ----- outgoing invites the leader is still waiting on (derived from info) -----
-  pendingInvites: string[];
+  pendingInvites: { id: string; username: string }[];
   // ----- the most recent invitee to decline, for an optional "X declined" notice -----
   lastRejectedId: string | null;
   error: string | null;
@@ -23,7 +23,7 @@ export type GameContextType = {
 
   // ----- lobby -----
   createGame: (seats: number) => void;
-  inviteUser: (invitedId: string) => void;
+  inviteUser: (username: string) => void;
   cancelInvite: (invitedId: string) => void;
   acceptInvite: () => void;
   rejectInvite: () => void;

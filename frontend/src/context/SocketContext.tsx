@@ -38,11 +38,12 @@ export type ClientToServerEvents = {
 
   // ----- Game (online mode) -----
   // The server derives the creator/leader/sender id from the JWT, so the
-  // client never sends its own id in these payloads.
+  // client never sends its own id in these payloads. Invites are addressed by
+  // username (resolved to a user server-side).
   CreateGame: (payload: { seats: number }) => void;
   JoinGame: (payload: { gameId: string }) => void;
   LeaveGame: () => void;
-  InviteGame: (payload: { gameId: string; invitedId: string }) => void;
+  InviteGame: (payload: { gameId: string; username: string }) => void;
   CancelInvite: (payload: { gameId: string; invitedId: string }) => void;
   RejectGame: (payload: { gameId: string }) => void;
   /** Relay a gameplay message to the other humans in our game. */

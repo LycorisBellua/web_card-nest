@@ -20,7 +20,7 @@ export class GameRegistry implements OnModuleDestroy {
   private readonly sweepInterval: ReturnType<typeof setInterval>;
 
   constructor() {
-    // The registry is otherwise lazy — it only cleans up when poked by an
+    // The registry is otherwise lazy - it only cleans up when poked by an
     // action (create/join/leave/reconnect). Without this sweep, a game where
     // everyone disconnected at once would linger in memory forever, since no
     // action ever runs to notice the reconnect windows have all lapsed.
@@ -153,17 +153,20 @@ export class GameRegistry implements OnModuleDestroy {
     return game;
   }
 
-  inviteToGame(dto: InviteGameDto): Game {
-    const leaderId = dto.leaderId;
-    const invitedId = dto.invitedId;
-    const game = this.getGame(dto.gameId);
-    if (!game || leaderId !== game.leader) {
+  inviteToGame(arg: {
+    leaderId: string;
+    gameId: string;
+    invitedId: string;
+    invitedUsername: string;
+  }): Game {
+    const game = this.getGame(arg.gameId);
+    if (!game || arg.leaderId !== game.leader) {
       throw new ForbiddenException(GameErr.ONLY_LEADER_INVITE);
     }
     if (game.humans === game.seats) {
       throw new BadRequestException(GameErr.NO_SEAT_AVAILABLE);
     }
-    game.invited.add(invitedId);
+    game.invited.set(arg.invitedId, arg.invitedUsername);
     return game;
   }
 
@@ -324,7 +327,7 @@ export class GameRegistry implements OnModuleDestroy {
       humans: 0,
       players: [],
       timeouts: [],
-      invited: new Set<string>(),
+      invited: new Map<string, string>(),
       leader: '',
     };
   }

@@ -13,6 +13,7 @@ import {
 import { ScrollablePage } from 'components/general/Scrollable';
 import CenterButtons from 'components/btn/CenterButtons';
 import { BtnDefault } from 'components/btn/Btn';
+import InputField from 'components/misc/InputField';
 import { useGameCanvas } from 'game/canvas/useGameCanvas';
 import type { GameState } from 'game/logic/types';
 import type { Timeout } from 'game/online/types';
@@ -22,7 +23,7 @@ import NotFound from 'pages/NotFound';
  * Online mode, wired to the GameProvider.
  *  - Lobby/occupancy and leadership come from the server (`info`).
  *  - Gameplay (`state`) is relayed peer-to-peer; this component only renders it
- *    and calls hit/stand, which the provider ignores unless it is our turn —
+ *    and calls hit/stand, which the provider ignores unless it is our turn -
  *    the disabled buttons here are just the matching UI layer.
  *  - The local user's seat comes from `localSeat`, no longer hardcoded to 0.
  *  - There is no "pass the device" transition: the provider auto-advances turns,
@@ -52,7 +53,7 @@ export default function PlayOnline() {
     clearError,
   } = useGame();
 
-  const [inviteId, setInviteId] = useState('');
+  const [inviteName, setInviteName] = useState('');
 
   // Hooks must run unconditionally, so the canvas hook is called before any
   // early return. localSeat decides whose cards/score are revealed.
@@ -67,10 +68,10 @@ export default function PlayOnline() {
   };
 
   const handleInvite = () => {
-    const id = inviteId.trim();
-    if (!id) return;
-    inviteUser(id);
-    setInviteId('');
+    const username = inviteName.trim();
+    if (!username) return;
+    inviteUser(username);
+    setInviteName('');
   };
 
   if (isAuthLoading) return null;
@@ -117,7 +118,7 @@ export default function PlayOnline() {
             return (
               <li key={seat}>
                 Seat {seat + 1}: {who}
-                {isSeatLeader ? ' — leader' : ''}
+                {isSeatLeader ? ' - leader' : ''}
               </li>
             );
           })}
@@ -126,19 +127,23 @@ export default function PlayOnline() {
         {isLeader && (
           <>
             <h2>Invite a player</h2>
-            <input
+            <InputField
+              id="invite-username"
               type="text"
-              value={inviteId}
-              placeholder="user id"
-              onChange={(e) => setInviteId(e.target.value)}
+              name="invite-username"
+              label="Username"
+              placeholder="Username to invite"
+              value={inviteName}
+              onChange={(e) => setInviteName(e.target.value)}
             />
             <BtnDefault onClick={handleInvite}>Invite</BtnDefault>
             {pendingInvites.length > 0 && (
               <ul>
-                {pendingInvites.map((id) => (
-                  <li key={id}>
-                    {id} — {onlineUsers.has(id) ? 'pending' : 'offline'}{' '}
-                    <BtnDefault onClick={() => cancelInvite(id)}>
+                {pendingInvites.map((inv) => (
+                  <li key={inv.id}>
+                    {inv.username} -{' '}
+                    {onlineUsers.has(inv.id) ? 'pending' : 'offline'}{' '}
+                    <BtnDefault onClick={() => cancelInvite(inv.id)}>
                       Cancel
                     </BtnDefault>
                   </li>
@@ -246,7 +251,7 @@ function ReconnectBanner({
     <ReconnectList>
       {active.map((t) => (
         <p key={t.seat}>
-          {label(t.seat)} disconnected — {Math.ceil((t.timer - now) / 1000)}s to
+          {label(t.seat)} disconnected - {Math.ceil((t.timer - now) / 1000)}s to
           return (playing as a bot)
         </p>
       ))}
@@ -263,7 +268,7 @@ function ErrorLine({
 }) {
   return (
     <ErrorMessage>
-      {message} <BtnDefault onClick={onDismiss}>dismiss</BtnDefault>
+      {message} <BtnDefault onClick={onDismiss}>Dismiss</BtnDefault>
     </ErrorMessage>
   );
 }

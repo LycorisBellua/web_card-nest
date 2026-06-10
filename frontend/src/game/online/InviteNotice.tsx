@@ -5,7 +5,7 @@ import { BtnDefault } from 'components/btn/Btn';
 
 /**
  * App-wide invite notification. Renders a small fixed banner whenever an invite
- * arrives, from anywhere in the app — it is driven by the GameProvider's
+ * arrives, from anywhere in the app - it is driven by the GameProvider's
  * `invite` state, which is why the provider is mounted high in the tree.
  *
  * Barebone by design: the styling is a placeholder (the "modal doesn't matter

@@ -4,7 +4,9 @@ export type Game = {
   humans: number;
   players: Occupant[];
   timeouts: Timeout[];
-  invited: Set<string>;
+  // userId -> username of players invited but not yet seated. A Map (rather
+  // than a Set of ids) so the leader's pending list can show real usernames.
+  invited: Map<string, string>;
   leader: string;
 };
 

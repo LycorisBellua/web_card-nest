@@ -94,8 +94,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // it stays ahead of prior values across a refresh without being persisted.
   const seqRef = useRef<number>(-1);
 
-  // Whether our current snapshot is "live" — adopted from a relay or pushed by
-  // us this session — rather than merely rehydrated from localStorage on a
+  // Whether our current snapshot is "live" - adopted from a relay or pushed by
+  // us this session - rather than merely rehydrated from localStorage on a
   // (re)connect and possibly stale. We refuse to act on or re-broadcast non-live
   // state, so a reconnecting client (the leader included) can never clobber the
   // table with an outdated snapshot.
@@ -120,7 +120,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const pendingInvites = useMemo(() => {
     if (!info || !Array.isArray(info.invited)) return [];
     return info.invited.filter(
-      (id) => !info.players.some((p) => p.type === 'human' && p.id === id),
+      (inv) => !info.players.some((p) => p.type === 'human' && p.id === inv.id),
     );
   }, [info]);
 
@@ -183,8 +183,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // Reconcile session ownership. We wait for auth to settle so the brief
       // guest connect during loading isn't mistaken for a logout. Same user
       // reconnecting (a transient drop) keeps the game; a different user (or a
-      // logout) clears the leftover session. Running here — a subscription
-      // callback rather than an effect body — also avoids a synchronous
+      // logout) clears the leftover session. Running here - a subscription
+      // callback rather than an effect body - also avoids a synchronous
       // setState cascade during render/effects.
       if (ref.current.isAuthLoading) return;
       const u = ref.current.user;
@@ -205,7 +205,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         (p) => p.type === 'human' && p.id === u?.id,
       );
       // Sole human: nobody else could have advanced the game while we were
-      // away, so our rehydrated snapshot is authoritative — trust it as live.
+      // away, so our rehydrated snapshot is authoritative - trust it as live.
       if (data.humans <= 1 && mine && ref.current.state) {
         liveRef.current = true;
       }
@@ -316,10 +316,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   );
 
   const inviteUser = useCallback(
-    (invitedId: string) => {
+    (username: string) => {
       const inf = ref.current.info;
       if (!inf) return;
-      socket.emit('InviteGame', { gameId: inf.gameId, invitedId });
+      socket.emit('InviteGame', { gameId: inf.gameId, username });
     },
     [socket],
   );

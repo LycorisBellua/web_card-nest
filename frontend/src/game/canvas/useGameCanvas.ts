@@ -34,7 +34,7 @@ function getPlayerPosition(relativeIndex: number, total: number) {
  *                         players' second card (index 1) stays hidden during play,
  *                         but every card is revealed once the round finishes.
  * @param hideOtherScores  When `true`, other players' real score is never shown
- *                         during play — only the visible-card estimate is displayed.
+ *                         during play - only the visible-card estimate is displayed.
  *                         At game end all scores are revealed regardless.  Use in
  *                         online mode so the local player cannot infer the hidden card.
  */

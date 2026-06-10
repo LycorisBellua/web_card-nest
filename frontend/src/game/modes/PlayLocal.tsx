@@ -24,7 +24,7 @@ export default function PlayLocal() {
   const { game, setGame, clearGame } = useGameStorage(STORAGE_KEY);
   const [showTransition, setShowTransition] = useState<boolean>(false);
 
-  // Derive started from game existence — no separate flag needed.
+  // Derive started from game existence - no separate flag needed.
   // This means a refresh with a saved game goes straight back into play.
   const started = game !== null;
 

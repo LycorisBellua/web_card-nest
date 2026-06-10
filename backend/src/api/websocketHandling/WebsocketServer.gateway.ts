@@ -297,19 +297,27 @@ export class WebsocketServer
   }
 
   @SubscribeMessage('InviteGame')
-  inviteToGame(
+  async inviteToGame(
     @ConnectedSocket() sender: AppSocket,
-    @MessageBody() payload: { gameId: string; invitedId: string },
-  ): void {
+    @MessageBody() payload: { gameId: string; username: string },
+  ): Promise<void> {
     try {
-      const socket = this.connections.getSocketId(payload.invitedId);
+      // Resolve the typed username to a user. getUserByUsername throws
+      // USER_NOT_FOUND if there's no match (or a PENDING user a regular user
+      // can't see), which the catch below surfaces to the leader as a GameError.
+      const invited = await this.userService.getUserByUsername(
+        sender.data.user.rank as Ranks,
+        payload.username,
+      );
+      const socket = this.connections.getSocketId(invited.id);
       if (!socket) {
-        throw new BadRequestException('The user is offline or does not exist.');
+        throw new BadRequestException('That user is offline.');
       }
       const game = this.games.inviteToGame({
         leaderId: sender.data.user.id,
         gameId: payload.gameId,
-        invitedId: payload.invitedId,
+        invitedId: invited.id,
+        invitedUsername: invited.username,
       });
       this.server.to(socket).emit('GameInvite', payload.gameId);
       this.broadcastGameInfo(game);
@@ -399,10 +407,17 @@ export class WebsocketServer
     }
   }
 
-  // `Game.invited` is a Set, which JSON-serializes to `{}` over Socket.IO.
-  // Convert it to an array so the client receives a usable invited list.
+  // `Game.invited` is a Map, which doesn't survive JSON over Socket.IO. Convert
+  // it to an array of { id, username } so the client can show pending invitees
+  // by name.
   private toWire(game: Game) {
-    return { ...game, invited: [...game.invited] };
+    return {
+      ...game,
+      invited: [...game.invited.entries()].map(([id, username]) => ({
+        id,
+        username,
+      })),
+    };
   }
 
   private errorHandler(err: unknown): string {

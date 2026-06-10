@@ -3,7 +3,7 @@ import type { GameState } from 'game/logic/types';
 /**
  * Online-mode types.
  *
- * These mirror the backend's *occupancy* model — who sits in which seat, who
+ * These mirror the backend's *occupancy* model - who sits in which seat, who
  * leads, and who is mid-disconnect. The server owns this and pushes it via the
  * `GameInfo` event. The actual card game (`GameState` in game/logic/types) is
  * never seen by the server: it is relayed peer-to-peer through the
@@ -28,11 +28,11 @@ export type Timeout = {
  * `players` is seat-indexed and aligns 1:1 with `GameState.players`, so the
  * occupant at seat `i` is the player rendered at index `i` on the canvas.
  *
- * `invited` is the set of user ids the leader has invited but who have not yet
- * taken a seat. The server stores it as a `Set`, which does not survive JSON
- * over Socket.IO, so the gateway must emit it as an array (see the queued
- * backend edit). It is optional here and consumers must guard with
- * `Array.isArray`, so the UI degrades to an empty list if that edit is missing.
+ * `invited` is the set of users the leader has invited but who have not yet
+ * taken a seat, as `{ id, username }` pairs. The server stores it as a Map and
+ * the gateway emits it as an array (see the queued backend edit). It is
+ * optional here and consumers must guard with `Array.isArray`, so the UI
+ * degrades to an empty list if that edit is missing.
  */
 export type GameInfo = {
   gameId: string;
@@ -41,13 +41,13 @@ export type GameInfo = {
   players: Occupant[];
   timeouts: Timeout[];
   leader: string;
-  invited?: string[];
+  invited?: { id: string; username: string }[];
 };
 
 /**
  * What travels over the relay (sent via `SyncGame`, received via `GameState`).
  *
- *  - 'state'    : a full gameplay snapshot from the current authority — the
+ *  - 'state'    : a full gameplay snapshot from the current authority - the
  *                 turn-holder for human turns, or the leader for the initial
  *                 deal, new rounds, and bot turns. `seq` is monotonic so
  *                 receivers can discard snapshots older than what they hold.
