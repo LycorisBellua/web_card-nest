@@ -24,20 +24,6 @@ function getPlayerPosition(relativeIndex: number, total: number) {
   if (total === 4) return ['bottom', 'right', 'top', 'left'][relativeIndex];
 }
 
-/**
- * @param game             Current game state.
- * @param started          Whether the game has started.
- * @param localPlayer      Index of the local player.  Pass `null` in local
- *                         (hotseat) mode: the current player's cards are always
- *                         fully visible, and all cards are revealed at round end.
- *                         Pass a player index (e.g. `0`) in online mode: other
- *                         players' second card (index 1) stays hidden during play,
- *                         but every card is revealed once the round finishes.
- * @param hideOtherScores  When `true`, other players' real score is never shown
- *                         during play — only the visible-card estimate is displayed.
- *                         At game end all scores are revealed regardless.  Use in
- *                         online mode so the local player cannot infer the hidden card.
- */
 export function useGameCanvas(
   game: GameState | null,
   started: boolean,
@@ -49,17 +35,10 @@ export function useGameCanvas(
   const allRef = useRef<CanvasCard[][]>([]);
   const gameRef = useRef(game);
   const revealedRef = useRef(false);
-
-  // Store these in refs so effects that read them don't need them as deps.
-  // They are stable for the lifetime of a game session.
   const isOnlineMode = localPlayer !== null;
   const localPlayerRef = useRef(localPlayer);
   const isOnlineModeRef = useRef(isOnlineMode);
   const hideOtherScoresRef = useRef(hideOtherScores);
-
-  // canvasReady flips to true when the canvas element mounts. This ensures
-  // the render loop effect re-runs after an isAuthLoading-gated return null
-  // caused the canvas to be absent on the first render.
   const [canvasReady, setCanvasReady] = useState(false);
   const setCanvasRef = useCallback((el: HTMLCanvasElement | null) => {
     canvasRef.current = el;
@@ -88,13 +67,10 @@ export function useGameCanvas(
       );
 
       const cards = player.cards.map((c, i) => {
-        const id = `p${playerIdx}-${i}`;
+        const id = `p${playerIdx}-${i}-${c.rank}${c.suit}`;
         const label = `${c.rank}${suitToSymbol(c.suit)}`;
         const card =
           existing.get(id) ?? new CanvasCard(id, label, DECK_X, DECK_Y);
-
-        // In online mode, non-local players start with their second card hidden
-        // and it never gets revealed (even at game end).
         if (i === 1 && !existing.has(id)) {
           card.flipped = isOnlineModeRef.current
             ? playerIdx !== localPlayerRef.current
@@ -182,8 +158,6 @@ export function useGameCanvas(
     let last = performance.now();
 
     function loop(now: number) {
-      // On a refresh, the layout effect and the render loop effect fire on the
-      // same tick. If allRef isn't populated yet, skip this frame and retry.
       if (allRef.current.length === 0) {
         rafRef.current = requestAnimationFrame(loop);
         return;
@@ -202,26 +176,22 @@ export function useGameCanvas(
         playerCards.forEach((card, i) => {
           if (gameRef.current!.gameStatus !== 'finished') {
             if (isCurrent) {
-              // Always show the current player's own cards
               if (
                 !isOnlineModeRef.current ||
                 playerIdx === localPlayerRef.current
               ) {
                 card.flipped = false;
               } else {
-                // In online mode, other "current" players: only show card 0
                 if (i === 1) card.flipped = true;
               }
             } else {
               if (i === 1) {
-                // In online mode, hide other players' second card during play.
                 card.flipped = isOnlineModeRef.current
                   ? playerIdx !== localPlayerRef.current
                   : true;
               }
             }
           } else {
-            // Game finished: reveal every card regardless of mode.
             card.flipped = false;
             isCurrent = false;
           }
@@ -238,9 +208,6 @@ export function useGameCanvas(
         let label = '';
         const crown = player.hasBlackCrown ? '👑​' : '';
         const isFinished = gameRef.current!.gameStatus === 'finished';
-        // In online mode, only the local player sees their own real score
-        // during play. Other players only show the visible-card estimate.
-        // At game end everyone's real score is shown regardless.
         const isLocalPlayer =
           !isOnlineModeRef.current || playerIdx === localPlayerRef.current;
         const showRealScore =
@@ -264,22 +231,13 @@ export function useGameCanvas(
           gameRef.current!.players.length,
         );
 
-        // The side hands are rotated 90deg, so their on-screen horizontal
-        // footprint is CARD_H wide centred on the card's mid-line. Derive the
-        // exact card edges so the label can be anchored just outside them.
         const TEXT_GAP = 16;
-        // Left hand: cards sit at x = 40, centre at 40 + CARD_W/2, extending
-        // CARD_H/2 each way -> right edge at 140.
         const leftHandRightEdge = 40 + CARD_W / 2 + CARD_H / 2;
-        // Right hand: cards sit at x = W - CARD_H, centre at that + CARD_W/2,
-        // so the left edge is centre - CARD_H/2 -> 760.
         const rightHandLeftEdge = W - CARD_H + CARD_W / 2 - CARD_H / 2;
 
         ctx.save();
         ctx.font = 'bold 16px Arial';
         ctx.fillStyle = isCurrent ? '#FFD700' : 'rgba(255,255,255,0.8)';
-        // Left hand starts to the right of its cards (left-aligned), right hand
-        // ends to the left of its cards (right-aligned), top/bottom centred.
         ctx.textAlign =
           position === 'left'
             ? 'left'
@@ -305,8 +263,6 @@ export function useGameCanvas(
 
         ctx.fillText(label, labelX, labelY);
 
-        // Status lines reuse labelX + the active textAlign so they stack neatly
-        // under the main label on whichever side the hand is on.
         if (gameRef.current!.players[playerIdx].isBusted) {
           ctx.font = 'bold 16px Arial';
           ctx.fillStyle = '#c0110f';

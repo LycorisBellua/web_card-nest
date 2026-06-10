@@ -5,11 +5,6 @@ import Section from 'components/general/Section';
 import CenterButtons from 'components/btn/CenterButtons';
 import { BtnDefault } from 'components/btn/Btn';
 
-/**
- * Landing page for /play.
- * The Online Mode button is only shown when the user is logged in and not
- * pending — matching the access guard in PlayOnline.
- */
 export default function Play() {
   const { user } = useUser();
   const canPlayOnline = !!user && user.rank.toLowerCase() !== 'pending';

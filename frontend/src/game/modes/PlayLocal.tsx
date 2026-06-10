@@ -24,13 +24,7 @@ export default function PlayLocal() {
   const { game, setGame, clearGame } = useGameStorage(STORAGE_KEY);
   const [showTransition, setShowTransition] = useState<boolean>(false);
 
-  // Derive started from game existence — no separate flag needed.
-  // This means a refresh with a saved game goes straight back into play.
   const started = game !== null;
-
-  // In local (hotseat) mode the "local player" rotates with the turn so that
-  // the current player always sees their own real score and hidden card, while
-  // everyone else only sees the visible-card estimate.
   const localPlayer = game?.currentPlayerIdx ?? 0;
   const { canvasRef, reset } = useGameCanvas(game, started, localPlayer, true);
 

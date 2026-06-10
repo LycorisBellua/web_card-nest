@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { SendMailService } from './sendMail/sendMail.service';
 import { UserController } from './user/user.controller';
 import { UserService } from './user/user.service';
@@ -8,15 +9,15 @@ import { RelController } from './relationships/rel.controller';
 import { RelService } from './relationships/rel.service';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
-import { WebsocketServer } from './websocketHandling/WebsocketServer.gateway';
-import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './auth/jwt/auth.jwt-secret';
 import { GdprController } from './gdpr/gdpr.controller';
 import { GdprService } from './gdpr/gdpr.service';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
 import { ChatService } from './chat/chat.service';
+import { WebsocketServer } from './websocketHandling/WebsocketServer.gateway';
 import { ConnectionRegistry } from './websocketHandling/registry/connection-registry';
+import { GameRegistry } from './game/registry/game.registry';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ConnectionRegistry } from './websocketHandling/registry/connection-regi
     ChatService,
     WebsocketServer,
     ConnectionRegistry,
+    GameRegistry,
   ],
 })
 export class ApiModule {}

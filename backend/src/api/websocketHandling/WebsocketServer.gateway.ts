@@ -1,4 +1,12 @@
-import { Injectable, Logger, forwardRef, Inject } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpException,
+  Injectable,
+  Logger,
+  forwardRef,
+  Inject,
+} from '@nestjs/common';
 import { Server } from 'socket.io';
 import {
   ConnectedSocket,
@@ -18,6 +26,8 @@ import { ConnectionRegistry } from './registry/connection-registry';
 import { AdminService } from '../admin/admin.service';
 import { UserService } from '../user/user.service';
 import { Ranks } from 'src/generated/prisma/enums';
+import { GameRegistry } from '../game/registry/game.registry';
+import { Game, Occupant } from '../game/types/game.types';
 
 @Injectable()
 @WebSocketGateway({
@@ -31,6 +41,7 @@ export class WebsocketServer
 {
   constructor(
     private readonly connections: ConnectionRegistry,
+    private readonly games: GameRegistry,
     private readonly jwtService: JwtService,
     private readonly chatService: ChatService,
     @Inject(forwardRef(() => AdminService))
@@ -62,7 +73,14 @@ export class WebsocketServer
     const userId = client.data.user.id;
     if (userId === 'Guest') return;
 
-    this.connections.add(userId, client.id);
+    const oldSocket = this.connections.add(userId, client.id);
+    if (oldSocket) {
+      this.server.sockets.sockets.get(oldSocket)?.disconnect(true);
+    }
+    this.reconnectGame(userId, client);
+    for (const gameId of this.games.findInvites(userId)) {
+      client.emit('GameInvite', gameId);
+    }
     const users = this.connections.getAllUserIds();
     client.emit('OnlineUsers', users);
     client.broadcast.emit('OnlineUsers', users);
@@ -71,9 +89,12 @@ export class WebsocketServer
   handleDisconnect(client: AppSocket): void {
     const userId = this.connections.removeBySocketId(client.id);
     if (!userId) return;
+    this.disconnectGame(userId);
     const users = this.connections.getAllUserIds();
     client.broadcast.emit('OnlineUsers', users);
   }
+
+  // ********** CHAT / LOBBY HANDLING **********
 
   @SubscribeMessage('FetchConvoHistory')
   async FetchConvoHistory(
@@ -203,5 +224,201 @@ export class WebsocketServer
     } catch {
       return false;
     }
+  }
+
+  // ********** GAME HANDLING **********
+
+  @SubscribeMessage('CreateGame')
+  async createGame(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: { seats: number },
+  ): Promise<void> {
+    try {
+      const self = await this.userService.getUserById(
+        sender.data.user.rank as Ranks,
+        sender.data.user.id,
+      );
+      const game = this.games.createGame({
+        userId: sender.data.user.id,
+        username: self.username,
+        seats: payload.seats,
+      });
+      sender.emit('GameInfo', this.toWire(game));
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  @SubscribeMessage('JoinGame')
+  joinGame(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: { gameId: string },
+  ): void {
+    try {
+      const game = this.games.joinGame({
+        joinerId: sender.data.user.id,
+        gameId: payload.gameId,
+      });
+      this.broadcastGameInfo(game);
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  @SubscribeMessage('LeaveGame')
+  leaveGame(@ConnectedSocket() sender: AppSocket): void {
+    try {
+      const game = this.games.leaveGame({
+        userId: sender.data.user.id,
+      });
+      this.broadcastGameInfo(game);
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  private reconnectGame(userId: string, client: AppSocket): void {
+    try {
+      const game = this.games.reconnect(userId);
+      this.broadcastGameInfo(game);
+    } catch (err) {
+      if (err instanceof ForbiddenException) {
+        client.emit('GameError', this.errorHandler(err));
+      }
+    }
+  }
+
+  private disconnectGame(userId: string): void {
+    const game = this.games.disconnect(userId);
+    if (game) {
+      this.broadcastGameInfo(game);
+    }
+  }
+
+  @SubscribeMessage('InviteGame')
+  async inviteToGame(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: { gameId: string; username: string },
+  ): Promise<void> {
+    try {
+      const invited = await this.userService.getUserByUsername(
+        sender.data.user.rank as Ranks,
+        payload.username,
+      );
+      const socket = this.connections.getSocketId(invited.id);
+      if (!socket) {
+        throw new BadRequestException('That user is offline.');
+      }
+      const game = this.games.inviteToGame({
+        leaderId: sender.data.user.id,
+        gameId: payload.gameId,
+        invitedId: invited.id,
+        invitedUsername: invited.username,
+      });
+      this.server.to(socket).emit('GameInvite', payload.gameId);
+      this.broadcastGameInfo(game);
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  @SubscribeMessage('CancelInvite')
+  cancelInvite(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: { gameId: string; invitedId: string },
+  ): void {
+    try {
+      const game = this.games.cancelInvite({
+        leaderId: sender.data.user.id,
+        gameId: payload.gameId,
+        invitedId: payload.invitedId,
+      });
+      this.broadcastGameInfo(game);
+      const invitedSocket = this.connections.getSocketId(payload.invitedId);
+      if (invitedSocket) {
+        this.server.to(invitedSocket).emit('GameInviteCancelled', game.gameId);
+      }
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  @SubscribeMessage('RejectGame')
+  rejectInvite(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: { gameId: string },
+  ): void {
+    try {
+      const game = this.games.rejectInvite({
+        joinerId: sender.data.user.id,
+        gameId: payload.gameId,
+      });
+      this.broadcastGameInfo(game);
+      const leaderSocket = this.connections.getSocketId(game.leader);
+      if (leaderSocket) {
+        this.server.to(leaderSocket).emit('GameRejected', {
+          gameId: game.gameId,
+          invitedId: sender.data.user.id,
+        });
+      }
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+    }
+  }
+
+  @SubscribeMessage('SyncGame')
+  syncGameState(
+    @ConnectedSocket() sender: AppSocket,
+    @MessageBody() payload: unknown,
+  ): void {
+    const senderId = sender.data.user.id;
+    let players: Occupant[];
+    try {
+      players = this.games.syncGameState(senderId);
+    } catch (err) {
+      sender.emit('GameError', this.errorHandler(err));
+      return;
+    }
+    for (const player of players) {
+      if (player.type === 'human' && player.id !== senderId) {
+        const socket = this.connections.getSocketId(player.id);
+        if (socket) {
+          this.server.to(socket).emit('GameState', payload);
+        }
+      }
+    }
+  }
+
+  private broadcastGameInfo(game: Game) {
+    for (const player of game.players) {
+      if (player.type === 'human') {
+        const socket = this.connections.getSocketId(player.id);
+        if (socket) {
+          this.server.to(socket).emit('GameInfo', this.toWire(game));
+        }
+      }
+    }
+  }
+
+  // `Game.invited` is a Map, which doesn't survive JSON over Socket.IO. Convert
+  // it to an array of { id, username } so the client can show pending invitees
+  // by name. `names` gets the same treatment so the client can resolve a
+  // display name for every seated human (leader included), not just an id.
+  private toWire(game: Game) {
+    return {
+      ...game,
+      invited: [...game.invited.entries()].map(([id, username]) => ({
+        id,
+        username,
+      })),
+      names: [...game.names.entries()].map(([id, username]) => ({
+        id,
+        username,
+      })),
+    };
+  }
+
+  private errorHandler(err: unknown): string {
+    return err instanceof HttpException ? err.message : 'Unexpected Error';
   }
 }

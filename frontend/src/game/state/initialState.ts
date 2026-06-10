@@ -1,7 +1,6 @@
 import type { Card, GameState } from 'game/logic/types';
 import { createDeck, shuffle } from 'game/logic/deck';
 
-// start a game
 export function initialGame(playerCount: number, username: string): GameState {
   const fullDeck: Card[] = createDeck();
   const shuffledDeck: Card[] = shuffle(fullDeck);

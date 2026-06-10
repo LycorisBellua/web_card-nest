@@ -4,6 +4,8 @@ import { Outlet } from 'react-router-dom';
 import { UserProvider } from 'context/UserProvider';
 import { useUser } from 'context/useUser';
 import { SocketProvider } from 'context/SocketProvider';
+import { GameProvider } from 'game/online/GameProvider';
+import InviteNotice from 'game/online/InviteNotice';
 import GlobalStyle from 'components/general/GlobalStyle';
 import Border from 'components/general/Border';
 import Nav from 'components/general/Nav';
@@ -16,7 +18,7 @@ function AppWithSocket({ children }: { children: ReactNode }) {
   const { user } = useUser();
   return (
     <SocketProvider accessToken={user?.accessToken ?? ''}>
-      {children}
+      <GameProvider>{children}</GameProvider>
     </SocketProvider>
   );
 }
@@ -29,6 +31,7 @@ function Layout() {
       <UserProvider>
         <AppWithSocket>
           <GlobalStyle />
+          <InviteNotice />
           <Border>
             <Nav onDMsClick={() => setSidebarOpen(true)} />
             <Content>
